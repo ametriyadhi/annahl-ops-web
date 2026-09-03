@@ -1969,6 +1969,8 @@ HTML_TEMPLATE = """
                         </div>
                     </div>
                 </div>
+            </div>
+
             <!-- TAB: PENGADAAN BARANG & LOGISTIK SARPRAS -->
             <div id="tab-pengadaan" class="tab-content hidden space-y-6">
                 <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-6 space-y-6">
