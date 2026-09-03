@@ -4692,6 +4692,8 @@ HTML_TEMPLATE = """
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> <span>Disposisikan & Buat Tiket</span>';
             }
+        }
+
         function openSetPhotoModal(timestamp, nama, area, existingUrl) {
             document.getElementById('set-photo-timestamp').value = timestamp || '';
             document.getElementById('set-photo-nama').innerText = nama || '-';
