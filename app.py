@@ -12,7 +12,13 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from flask import Flask, render_template_string, request, jsonify, Response, session, redirect, url_for
+
+WIB = ZoneInfo("Asia/Jakarta")
+
+def now_wib():
+    return datetime.now(WIB)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "annahl-ops-super-secret-key-2026-bismillah")
@@ -941,7 +947,7 @@ HTML_TEMPLATE = """
                                         {% endif %}
                                         
                                         <span class="text-xs text-slate-600 font-semibold"><i class="fa-solid fa-user-pen mr-1 text-slate-400"></i>{{ j.author_nama or 'Mr Slam' }}</span>
-                                        <span class="text-xs font-mono text-slate-400"><i class="fa-regular fa-clock mr-1"></i>{{ j.date }} ({{ j.time }})</span>
+                                        <span class="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200"><i class="fa-regular fa-clock mr-1 text-slate-400"></i>{{ j.date }} • {{ j.time }} WIB</span>
                                     </div>
                                     <h3 class="text-base font-bold text-slate-800 pt-1">{{ j.title }}</h3>
                                 </div>
@@ -955,6 +961,18 @@ HTML_TEMPLATE = """
                                     </button>
                                     {% endif %}
                                     {% if user_role == 'manager' or j.author_username == session.get('ops_username') %}
+                                    <button onclick="openEditJournalModal(this)"
+                                            data-id="{{ j.id }}"
+                                            data-title="{{ j.title }}"
+                                            data-category="{{ j.category or '' }}"
+                                            data-unit="{{ j.unit_code or 'ALL' }}"
+                                            data-date="{{ j.date }}"
+                                            data-time="{{ j.time }}"
+                                            data-desc="{{ j.description or '' }}"
+                                            data-output="{{ j.output or '' }}"
+                                            class="p-1.5 text-slate-400 hover:text-blue-600 transition text-xs" title="Edit Jurnal">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
                                     <form action="/delete_journal" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus jurnal ini?')">
                                         <input type="hidden" name="journal_id" value="{{ j.id }}">
                                         <button type="submit" class="p-1.5 text-slate-300 hover:text-rose-600 transition text-xs" title="Hapus Jurnal">
@@ -1387,9 +1405,12 @@ HTML_TEMPLATE = """
                             <i class="fa-solid fa-broom text-purple-600"></i>
                             Log Laporan Kebersihan & Maintenance OB (+ Foto Drive)
                         </h2>
-                        <div class="flex items-center gap-3">
-                            <a href="/export/kebersihan" class="px-3.5 py-1.5 bg-purple-600 text-white text-xs font-semibold rounded-lg hover:bg-purple-700 transition shadow-xs flex items-center gap-1.5" title="Export ke Excel">
-                                <i class="fa-solid fa-file-excel"></i> Export Excel
+                        <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+                            <button type="button" onclick="syncDrivePhotos()" id="btn-sync-photos" class="px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition shadow-xs flex items-center gap-1.5" title="Sinkronkan Foto Drive dari Google Sheet">
+                                <i class="fa-solid fa-arrows-rotate"></i> <span>Sinkron Foto Drive</span>
+                            </button>
+                            <a href="/export/kebersihan" class="px-3 py-1.5 bg-purple-600 text-white text-xs font-semibold rounded-lg hover:bg-purple-700 transition shadow-xs flex items-center gap-1.5" title="Export ke Excel">
+                                <i class="fa-solid fa-file-excel"></i> <span>Export Excel</span>
                             </a>
                             <span id="kebersihan-count-badge" class="px-3 py-1 bg-purple-50 text-purple-700 text-xs font-bold rounded-full border border-purple-200">
                                 Total: {{ kebersihan_logs|length }} Laporan
@@ -1441,23 +1462,51 @@ HTML_TEMPLATE = """
                             </thead>
                             <tbody class="divide-y divide-slate-100 text-xs">
                                 {% for log in kebersihan_logs|reverse %}
+                                {% set p_link = log.photoUrl or log.photo_url or log.driveUrl or log.drive_url or log.foto_url %}
+                                {% set has_any_photo = p_link or log.local_photo_url or log.hasImage or log.imageBase64 %}
                                 <tr class="kebersihan-row hover:bg-slate-50/50"
                                     data-search="{{ (log.nama + ' ' + log.area + ' ' + log.keterangan)|lower }}"
                                     data-unit="{{ log.unit }}"
                                     data-date="{{ log.wibDate or log.timestamp[:10] }}"
-                                    data-hasphoto="{% if log.imageBase64 %}true{% else %}false{% endif %}">
+                                    data-hasphoto="{% if has_any_photo %}true{% else %}false{% endif %}">
                                     <td class="p-3 text-xs font-mono text-slate-500 whitespace-nowrap">{{ log.wibDate or log.timestamp[:10] }}</td>
                                     <td class="p-3 font-semibold text-slate-800">{{ log.nama }}</td>
                                     <td class="p-3 text-xs font-medium text-slate-600">{{ log.unit }}</td>
                                     <td class="p-3 text-xs font-bold text-slate-700">{{ log.area }}</td>
                                     <td class="p-3 text-xs text-slate-700 leading-relaxed">{{ log.keterangan }}</td>
                                     <td class="p-3 text-xs whitespace-nowrap">
-                                        {% if log.imageBase64 %}
-                                        <span class="inline-flex items-center text-emerald-600 font-medium">
-                                            <i class="fa-solid fa-cloud-arrow-up mr-1"></i> Drive Synced
-                                        </span>
+                                        {% if p_link and p_link != '-' and not p_link.startswith('Error') %}
+                                        <a href="{{ p_link }}" target="_blank" rel="noopener noreferrer"
+                                           class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-600 hover:text-white transition shadow-2xs group"
+                                           title="Buka Foto di Google Drive">
+                                            <i class="fa-brands fa-google-drive text-blue-600 group-hover:text-white"></i>
+                                            <span>Foto Drive</span>
+                                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px] opacity-70 group-hover:text-white"></i>
+                                        </a>
+                                        {% elif log.local_photo_url %}
+                                        <a href="{{ log.local_photo_url }}" target="_blank" rel="noopener noreferrer"
+                                           class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-600 hover:text-white transition shadow-2xs group"
+                                           title="Lihat Foto Bukti">
+                                            <i class="fa-solid fa-image text-emerald-600 group-hover:text-white"></i>
+                                            <span>Lihat Foto</span>
+                                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px] opacity-70 group-hover:text-white"></i>
+                                        </a>
+                                        {% elif log.hasImage or log.imageBase64 %}
+                                        <div class="inline-flex items-center gap-1.5">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200" title="Foto dilampirkan via WhatsApp (Tersimpan di Sheet/Drive)">
+                                                <i class="fa-solid fa-camera text-amber-500"></i>
+                                                <span>Foto Terlampir</span>
+                                            </span>
+                                            <button type="button" onclick="openSetPhotoModal('{{ log.timestamp }}', '{{ log.nama|replace("'", "\\'") }}', '{{ log.area|replace("'", "\\'") }}', '')"
+                                                    class="p-1 text-slate-400 hover:text-blue-600 transition rounded" title="Tautkan / Edit Link Drive">
+                                                <i class="fa-solid fa-link text-xs"></i>
+                                            </button>
+                                        </div>
                                         {% else %}
-                                        <span class="text-slate-400">Tanpa Foto</span>
+                                        <span class="inline-flex items-center gap-1 text-slate-400 text-xs">
+                                            <i class="fa-solid fa-minus text-slate-300"></i>
+                                            <span>Tanpa Foto</span>
+                                        </span>
                                         {% endif %}
                                     </td>
                                     <td class="p-3 text-center whitespace-nowrap">
@@ -2426,7 +2475,7 @@ HTML_TEMPLATE = """
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Judul / Topik Kegiatan</label>
                     <input type="text" name="title" placeholder="Misal: Rapat Evaluasi Mutu KBM & IT" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg" required>
                 </div>
-                <div class="grid grid-cols-2 gap-2">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">Kategori</label>
                         <select name="category" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg">
@@ -2435,11 +2484,16 @@ HTML_TEMPLATE = """
                             <option value="Mutu & Pengembangan">Mutu & Pengembangan</option>
                             <option value="Rapat & Koordinasi">Rapat & Koordinasi</option>
                             <option value="Supervisi Lapangan">Supervisi Lapangan</option>
+                            <option value="Operasional">Operasional</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">Tanggal</label>
-                        <input type="date" name="date" value="{{ today_date }}" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg">
+                        <input type="date" name="date" value="{{ today_date }}" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Waktu / Jam (WIB)</label>
+                        <input type="time" name="time" value="{{ current_time }}" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg" required>
                     </div>
                 </div>
                 {% if user_role == 'manager' %}
@@ -2467,6 +2521,73 @@ HTML_TEMPLATE = """
                 <div class="flex justify-end space-x-2 pt-2">
                     <button type="button" onclick="toggleModal('modal-add-journal')" class="px-4 py-2 text-xs bg-slate-100 text-slate-600 rounded-lg">Batal</button>
                     <button type="submit" class="px-4 py-2 text-xs bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700">Simpan Jurnal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Edit Journal -->
+    <div id="modal-edit-journal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 space-y-4">
+            <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-pen-to-square text-emerald-600"></i> Edit Jurnal Kegiatan Harian
+            </h3>
+            <form action="/edit_journal" method="POST" class="space-y-3">
+                <input type="hidden" name="journal_id" id="edit-journal-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Judul / Topik Kegiatan</label>
+                    <input type="text" name="title" id="edit-journal-title" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg" required>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Kategori</label>
+                        <select name="category" id="edit-journal-category" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg">
+                            <option value="IT Manager">IT Manager</option>
+                            <option value="Kabag Umum">Kabag Umum</option>
+                            <option value="Mutu & Pengembangan">Mutu & Pengembangan</option>
+                            <option value="Rapat & Koordinasi">Rapat & Koordinasi</option>
+                            <option value="Supervisi Lapangan">Supervisi Lapangan</option>
+                            <option value="Operasional">Operasional</option>
+                            <option value="Unit IT">Unit IT</option>
+                            <option value="Unit OB">Unit OB</option>
+                            <option value="Unit Gardener">Unit Gardener</option>
+                            <option value="Unit Security">Unit Security</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Tanggal</label>
+                        <input type="date" name="date" id="edit-journal-date" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Waktu / Jam (WIB)</label>
+                        <input type="time" name="time" id="edit-journal-time" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg" required>
+                    </div>
+                </div>
+                {% if user_role == 'manager' %}
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Unit Sasaran / Bidang</label>
+                    <select name="unit_code" id="edit-journal-unit" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg">
+                        <option value="ALL">Semua Unit (Manajemen)</option>
+                        <option value="IT">Unit IT</option>
+                        <option value="OB">Unit Office Boy (OB)</option>
+                        <option value="GARDENER">Unit Gardener / Lingkungan</option>
+                        <option value="SECURITY">Unit Security / Keamanan</option>
+                    </select>
+                </div>
+                {% else %}
+                <input type="hidden" name="unit_code" id="edit-journal-unit" value="{{ user_unit }}">
+                {% endif %}
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Deskripsi Kegiatan / Hasil Rapat</label>
+                    <textarea name="description" id="edit-journal-desc" rows="4" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg" required></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Hasil / Output Pekerjaan</label>
+                    <input type="text" name="output" id="edit-journal-output" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg">
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="toggleModal('modal-edit-journal')" class="px-4 py-2 text-xs bg-slate-100 text-slate-600 rounded-lg">Batal</button>
+                    <button type="submit" class="px-4 py-2 text-xs bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700">Simpan Perubahan</button>
                 </div>
             </form>
         </div>
@@ -2681,6 +2802,45 @@ HTML_TEMPLATE = """
                     <button type="submit" id="btn-submit-convert" class="px-5 py-2 text-xs font-bold bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition shadow-xs flex items-center gap-1.5">
                         <i class="fa-solid fa-paper-plane"></i>
                         <span>Disposisikan & Buat Tiket</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Set Link Foto Drive Kebersihan -->
+    <div id="modal-set-kebersihan-photo" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-100">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-brands fa-google-drive text-blue-600"></i>
+                    <span>Tautkan Link Foto Google Drive</span>
+                </h3>
+                <button type="button" onclick="toggleModal('modal-set-kebersihan-photo')" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+            <form id="form-set-kebersihan-photo" onsubmit="submitSetPhoto(event)" class="space-y-3 text-xs">
+                <input type="hidden" id="set-photo-timestamp">
+                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 space-y-1">
+                    <div>
+                        <span class="text-slate-500">Petugas:</span>
+                        <strong id="set-photo-nama" class="text-slate-800 ml-1"></strong>
+                    </div>
+                    <div>
+                        <span class="text-slate-500">Area:</span>
+                        <strong id="set-photo-area" class="text-slate-800 ml-1"></strong>
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">URL Foto Google Drive:</label>
+                    <input type="url" id="set-photo-url" required placeholder="https://drive.google.com/file/d/.../view" class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 text-xs font-mono">
+                    <p class="text-[11px] text-slate-400 mt-1">Masukkan URL file foto Google Drive dari hasil share atau Google Sheet.</p>
+                </div>
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="toggleModal('modal-set-kebersihan-photo')" class="px-4 py-2 text-xs font-semibold bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition">Batal</button>
+                    <button type="submit" id="btn-submit-set-photo" class="px-4 py-2 text-xs font-semibold bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition flex items-center gap-1.5 shadow-xs">
+                        <i class="fa-solid fa-save"></i> <span>Simpan Link</span>
                     </button>
                 </div>
             </form>
@@ -4532,6 +4692,64 @@ HTML_TEMPLATE = """
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> <span>Disposisikan & Buat Tiket</span>';
             }
+        function openSetPhotoModal(timestamp, nama, area, existingUrl) {
+            document.getElementById('set-photo-timestamp').value = timestamp || '';
+            document.getElementById('set-photo-nama').innerText = nama || '-';
+            document.getElementById('set-photo-area').innerText = area || '-';
+            document.getElementById('set-photo-url').value = existingUrl || '';
+            toggleModal('modal-set-kebersihan-photo');
+        }
+
+        async function submitSetPhoto(e) {
+            e.preventDefault();
+            const timestamp = document.getElementById('set-photo-timestamp').value;
+            const photoUrl = document.getElementById('set-photo-url').value.trim();
+            const btn = document.getElementById('btn-submit-set-photo');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Menyimpan...';
+            try {
+                const res = await fetch('/api/kebersihan/update_photo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ timestamp, photo_url: photoUrl })
+                });
+                const data = await res.json();
+                if (res.ok && data.status === 'ok') {
+                    alert('✅ ' + (data.message || 'Link Foto Drive berhasil disimpan!'));
+                    window.location.reload();
+                } else {
+                    alert('❌ Gagal: ' + (data.message || 'Terjadi kesalahan'));
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-save"></i> <span>Simpan Link</span>';
+                }
+            } catch(err) {
+                alert('❌ Error koneksi: ' + err.message);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-save"></i> <span>Simpan Link</span>';
+            }
+        }
+
+        async function syncDrivePhotos() {
+            const btn = document.getElementById('btn-sync-photos');
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> <span>Menyinkronkan...</span>';
+            try {
+                const res = await fetch('/api/kebersihan/sync_drive', { method: 'POST' });
+                const data = await res.json();
+                if (data.status === 'ok') {
+                    alert(`✅ ${data.message || 'Sinkronisasi berhasil!'}`);
+                    window.location.reload();
+                } else {
+                    alert(`ℹ️ ${data.message || 'Gagal menyinkronkan foto dari Google Sheet.'}`);
+                    btn.disabled = false;
+                    btn.innerHTML = origHtml;
+                }
+            } catch(err) {
+                alert('❌ Error: ' + err.message);
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+            }
         }
 
         function openUpdateTaskModal(id, title, status, notes) {
@@ -4633,6 +4851,22 @@ HTML_TEMPLATE = """
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-check"></i> <span>Simpan Catatan Supervisi</span>';
             }
+        }
+
+        function openEditJournalModal(btn) {
+            document.getElementById('edit-journal-id').value = btn.dataset.id || '';
+            document.getElementById('edit-journal-title').value = btn.dataset.title || '';
+            if (document.getElementById('edit-journal-category')) {
+                document.getElementById('edit-journal-category').value = btn.dataset.category || 'Operasional';
+            }
+            if (document.getElementById('edit-journal-unit')) {
+                document.getElementById('edit-journal-unit').value = btn.dataset.unit || 'ALL';
+            }
+            document.getElementById('edit-journal-date').value = btn.dataset.date || '';
+            document.getElementById('edit-journal-time').value = btn.dataset.time || '';
+            document.getElementById('edit-journal-desc').value = btn.dataset.desc || '';
+            document.getElementById('edit-journal-output').value = btn.dataset.output || '';
+            toggleModal('modal-edit-journal');
         }
 
         // ==================== OPS PROCUREMENTS (PENGADAAN) JS ====================
@@ -4881,7 +5115,7 @@ def index():
     mutabaah_logs = [l for l in load_logs(MUTABAAH_LOGS_PATH) if l.get('type') not in ['mutubaah_personal', 'mutabaah_personal']]
     kebersihan_logs = load_logs(KEBERSIHAN_LOGS_PATH)
 
-    today_str = datetime.now().strftime("%Y-%m-%d")
+    today_str = now_wib().strftime("%Y-%m-%d")
     today_mutabaah = [l for l in mutabaah_logs if (l.get('wibDate') or l.get('timestamp', '')[:10]) == today_str]
     today_kebersihan = [l for l in kebersihan_logs if (l.get('wibDate') or l.get('timestamp', '')[:10]) == today_str]
 
@@ -4951,7 +5185,7 @@ def index():
     chart_dates = []
     chart_m_counts = []
     for i in range(6, -1, -1):
-        dt = (datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d")
+        dt = (now_wib() - timedelta(days=i)).strftime("%Y-%m-%d")
         chart_dates.append(dt)
         c = len([l for l in mutabaah_logs if (l.get('wibDate') or l.get('timestamp', '')[:10]) == dt])
         chart_m_counts.append(c)
@@ -4991,7 +5225,7 @@ def index():
     report_lines = [
         "==================================================",
         "LAPORAN HARIAN IT & BAGIAN UMUM - AN NAHL",
-        f"Tanggal : {datetime.now().strftime('%d %B %Y')}",
+        f"Tanggal : {now_wib().strftime('%d %B %Y')}",
         "Penanggung Jawab: Mr Slam (IT Manager & Kabag Umum)",
         "==================================================\n",
         f"1. JURNAL KEGIATAN HARIAN      : {len(journals_sorted)} Catatan Tersimpan",
@@ -5011,8 +5245,9 @@ def index():
 
     return render_template_string(
         HTML_TEMPLATE,
-        now_str=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        now_str=now_wib().strftime("%Y-%m-%d %H:%M:%S") + " WIB",
         today_date=today_str,
+        current_time=now_wib().strftime("%H:%M"),
         stats=stats,
         units=UNITS,
         tasks=tasks,
@@ -5345,7 +5580,7 @@ def export_mutabaah():
 @login_required
 def export_kebersihan():
     logs = load_logs(KEBERSIHAN_LOGS_PATH)
-    headers = ["Tanggal WIB", "Nama", "Unit", "Area", "Keterangan", "Ada Foto"]
+    headers = ["Tanggal WIB", "Nama", "Unit", "Area", "Keterangan", "Ada Foto", "Link Foto Drive"]
     rows = []
     for log in logs:
         tgl = log.get("wibDate") or (log.get("timestamp") or "")[:10]
@@ -5353,9 +5588,98 @@ def export_kebersihan():
         unit = log.get("unit", "")
         area = log.get("area", "")
         keterangan = log.get("keterangan", "")
-        ada_foto = "Ya" if log.get("imageBase64") else "Tidak"
-        rows.append([tgl, nama, unit, area, keterangan, ada_foto])
+        p_link = log.get("photoUrl") or log.get("photo_url") or log.get("driveUrl") or log.get("drive_url") or log.get("foto_url") or log.get("local_photo_url") or ""
+        ada_foto = "Ya" if (p_link or log.get("hasImage") or log.get("imageBase64")) else "Tidak"
+        rows.append([tgl, nama, unit, area, keterangan, ada_foto, p_link or "-"])
     return create_excel_response("Kebersihan", headers, rows, "Kebersihan_AnNahl")
+
+@app.route("/api/kebersihan/update_photo", methods=["POST"])
+@login_required
+def api_update_kebersihan_photo():
+    payload = request.get_json() or {}
+    timestamp = payload.get("timestamp", "").strip()
+    photo_url = payload.get("photo_url", "").strip()
+
+    if not timestamp or not photo_url:
+        return jsonify({"status": "error", "message": "Timestamp dan URL foto wajib diisi"}), 400
+
+    logs = load_logs(KEBERSIHAN_LOGS_PATH)
+    updated = False
+    for l in logs:
+        if l.get("timestamp") == timestamp:
+            l["photoUrl"] = photo_url
+            l["photo_url"] = photo_url
+            l["driveUrl"] = photo_url
+            l["hasImage"] = True
+            updated = True
+            break
+
+    if updated:
+        try:
+            with open(KEBERSIHAN_LOGS_PATH, "w", encoding="utf-8") as f:
+                json.dump(logs, f, ensure_ascii=False, indent=2)
+            return jsonify({"status": "ok", "message": "Berhasil memperbarui tautan foto Google Drive"})
+        except Exception as e:
+            return jsonify({"status": "error", "message": f"Gagal menyimpan ke file: {str(e)}"}), 500
+    else:
+        return jsonify({"status": "error", "message": "Log kebersihan tidak ditemukan"}), 404
+
+@app.route("/api/kebersihan/sync_drive", methods=["POST", "GET"])
+@login_required
+def api_sync_kebersihan_drive():
+    gas_url = "https://script.google.com/macros/s/AKfycbwV-RKgFsR-GEgWQ0yWxvGz4Ct3Yag5xzhg-zayoE3BoHPqdJWjbLYW_bl9o1gWoZDmIg/exec"
+    try:
+        import urllib.request
+        req = urllib.request.Request(f"{gas_url}?action=kebersihan", headers={"User-Agent": "AnNahl-Ops/1.0"})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            content = resp.read().decode("utf-8")
+            try:
+                gas_data = json.loads(content)
+            except Exception:
+                return jsonify({
+                    "status": "info",
+                    "message": "Google Apps Script belum mendukung respons JSON action=kebersihan. Silakan update script di GAS sesuai panduan."
+                })
+
+            if gas_data.get("result") != "success" or "rows" not in gas_data:
+                return jsonify({"status": "info", "message": gas_data.get("message", "Tidak ada data foto dari Google Sheet")})
+
+            gas_rows = gas_data.get("rows", [])
+            logs = load_logs(KEBERSIHAN_LOGS_PATH)
+            updated_count = 0
+
+            for grow in gas_rows:
+                g_photo = (grow.get("photoUrl") or "").strip()
+                if not g_photo or g_photo == "-" or g_photo.startswith("Error"):
+                    continue
+                g_nama = (grow.get("nama") or "").lower().strip()
+                g_tgl = (grow.get("tanggal") or "").strip()
+                g_area = (grow.get("area") or "").lower().strip()
+
+                for l in logs:
+                    l_tgl = l.get("wibDate") or (l.get("timestamp") or "")[:10]
+                    l_nama = (l.get("nama") or "").lower().strip()
+                    l_area = (l.get("area") or "").lower().strip()
+                    if l_tgl == g_tgl and (l_nama in g_nama or g_nama in l_nama) and (l_area in g_area or g_area in l_area or l_area == "-"):
+                        if not l.get("photoUrl") or l.get("photoUrl") == "-":
+                            l["photoUrl"] = g_photo
+                            l["photo_url"] = g_photo
+                            l["driveUrl"] = g_photo
+                            l["hasImage"] = True
+                            updated_count += 1
+                            break
+
+            if updated_count > 0:
+                with open(KEBERSIHAN_LOGS_PATH, "w", encoding="utf-8") as f:
+                    json.dump(logs, f, ensure_ascii=False, indent=2)
+
+            return jsonify({
+                "status": "ok",
+                "message": f"Berhasil menyinkronkan {updated_count} foto dari Google Sheet!",
+                "updated_count": updated_count
+            })
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Gagal menghubungi Google Apps Script: {str(e)}"}), 500
 
 @app.route("/export/journal")
 @login_required
@@ -5474,13 +5798,15 @@ def api_report_kebersihan():
         if unit and unit.lower() != "semua" and unit.lower() not in l_unit.lower():
             continue
 
+        p_link = log.get("photoUrl") or log.get("photo_url") or log.get("driveUrl") or log.get("drive_url") or log.get("foto_url") or log.get("local_photo_url") or ""
         row = {
             "tanggal": tgl,
             "nama": log.get("nama", ""),
             "unit": l_unit,
             "area": log.get("area", ""),
             "keterangan": log.get("keterangan", ""),
-            "ada_foto": bool(log.get("imageBase64"))
+            "ada_foto": bool(p_link or log.get("hasImage") or log.get("imageBase64")),
+            "photo_url": p_link
         }
         filtered.append(row)
         if l_unit:
@@ -5779,12 +6105,13 @@ def export_combined_report():
         l_unit = l.get("unit", "")
         if unit and unit.lower() != "semua" and unit.lower() not in l_unit.lower():
             continue
-        ada_foto = "Ya" if l.get("imageBase64") else "Tidak"
-        kebersihan_rows.append([tgl, l.get("nama", ""), l_unit, l.get("area", ""), l.get("keterangan", ""), ada_foto])
+        p_link = l.get("photoUrl") or l.get("photo_url") or l.get("driveUrl") or l.get("drive_url") or l.get("foto_url") or l.get("local_photo_url") or ""
+        ada_foto = "Ya" if (p_link or l.get("hasImage") or l.get("imageBase64")) else "Tidak"
+        kebersihan_rows.append([tgl, l.get("nama", ""), l_unit, l.get("area", ""), l.get("keterangan", ""), ada_foto, p_link or "-"])
 
     if kebersihan_rows:
         ws = wb.create_sheet(title="Kebersihan")
-        format_excel_sheet(ws, ["Tanggal WIB", "Nama", "Unit", "Area", "Keterangan", "Ada Foto"], kebersihan_rows)
+        format_excel_sheet(ws, ["Tanggal WIB", "Nama", "Unit", "Area", "Keterangan", "Ada Foto", "Link Foto Drive"], kebersihan_rows)
 
     # 3. Sheet Jurnal
     data = load_data()
