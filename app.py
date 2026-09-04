@@ -1735,6 +1735,9 @@ HTML_TEMPLATE = """
                             <p class="text-xs text-slate-500 mt-1">Program peningkatan kualitas diri: tilawah Al-Qur'an, pemahaman bacaan sholat, dan target dzikir yaumiyah civitas An Nahl</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
+                            <a href="https://ais-survey.ametriyadhi.com/mutabaah/peserta" target="_blank" class="px-3.5 py-1.5 bg-teal-50 text-teal-800 border border-teal-200 text-xs font-semibold rounded-lg hover:bg-teal-100 transition shadow-xs flex items-center gap-1.5" title="Buka Pengaturan Peserta & WhatsApp di SAS">
+                                <i class="fa-solid fa-users-gear text-teal-600"></i> Kelola Peserta & WA
+                            </a>
                             <button onclick="toggleModal('modal-add-mutubaah')" class="px-3.5 py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 transition shadow-xs flex items-center gap-1.5">
                                 <i class="fa-solid fa-plus"></i> Input Mutaba'ah
                             </button>
