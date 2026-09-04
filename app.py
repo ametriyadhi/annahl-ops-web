@@ -11,7 +11,7 @@ import io
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from flask import Flask, render_template_string, request, jsonify, Response, session, redirect, url_for
 
@@ -395,6 +395,12 @@ HTML_TEMPLATE = """
                 <i class="fa-solid fa-shield-halved text-base w-5 text-teal-400"></i>
                 <span>Manajemen Role Akses</span>
             </button>
+
+            <a href="/bot-qr" target="_blank" class="w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition group">
+                <i class="fa-brands fa-whatsapp text-base w-5 text-emerald-400 group-hover:scale-110 transition"></i>
+                <span>Koneksi WhatsApp Bot</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-auto opacity-60"></i>
+            </a>
             {% endif %}
         </div>
 
@@ -428,6 +434,7 @@ HTML_TEMPLATE = """
                 <h2 id="page-title" class="text-sm sm:text-base font-bold text-slate-800">Dashboard Utama</h2>
             </div>
             <div class="flex items-center space-x-2 sm:space-x-3 text-xs">
+                <div id="bot-status-badge" class="inline-flex items-center"></div>
                 <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 font-medium rounded-full border border-emerald-200 hidden lg:flex items-center gap-1.5">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Tunnel Active
                 </span>
@@ -3257,6 +3264,9 @@ HTML_TEMPLATE = """
             if (tabId === 'tab-roles') {
                 loadOpsRoles();
             }
+            if (tabId === 'tab-kebersihan') {
+                filterKebersihanTable();
+            }
 
             if (window.innerWidth < 768) {
                 const sidebar = document.getElementById('sidebar');
@@ -3857,7 +3867,7 @@ HTML_TEMPLATE = """
                 const rPhoto = row.getAttribute('data-hasphoto') === 'true';
 
                 const matchSearch = !search || rSearch.includes(search);
-                const matchUnit = !unit || rUnit === unit;
+                const matchUnit = !unit || rUnit.includes(unit) || (unit === 'ob' && (rUnit.startsWith('ob') || rUnit.includes('ob')));
                 const matchDate = !date || rDate === date;
 
                 let matchPhoto = true;
@@ -3874,6 +3884,25 @@ HTML_TEMPLATE = """
 
             document.getElementById('kebersihan-count-badge').innerText = 'Total: ' + visibleCount + ' Laporan Filtered';
         }
+
+        // ===== WA BOT STATUS CHECKER =====
+        async function checkBotStatus() {
+            try {
+                const res = await fetch('/api/bot/status');
+                const data = await res.json();
+                const badgeEl = document.getElementById('bot-status-badge');
+                if (!badgeEl) return;
+                if (data.hasQR || data.status === 'Waiting for Scan') {
+                    badgeEl.innerHTML = `<a href="/bot-qr" target="_blank" class="px-2.5 py-1 bg-amber-100 text-amber-800 font-bold rounded-full border border-amber-300 animate-pulse flex items-center gap-1.5 text-[11px] hover:bg-amber-200 transition" title="WhatsApp Bot Butuh Scan QR"><i class="fa-brands fa-whatsapp text-amber-600"></i> Scan QR Bot</a>`;
+                } else if (data.status === 'Connected') {
+                    badgeEl.innerHTML = `<a href="/bot-qr" target="_blank" class="px-2 py-0.5 bg-emerald-50 text-emerald-700 font-medium rounded-full border border-emerald-200 flex items-center gap-1 text-[11px] hover:bg-emerald-100 transition" title="WhatsApp Bot Online"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> WA Bot Online</a>`;
+                } else {
+                    badgeEl.innerHTML = `<a href="/bot-qr" target="_blank" class="px-2 py-0.5 bg-rose-50 text-rose-700 font-medium rounded-full border border-rose-200 flex items-center gap-1 text-[11px] hover:bg-rose-100 transition" title="WhatsApp Bot Disconnected"><span class="w-2 h-2 rounded-full bg-rose-500"></span> WA Bot Offline</a>`;
+                }
+            } catch (e) {}
+        }
+        checkBotStatus();
+        setInterval(checkBotStatus, 15000);
 
         // ===== CHART.JS INITIALIZATION =====
         window.addEventListener('DOMContentLoaded', () => {
@@ -5597,6 +5626,70 @@ def export_kebersihan():
         rows.append([tgl, nama, unit, area, keterangan, ada_foto, p_link or "-"])
     return create_excel_response("Kebersihan", headers, rows, "Kebersihan_AnNahl")
 
+@app.route("/api/kebersihan/laporan", methods=["POST"])
+def api_kebersihan_laporan():
+    """
+    Endpoint ingestion laporan kebersihan dari WhatsApp bot atau integrasi lokal.
+    Menyimpan secara persisten ke KEBERSIHAN_LOGS_PATH.
+    """
+    try:
+        data = request.get_json(silent=True) or request.form.to_dict()
+        if not data:
+            return jsonify({"success": False, "error": "Payload data kosong"}), 400
+
+        nama = data.get("nama", "Petugas").strip()
+        unit = data.get("unit", "OB").strip()
+        area = data.get("area", "-").strip()
+        keterangan = data.get("keterangan", "-").strip()
+        timestamp = data.get("timestamp") or datetime.now(timezone.utc).isoformat()
+        wib_date = data.get("wibDate") or now_wib().strftime("%Y-%m-%d")
+
+        log_entry = {
+            "type": "kebersihan",
+            "sender": data.get("sender", ""),
+            "pushName": data.get("pushName", ""),
+            "nama": nama,
+            "unit": unit,
+            "area": area,
+            "keterangan": keterangan,
+            "rawText": data.get("rawText", ""),
+            "timestamp": timestamp,
+            "wibDate": wib_date,
+            "imageMime": data.get("imageMime", "image/jpeg"),
+            "hasImage": bool(data.get("hasImage") or data.get("photoUrl") or data.get("local_photo_url")),
+            "local_photo_url": data.get("local_photo_url", ""),
+            "photoUrl": data.get("photoUrl", ""),
+            "photo_url": data.get("photo_url", "") or data.get("photoUrl", ""),
+            "driveUrl": data.get("driveUrl", "") or data.get("photoUrl", "")
+        }
+
+        logs = load_logs(KEBERSIHAN_LOGS_PATH)
+        existing = False
+        for l in logs:
+            if l.get("timestamp") == timestamp and l.get("nama") == nama:
+                if log_entry.get("photoUrl") and not l.get("photoUrl"):
+                    l["photoUrl"] = log_entry["photoUrl"]
+                    l["photo_url"] = log_entry["photo_url"]
+                    l["driveUrl"] = log_entry["driveUrl"]
+                if log_entry.get("local_photo_url") and not l.get("local_photo_url"):
+                    l["local_photo_url"] = log_entry["local_photo_url"]
+                existing = True
+                break
+
+        if not existing:
+            logs.append(log_entry)
+
+        with open(KEBERSIHAN_LOGS_PATH, "w", encoding="utf-8") as f:
+            json.dump(logs, f, ensure_ascii=False, indent=2)
+
+        return jsonify({
+            "success": True,
+            "message": "Laporan kebersihan berhasil dicatat ke Dashboard An Nahl Ops",
+            "entry": log_entry
+        }), 201
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
 @app.route("/api/kebersihan/update_photo", methods=["POST"])
 @login_required
 def api_update_kebersihan_photo():
@@ -6434,6 +6527,38 @@ def sapaais_data():
     })
 
 
+@app.route("/bot-qr")
+def page_bot_qr():
+    """Halaman perantara untuk melihat status dan memindai QR Code WhatsApp Bot"""
+    try:
+        import urllib.request
+        with urllib.request.urlopen("http://127.0.0.1:3005/qr", timeout=4) as resp:
+            return resp.read().decode("utf-8")
+    except Exception as e:
+        return f"""
+        <!DOCTYPE html>
+        <html>
+        <head><title>WhatsApp Bot Offline</title><meta charset="utf-8"><meta http-equiv="refresh" content="5"></head>
+        <body style="font-family:sans-serif;text-align:center;padding:50px;background:#0f172a;color:#f8fafc;">
+            <h2 style="color:#ef4444;">⚠️ WhatsApp Bot Engine Belum Aktif</h2>
+            <p style="color:#94a3b8;">Tidak dapat menghubungi engine bot di port 3005 ({e}).</p>
+            <p style="color:#64748b;">Halaman akan mencoba kembali setiap 5 detik...</p>
+            <p><a href="/" style="color:#38bdf8;text-decoration:none;">← Kembali ke Dashboard Ops</a></p>
+        </body>
+        </html>
+        """, 502
+
+@app.route("/api/bot/status")
+def api_bot_status():
+    """Proxy status WhatsApp bot dari loopback port 3005"""
+    try:
+        import urllib.request
+        with urllib.request.urlopen("http://127.0.0.1:3005/status", timeout=3) as resp:
+            return jsonify(json.loads(resp.read().decode("utf-8")))
+    except Exception as e:
+        return jsonify({"status": "Offline", "error": str(e), "hasQR": False}), 503
+
 app.register_blueprint(mutubaah_bp)
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=False)
+

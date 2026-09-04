@@ -61,3 +61,7 @@ Thumbs.db
 *.sqlite
 *.sqlite3
 *.db
+
+# Uploaded and dynamic runtime static files
+static/uploads/
+static/bot_qr.png
