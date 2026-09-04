@@ -349,10 +349,10 @@ HTML_TEMPLATE = """
             </button>
             {% endif %}
 
-            {% if user_role == 'manager' %}
+            {% if user_role in ['manager', 'koordinator_it', 'pic_sarpras', 'koordinator_ob', 'koordinator_gardener', 'koordinator_security', 'pic_pengadaan'] %}
             <button onclick="showTab('tab-mutubaah')" id="btn-tab-mutubaah" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-book-open text-base w-5 text-teal-400"></i>
-                <span>Mutabaah Diri Mr. Slam</span>
+                <span>Mutabaah Diri Civitas</span>
             </button>
             {% endif %}
 
@@ -1725,15 +1725,19 @@ HTML_TEMPLATE = """
             <!-- TAB: MUTABA'AH DIRI -->
             <div id="tab-mutubaah" class="tab-content hidden space-y-6">
                 <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-6 space-y-6">
+                    <!-- Header -->
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
                         <div>
                             <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
                                 <i class="fa-solid fa-book-open text-teal-600"></i>
-                                Mutabaah Harian Mr. Slam
+                                Mutaba'ah Diri Pimpinan & Civitas
                             </h2>
-                            <p class="text-xs text-slate-500 mt-1">Rekap tilawah, progres khatam, pemahaman sholat, dan target dzikir yaumiyah</p>
+                            <p class="text-xs text-slate-500 mt-1">Program peningkatan kualitas diri: tilawah Al-Qur'an, pemahaman bacaan sholat, dan target dzikir yaumiyah civitas An Nahl</p>
                         </div>
-                        <div class="flex items-center gap-3">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button onclick="toggleModal('modal-add-mutubaah')" class="px-3.5 py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 transition shadow-xs flex items-center gap-1.5">
+                                <i class="fa-solid fa-plus"></i> Input Mutaba'ah
+                            </button>
                             <button onclick="loadMutubaahData()" class="px-3.5 py-1.5 bg-teal-600 text-white text-xs font-semibold rounded-lg hover:bg-teal-700 transition shadow-xs flex items-center gap-1.5">
                                 <i class="fa-solid fa-arrows-rotate"></i> Refresh Data
                             </button>
@@ -1743,11 +1747,52 @@ HTML_TEMPLATE = """
                         </div>
                     </div>
                     
+                    <!-- Filter Bar -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/80 flex flex-col md:flex-row gap-3 items-center justify-between">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 w-full md:w-auto flex-1">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Pilih Peserta:</label>
+                                <select id="mutubaah-filter-peserta" onchange="loadMutubaahData()" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-teal-500">
+                                    <option value="all">Semua Peserta</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Unit Kerja:</label>
+                                <select id="mutubaah-filter-unit" onchange="loadMutubaahData()" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-teal-500">
+                                    <option value="all">Semua Unit</option>
+                                    <option value="SMA">SMA Islam An Nahl</option>
+                                    <option value="SMP">SMP Islam An Nahl</option>
+                                    <option value="SD">SD Islam An Nahl</option>
+                                    <option value="PGTK">PG-TK Islam An Nahl</option>
+                                    <option value="UMUM & ECOPARK">Umum & Ecopark</option>
+                                    <option value="IT">IT & Sistem</option>
+                                    <option value="OB">Office Boy (OB)</option>
+                                    <option value="GARDENER">Gardener / Taman</option>
+                                    <option value="SECURITY">Security / Keamanan</option>
+                                    <option value="SDM">SDM & Kepegawaian</option>
+                                    <option value="SARPRAS">Sarana & Prasarana</option>
+                                    <option value="PENGADAAN">Pengadaan Barang</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Dari Tanggal:</label>
+                                <input type="date" id="mutubaah-filter-from" onchange="loadMutubaahData()" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-teal-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Sampai Tanggal:</label>
+                                <input type="date" id="mutubaah-filter-to" onchange="loadMutubaahData()" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-teal-500">
+                            </div>
+                        </div>
+                        <button onclick="resetMutubaahFilter()" class="text-xs text-slate-500 hover:text-rose-600 font-medium whitespace-nowrap self-end md:self-center">
+                            <i class="fa-solid fa-rotate-left mr-1"></i>Reset
+                        </button>
+                    </div>
+
                     <!-- Metric / Summary Cards -->
                     <div id="mutubaah-summary" class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                         <div class="bg-white rounded-xl shadow-xs p-4 sm:p-5 border border-slate-200 flex items-center justify-between">
                             <div>
-                                <p class="text-[11px] sm:text-xs text-slate-500 font-medium">Juz Hari Ini</p>
+                                <p class="text-[11px] sm:text-xs text-slate-500 font-medium" id="mutubaah-lbl-card1">Juz Terakhir</p>
                                 <h3 class="text-base sm:text-xl font-bold text-teal-700 mt-1" id="mutubaah-tilawah-hari">-</h3>
                             </div>
                             <div class="p-2.5 sm:p-3 bg-teal-50 text-teal-600 rounded-xl">
@@ -1756,7 +1801,7 @@ HTML_TEMPLATE = """
                         </div>
                         <div class="bg-white rounded-xl shadow-xs p-4 sm:p-5 border border-slate-200 flex items-center justify-between">
                             <div>
-                                <p class="text-[11px] sm:text-xs text-slate-500 font-medium">Khatam Ke</p>
+                                <p class="text-[11px] sm:text-xs text-slate-500 font-medium" id="mutubaah-lbl-card2">Khatam Ke</p>
                                 <h3 class="text-base sm:text-xl font-bold text-blue-700 mt-1" id="mutubaah-khatam">-</h3>
                             </div>
                             <div class="p-2.5 sm:p-3 bg-blue-50 text-blue-600 rounded-xl">
@@ -1765,7 +1810,7 @@ HTML_TEMPLATE = """
                         </div>
                         <div class="bg-white rounded-xl shadow-xs p-4 sm:p-5 border border-slate-200 flex items-center justify-between">
                             <div>
-                                <p class="text-[11px] sm:text-xs text-slate-500 font-medium">Faham Sholat</p>
+                                <p class="text-[11px] sm:text-xs text-slate-500 font-medium" id="mutubaah-lbl-card3">Faham Sholat</p>
                                 <h3 class="text-base sm:text-xl font-bold text-purple-700 mt-1" id="mutubaah-sholat">-%</h3>
                             </div>
                             <div class="p-2.5 sm:p-3 bg-purple-50 text-purple-600 rounded-xl">
@@ -1774,7 +1819,7 @@ HTML_TEMPLATE = """
                         </div>
                         <div class="bg-white rounded-xl shadow-xs p-4 sm:p-5 border border-slate-200 flex items-center justify-between">
                             <div>
-                                <p class="text-[11px] sm:text-xs text-slate-500 font-medium">Total Dzikir</p>
+                                <p class="text-[11px] sm:text-xs text-slate-500 font-medium" id="mutubaah-lbl-card4">Total Dzikir</p>
                                 <h3 class="text-base sm:text-xl font-bold text-rose-700 mt-1" id="mutubaah-dzikir">-</h3>
                             </div>
                             <div class="p-2.5 sm:p-3 bg-rose-50 text-rose-600 rounded-xl">
@@ -1783,24 +1828,123 @@ HTML_TEMPLATE = """
                         </div>
                     </div>
 
+                    <!-- Table -->
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse text-sm">
                             <thead>
                                 <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold text-xs uppercase">
                                     <th class="p-3">Tanggal</th>
-                                    <th class="p-3">Nama</th>
+                                    <th class="p-3">Nama & Jabatan</th>
+                                    <th class="p-3">Unit</th>
                                     <th class="p-3">Juz Tilawah</th>
-                                    <th class="p-3">Khatam Ke</th>
+                                    <th class="p-3">Khatam</th>
                                     <th class="p-3">Faham Sholat</th>
                                     <th class="p-3">Total Dzikir</th>
                                     <th class="p-3">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="mutubaah-tbody" class="divide-y divide-slate-100 min-h-[60px]">
-                                <tr><td colspan="7" class="p-4 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat data Mutabaah Diri...</td></tr>
+                                <tr><td colspan="8" class="p-4 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat data Mutabaah Diri...</td></tr>
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+
+            <!-- MODAL: INPUT MUTABA'AH DIRI LANGSUNG -->
+            <div id="modal-add-mutubaah" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 hidden p-4">
+                <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-book-open text-teal-600"></i>
+                            Input Laporan Mutaba'ah Diri
+                        </h3>
+                        <button onclick="toggleModal('modal-add-mutubaah')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <form onsubmit="submitMutubaahForm(event)" class="space-y-3.5 mt-4 text-xs">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Nama Peserta *</label>
+                                <input type="text" id="mut-input-nama" required placeholder="Contoh: Ust. Japar Siddiq" class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-1 focus:ring-teal-500">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Unit Kerja *</label>
+                                <select id="mut-input-unit" required class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-1 focus:ring-teal-500">
+                                    <option value="SMA">SMA Islam An Nahl</option>
+                                    <option value="SMP">SMP Islam An Nahl</option>
+                                    <option value="SD">SD Islam An Nahl</option>
+                                    <option value="PGTK">PG-TK Islam An Nahl</option>
+                                    <option value="UMUM & ECOPARK" selected>Umum & Ecopark</option>
+                                    <option value="IT">IT & Sistem</option>
+                                    <option value="OB">Office Boy (OB)</option>
+                                    <option value="GARDENER">Gardener</option>
+                                    <option value="SECURITY">Security</option>
+                                    <option value="SDM">SDM & Kepegawaian</option>
+                                    <option value="SARPRAS">Sarpras</option>
+                                    <option value="PENGADAAN">Pengadaan</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-3">
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Tanggal</label>
+                                <input type="date" id="mut-input-tanggal" class="w-full border border-slate-300 rounded-lg p-2 text-xs">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Usia</label>
+                                <input type="number" id="mut-input-usia" value="40" class="w-full border border-slate-300 rounded-lg p-2 text-xs">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Juz Tilawah *</label>
+                                <input type="text" id="mut-input-tilawah" required placeholder="Misal: 1 atau 4-6" class="w-full border border-slate-300 rounded-lg p-2 text-xs">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Khatam Ke</label>
+                                <input type="number" id="mut-input-khatam" value="1" min="0" class="w-full border border-slate-300 rounded-lg p-2 text-xs">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Faham Sholat (%)</label>
+                                <input type="text" id="mut-input-sholat" value="95%" placeholder="95%" class="w-full border border-slate-300 rounded-lg p-2 text-xs">
+                            </div>
+                        </div>
+
+                        <div class="border-t border-slate-100 pt-3">
+                            <p class="font-bold text-slate-700 mb-2 flex items-center gap-1.5"><i class="fa-solid fa-hands-holding-circle text-teal-600"></i> Target Dzikir Yaumiyah</p>
+                            <div class="grid grid-cols-2 gap-2 text-slate-600">
+                                <div>
+                                    <label class="block text-[11px] mb-0.5">1. Doa Orang Tua</label>
+                                    <input type="number" id="mut-input-dzikir1" value="300" class="w-full border border-slate-200 rounded p-1.5 text-xs font-mono">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] mb-0.5">2. Doa Nabi Yunus</label>
+                                    <input type="number" id="mut-input-dzikir2" value="300" class="w-full border border-slate-200 rounded p-1.5 text-xs font-mono">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] mb-0.5">3. Hauqolah</label>
+                                    <input type="number" id="mut-input-dzikir3" value="300" class="w-full border border-slate-200 rounded p-1.5 text-xs font-mono">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] mb-0.5">4. Hasballah</label>
+                                    <input type="number" id="mut-input-dzikir4" value="300" class="w-full border border-slate-200 rounded p-1.5 text-xs font-mono">
+                                </div>
+                                <div class="col-span-2">
+                                    <label class="block text-[11px] mb-0.5">5. Sholawat Nabi</label>
+                                    <input type="number" id="mut-input-dzikir5" value="300" class="w-full border border-slate-200 rounded p-1.5 text-xs font-mono">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end gap-2 border-t border-slate-100 pt-3 mt-4">
+                            <button type="button" onclick="toggleModal('modal-add-mutubaah')" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-semibold">Batal</button>
+                            <button type="submit" class="px-4 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold shadow-xs flex items-center gap-1.5">
+                                <i class="fa-solid fa-paper-plane"></i> Simpan Mutaba'ah
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
 
@@ -3187,7 +3331,7 @@ HTML_TEMPLATE = """
             'tab-report': 'Report Builder - Cetak Laporan Operasional',
             'tab-server': 'Server',
             'tab-sapaais': 'LaporPak (Sapa Ais) — Tiket WhatsApp',
-            'tab-mutubaah': 'Mutabaah Diri Mr. Slam',
+            'tab-mutubaah': 'Mutabaah Diri Civitas & Pimpinan',
             'tab-users': 'Manajemen Pengguna & Koordinator Unit',
             'tab-roles': 'Manajemen Role & Hak Akses (RBAC Matrix)',
             'tab-pengadaan': 'Pengadaan Barang & Logistik Sarpras',
@@ -3538,46 +3682,131 @@ HTML_TEMPLATE = """
                 });
         }
 
-        // ============ Mutabaah Diri Mr. Slam Loader ============
+        // ============ Mutabaah Diri Pimpinan & Civitas Loader ============
+        let mutubaahPesertaLoaded = false;
+
+        function populateMutubaahPesertaFilter() {
+            if (mutubaahPesertaLoaded) return;
+            fetch('/api/mutubaah/peserta')
+                .then(r => r.json())
+                .then(pesertaList => {
+                    const sel = document.getElementById('mutubaah-filter-peserta');
+                    if (!sel) return;
+                    const curVal = sel.value;
+                    let opts = '<option value="all">Semua Peserta</option>';
+                    pesertaList.forEach(p => {
+                        opts += `<option value="${p.nama}">${p.nama} (${p.unit || '-'})</option>`;
+                    });
+                    sel.innerHTML = opts;
+                    sel.value = curVal || 'all';
+                    mutubaahPesertaLoaded = true;
+                })
+                .catch(() => {});
+        }
+
+        function resetMutubaahFilter() {
+            if (document.getElementById('mutubaah-filter-peserta')) document.getElementById('mutubaah-filter-peserta').value = 'all';
+            if (document.getElementById('mutubaah-filter-unit')) document.getElementById('mutubaah-filter-unit').value = 'all';
+            if (document.getElementById('mutubaah-filter-from')) document.getElementById('mutubaah-filter-from').value = '';
+            if (document.getElementById('mutubaah-filter-to')) document.getElementById('mutubaah-filter-to').value = '';
+            loadMutubaahData();
+        }
+
         function loadMutubaahData() {
+            populateMutubaahPesertaFilter();
             const tbody = document.getElementById('mutubaah-tbody');
             if (!tbody) return;
-            tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat data Mutabaah Diri...</td></tr>';
-            fetch('/api/mutubaah/laporan?limit=100')
+            tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat data Mutabaah Diri...</td></tr>';
+
+            const peserta = document.getElementById('mutubaah-filter-peserta')?.value || 'all';
+            const unit = document.getElementById('mutubaah-filter-unit')?.value || 'all';
+            const fromDate = document.getElementById('mutubaah-filter-from')?.value || '';
+            const toDate = document.getElementById('mutubaah-filter-to')?.value || '';
+
+            const params = new URLSearchParams();
+            params.set('limit', '200');
+            if (peserta && peserta !== 'all') params.set('nama', peserta);
+            if (unit && unit !== 'all') params.set('unit', unit);
+            if (fromDate) params.set('from', fromDate);
+            if (toDate) params.set('to', toDate);
+
+            fetch('/api/mutubaah/laporan?' + params.toString())
                 .then(r => r.json())
                 .then(data => {
                     if (!Array.isArray(data) || data.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400">Belum ada laporan mutabaah diri tercatat.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-slate-400">Tidak ada laporan mutabaah yang sesuai filter.</td></tr>';
+                        document.getElementById('mutubaah-tilawah-hari').innerText = '-';
+                        document.getElementById('mutubaah-khatam').innerText = '-';
+                        document.getElementById('mutubaah-sholat').innerText = '-%';
+                        document.getElementById('mutubaah-dzikir').innerText = '-';
                         return;
                     }
 
+                    const isSingle = (peserta && peserta !== 'all');
                     const latest = data[0];
-                    if (document.getElementById('mutubaah-tilawah-hari')) {
+
+                    if (isSingle) {
+                        document.getElementById('mutubaah-lbl-card1').innerText = 'Juz Terakhir';
                         document.getElementById('mutubaah-tilawah-hari').innerText = latest.tilawah ? 'Juz ' + latest.tilawah : '-';
-                    }
-                    if (document.getElementById('mutubaah-khatam')) {
+
+                        document.getElementById('mutubaah-lbl-card2').innerText = 'Khatam Ke';
                         document.getElementById('mutubaah-khatam').innerText = latest.khatam_ke !== undefined ? 'Ke-' + latest.khatam_ke : '-';
-                    }
-                    if (document.getElementById('mutubaah-sholat')) {
+
+                        document.getElementById('mutubaah-lbl-card3').innerText = 'Faham Sholat';
                         document.getElementById('mutubaah-sholat').innerText = latest.faham_sholat ? (String(latest.faham_sholat).includes('%') ? latest.faham_sholat : latest.faham_sholat + '%') : '-';
-                    }
-                    if (document.getElementById('mutubaah-dzikir')) {
+
+                        document.getElementById('mutubaah-lbl-card4').innerText = 'Dzikir Terakhir';
                         const totalDzikir = latest.total_dzikir || ((latest.doa_orang_tua||0) + (latest.doa_nabi_yunus||0) + (latest.hauqolah||0) + (latest.hasballah||0) + (latest.sholawat||0));
                         document.getElementById('mutubaah-dzikir').innerText = totalDzikir.toLocaleString('id-ID');
+                    } else {
+                        document.getElementById('mutubaah-lbl-card1').innerText = 'Total Laporan';
+                        document.getElementById('mutubaah-tilawah-hari').innerText = data.length + ' Catatan';
+
+                        const distinctUsers = new Set(data.map(d => d.nama)).size;
+                        document.getElementById('mutubaah-lbl-card2').innerText = 'Peserta Aktif';
+                        document.getElementById('mutubaah-khatam').innerText = distinctUsers + ' Orang';
+
+                        document.getElementById('mutubaah-lbl-card3').innerText = 'Juz Masuk Terakhir';
+                        document.getElementById('mutubaah-sholat').innerText = latest.tilawah ? 'Juz ' + latest.tilawah : '-';
+
+                        document.getElementById('mutubaah-lbl-card4').innerText = 'Total Akumulasi Dzikir';
+                        const grandTotalDzikir = data.reduce((acc, cur) => acc + (cur.total_dzikir || 0), 0);
+                        document.getElementById('mutubaah-dzikir').innerText = grandTotalDzikir.toLocaleString('id-ID');
                     }
+
+                    const getUnitBadge = (u) => {
+                        const unitCode = String(u || '').toUpperCase();
+                        if (unitCode.includes('SMA')) return 'bg-blue-100 text-blue-800 border-blue-200';
+                        if (unitCode.includes('SMP')) return 'bg-amber-100 text-amber-800 border-amber-200';
+                        if (unitCode.includes('SD')) return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+                        if (unitCode.includes('TK') || unitCode.includes('PG')) return 'bg-purple-100 text-purple-800 border-purple-200';
+                        if (unitCode.includes('IT')) return 'bg-sky-100 text-sky-800 border-sky-200';
+                        if (unitCode.includes('OB')) return 'bg-teal-100 text-teal-800 border-teal-200';
+                        if (unitCode.includes('GARDEN')) return 'bg-lime-100 text-lime-800 border-lime-200';
+                        if (unitCode.includes('SECURITY')) return 'bg-indigo-100 text-indigo-800 border-indigo-200';
+                        if (unitCode.includes('SDM')) return 'bg-pink-100 text-pink-800 border-pink-200';
+                        return 'bg-slate-100 text-slate-800 border-slate-200';
+                    };
 
                     tbody.innerHTML = data.map(l => {
                         const totalDzikir = l.total_dzikir || ((l.doa_orang_tua||0) + (l.doa_nabi_yunus||0) + (l.hauqolah||0) + (l.hasballah||0) + (l.sholawat||0));
                         const dzikirDetail = `1. Doa Orang Tua: ${l.doa_orang_tua||0}\\n2. Doa Nabi Yunus: ${l.doa_nabi_yunus||0}\\n3. Hauqolah: ${l.hauqolah||0}\\n4. Hasballah: ${l.hasballah||0}\\n5. Sholawat: ${l.sholawat||0}`;
+                        const unitBadge = getUnitBadge(l.unit);
                         return `
                             <tr class="hover:bg-slate-50/50 transition">
-                                <td class="p-3 font-mono text-xs text-slate-500">${l.tanggal || '-'}</td>
-                                <td class="p-3 font-semibold text-slate-800 text-xs">${l.nama || 'Slamet'}</td>
-                                <td class="p-3 text-xs font-semibold text-emerald-700">${l.tilawah ? 'Juz ' + l.tilawah : '-'}</td>
-                                <td class="p-3 text-xs font-semibold text-blue-700">${l.khatam_ke !== undefined ? 'Ke-' + l.khatam_ke : '-'}</td>
-                                <td class="p-3 text-xs text-purple-700 font-medium">${l.faham_sholat ? (String(l.faham_sholat).includes('%') ? l.faham_sholat : l.faham_sholat + '%') : '-'}</td>
-                                <td class="p-3 text-xs font-bold text-rose-700" title="${dzikirDetail}">${totalDzikir.toLocaleString('id-ID')}</td>
-                                <td class="p-3 text-xs">
+                                <td class="p-3 font-mono text-xs text-slate-500 whitespace-nowrap">${l.tanggal || '-'}</td>
+                                <td class="p-3">
+                                    <div class="font-semibold text-slate-800 text-xs">${l.nama || 'Civitas'}</div>
+                                    <div class="text-[10px] text-slate-400 font-medium">${l.jabatan || 'Pimpinan'}</div>
+                                </td>
+                                <td class="p-3 whitespace-nowrap">
+                                    <span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded-md border ${unitBadge}">${l.unit || 'UMUM'}</span>
+                                </td>
+                                <td class="p-3 text-xs font-semibold text-emerald-700 whitespace-nowrap">${l.tilawah ? 'Juz ' + l.tilawah : '-'}</td>
+                                <td class="p-3 text-xs font-semibold text-blue-700 whitespace-nowrap">${l.khatam_ke !== undefined ? 'Ke-' + l.khatam_ke : '-'}</td>
+                                <td class="p-3 text-xs text-purple-700 font-medium whitespace-nowrap">${l.faham_sholat ? (String(l.faham_sholat).includes('%') ? l.faham_sholat : l.faham_sholat + '%') : '-'}</td>
+                                <td class="p-3 text-xs font-bold text-rose-700 whitespace-nowrap" title="${dzikirDetail}">${totalDzikir.toLocaleString('id-ID')}</td>
+                                <td class="p-3 text-xs whitespace-nowrap">
                                     <button onclick="alert('📿 Detail Dzikir (${l.nama} - ${l.tanggal}):\\n\\n${dzikirDetail}')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition">
                                         <i class="fa-solid fa-eye mr-1"></i> Rincian
                                     </button>
@@ -3587,28 +3816,80 @@ HTML_TEMPLATE = """
                     }).join('');
                 })
                 .catch(err => {
-                    tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-rose-500">Gagal memuat data: ' + err.message + '</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-rose-500">Gagal memuat data: ' + err.message + '</td></tr>';
                 });
         }
 
+        function submitMutubaahForm(e) {
+            e.preventDefault();
+            const nama = document.getElementById('mut-input-nama').value.trim();
+            const unit = document.getElementById('mut-input-unit').value;
+            const tanggal = document.getElementById('mut-input-tanggal').value || new Date().toISOString().slice(0,10);
+            const usia = parseInt(document.getElementById('mut-input-usia').value) || 40;
+            const tilawah = document.getElementById('mut-input-tilawah').value.trim();
+            const khatam_ke = parseInt(document.getElementById('mut-input-khatam').value) || 0;
+            const faham_sholat = document.getElementById('mut-input-sholat').value.trim();
+            const doa_orang_tua = parseInt(document.getElementById('mut-input-dzikir1').value) || 0;
+            const doa_nabi_yunus = parseInt(document.getElementById('mut-input-dzikir2').value) || 0;
+            const hauqolah = parseInt(document.getElementById('mut-input-dzikir3').value) || 0;
+            const hasballah = parseInt(document.getElementById('mut-input-dzikir4').value) || 0;
+            const sholawat = parseInt(document.getElementById('mut-input-dzikir5').value) || 0;
+
+            const payload = {
+                nama, unit, tanggal, usia, tilawah, khatam_ke, faham_sholat,
+                dzikir: { doa_orang_tua, doa_nabi_yunus, hauqolah, hasballah, sholawat }
+            };
+
+            fetch('/api/mutubaah/laporan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.error) {
+                    alert('Gagal menyimpan laporan: ' + res.error);
+                } else {
+                    alert('Alhamdulillah! Laporan mutabaah berhasil disimpan untuk ' + (res.nama || nama));
+                    toggleModal('modal-add-mutubaah');
+                    document.getElementById('mut-input-tilawah').value = '';
+                    loadMutubaahData();
+                }
+            })
+            .catch(err => alert('Terjadi kesalahan: ' + err.message));
+        }
+
         function exportMutubaahCSV() {
-            fetch('/api/mutubaah/laporan?limit=1000')
+            const peserta = document.getElementById('mutubaah-filter-peserta')?.value || 'all';
+            const unit = document.getElementById('mutubaah-filter-unit')?.value || 'all';
+            const fromDate = document.getElementById('mutubaah-filter-from')?.value || '';
+            const toDate = document.getElementById('mutubaah-filter-to')?.value || '';
+
+            const params = new URLSearchParams();
+            params.set('limit', '2000');
+            if (peserta && peserta !== 'all') params.set('nama', peserta);
+            if (unit && unit !== 'all') params.set('unit', unit);
+            if (fromDate) params.set('from', fromDate);
+            if (toDate) params.set('to', toDate);
+
+            fetch('/api/mutubaah/laporan?' + params.toString())
                 .then(r => r.json())
                 .then(data => {
                     if (!Array.isArray(data) || data.length === 0) {
                         alert('Tidak ada data untuk diekspor');
                         return;
                     }
-                    let csv = 'ID,Tanggal,Nama,Usia,Tilawah,Khatam Ke,Faham Sholat,Doa Orang Tua,Doa Nabi Yunus,Hauqolah,Hasballah,Sholawat,Total Dzikir\\n';
+                    let csv = 'ID,Tanggal,Nama,Unit,Jabatan,Usia,Tilawah,Khatam Ke,Faham Sholat,Doa Orang Tua,Doa Nabi Yunus,Hauqolah,Hasballah,Sholawat,Total Dzikir\\n';
                     data.forEach(r => {
                         const total = r.total_dzikir || ((r.doa_orang_tua||0)+(r.doa_nabi_yunus||0)+(r.hauqolah||0)+(r.hasballah||0)+(r.sholawat||0));
-                        csv += `"${r.id||''}","${r.tanggal||''}","${r.nama||''}","${r.usia||''}","${r.tilawah||''}","${r.khatam_ke||''}","${r.faham_sholat||''}","${r.doa_orang_tua||0}","${r.doa_nabi_yunus||0}","${r.hauqolah||0}","${r.hasballah||0}","${r.sholawat||0}","${total}"\\n`;
+                        csv += `"${r.id||''}","${r.tanggal||''}","${r.nama||''}","${r.unit||'UMUM'}","${r.jabatan||'Pimpinan'}","${r.usia||''}","${r.tilawah||''}","${r.khatam_ke||''}","${r.faham_sholat||''}","${r.doa_orang_tua||0}","${r.doa_nabi_yunus||0}","${r.hauqolah||0}","${r.hasballah||0}","${r.sholawat||0}","${total}"\\n`;
                     });
                     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement('a');
                     link.setAttribute('href', url);
-                    link.setAttribute('download', `Mutabaah_Diri_Mr_Slam_${new Date().toISOString().slice(0,10)}.csv`);
+                    const fileSuffix = unit !== 'all' ? unit : (peserta !== 'all' ? peserta : 'Civitas');
+                    link.setAttribute('download', `Mutabaah_Diri_${fileSuffix}_${new Date().toISOString().slice(0,10)}.csv`);
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
