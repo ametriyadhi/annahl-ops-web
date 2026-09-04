@@ -3531,10 +3531,10 @@ HTML_TEMPLATE = """
             <form id="form-standby-point" onsubmit="saveStandbyPoint(event)" class="space-y-3.5 text-xs">
                 <input type="hidden" id="standby-point-id" value="">
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                         <label class="block font-semibold text-slate-700 mb-1">Kode Pos (Unik) *</label>
-                        <input type="text" id="standby-point-code" required placeholder="Contoh: POS-OB-SD03" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-mono font-bold uppercase focus:bg-white focus:outline-none focus:border-emerald-500">
+                        <input type="text" id="standby-point-code" required placeholder="POS-OB-SD03" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-mono font-bold uppercase focus:bg-white focus:outline-none focus:border-emerald-500">
                     </div>
                     <div>
                         <label class="block font-semibold text-slate-700 mb-1">Unit Kerja *</label>
@@ -3542,6 +3542,13 @@ HTML_TEMPLATE = """
                             <option value="OB">Office Boy (OB)</option>
                             <option value="GARDENER">Gardener (Taman/Ecopark)</option>
                             <option value="SECURITY">Security (Keamanan)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Status Pos *</label>
+                        <select id="standby-point-active" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-bold focus:bg-white focus:outline-none focus:border-emerald-500">
+                            <option value="1">Aktif (Radar)</option>
+                            <option value="0">Non-Aktif (Arsip)</option>
                         </select>
                     </div>
                 </div>
@@ -3861,6 +3868,14 @@ HTML_TEMPLATE = """
                     document.getElementById('stat-standby-late').innerText = s.standby_late;
                     document.getElementById('stat-standby-empty').innerText = s.empty_points;
 
+                    if (data.radar && data.radar.length > 0) {
+                        data.radar.forEach(r => {
+                            const idx = cachedStandbyPoints.findIndex(p => p.id === r.point.id);
+                            if (idx >= 0) cachedStandbyPoints[idx] = r.point;
+                            else cachedStandbyPoints.push(r.point);
+                        });
+                    }
+
                     if (data.radar.length === 0) {
                         tbody.innerHTML = '<tr><td colspan="8" class="text-center py-6 text-slate-400">Tidak ada pos terdaftar untuk filter ini.</td></tr>';
                         return;
@@ -3899,6 +3914,8 @@ HTML_TEMPLATE = """
                         const laporTime = log ? `<span class="font-bold text-slate-800">${log.checkin_time} WIB</span><span class="block text-[10px] text-slate-400 font-mono">${log.channel === 'WA_LOCATION' ? 'WhatsApp' : 'Scan QR'}</span>` : '<span class="text-slate-400 italic">Belum ada</span>';
                         const jarakInfo = log ? `<span class="font-bold ${log.distance_meters <= p.radius_meters ? 'text-emerald-700' : 'text-rose-600'}">${log.distance_meters}m</span> / max ${p.radius_meters}m` : `<span class="text-slate-400">Toleransi: ${p.radius_meters}m</span>`;
 
+                        const safeName = (p.name || '').replace(/'/g, "\\'");
+
                         html += `
                         <tr class="hover:bg-slate-50/80 transition">
                             <td class="py-3 px-4">
@@ -3923,6 +3940,12 @@ HTML_TEMPLATE = """
                                     <a href="/standby/print-qr?point_id=${p.id}" target="_blank" title="Cetak Stiker Pos" class="p-1.5 text-slate-500 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 transition">
                                         <i class="fa-solid fa-qrcode"></i>
                                     </a>
+                                    <button type="button" onclick="openModalEditStandbyPoint('${p.id}')" title="Edit Parameter Pos" class="p-1.5 text-slate-500 hover:text-amber-600 rounded-lg hover:bg-amber-50 transition cursor-pointer">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                    <button type="button" onclick="deleteStandbyPoint('${p.id}', '${safeName}')" title="Hapus Titik Pos" class="p-1.5 text-slate-500 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition cursor-pointer">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>`;
@@ -3952,15 +3975,21 @@ HTML_TEMPLATE = """
 
                     let html = '';
                     data.points.forEach(p => {
+                        const safeName = (p.name || '').replace(/'/g, "\\'");
                         const assignees = p.assignments && p.assignments.length > 0 
                             ? p.assignments.map(a => `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-slate-100 rounded text-[10px] text-slate-700 mr-1 mb-1">${a.petugas_name} <button onclick="deleteStandbyAssignment(${a.id})" class="text-rose-500 hover:text-rose-700 font-bold">&times;</button></span>`).join('') 
                             : '<span class="text-slate-400 italic">Belum ada</span>';
 
+                        const inactiveBadge = p.is_active === 0 ? '<span class="ml-1.5 px-1.5 py-0.5 bg-rose-100 text-rose-700 text-[9px] font-bold rounded">Non-Aktif</span>' : '';
+
                         html += `
-                        <tr class="hover:bg-slate-50 transition">
+                        <tr class="hover:bg-slate-50 transition ${p.is_active === 0 ? 'opacity-60 bg-slate-50/50' : ''}">
                             <td class="py-3 px-3">
-                                <span class="font-bold text-slate-800 block">${p.name}</span>
-                                <span class="text-[10px] text-emerald-700 font-mono font-semibold">${p.code}</span>
+                                <div class="flex items-center">
+                                    <span class="font-bold text-slate-800">${p.name}</span>
+                                    ${inactiveBadge}
+                                </div>
+                                <span class="text-[10px] text-emerald-700 font-mono font-semibold">${p.code} ${p.sub_scope ? '• ' + p.sub_scope : ''}</span>
                             </td>
                             <td class="py-3 px-3"><span class="px-2 py-0.5 bg-slate-100 rounded font-bold text-[10px] text-slate-700">${p.unit_code}</span></td>
                             <td class="py-3 px-3 font-mono text-[10px] text-slate-500">${p.latitude.toFixed(6)}, ${p.longitude.toFixed(6)}</td>
@@ -3973,17 +4002,17 @@ HTML_TEMPLATE = """
                             </td>
                             <td class="py-3 px-3">
                                 <div>${assignees}</div>
-                                <button type="button" onclick="openModalAssignStandby('${p.id}', '${p.name}', '${p.unit_code}')" class="text-[10px] text-sky-600 hover:text-sky-800 font-bold underline mt-1 block cursor-pointer">+ Tugaskan</button>
+                                <button type="button" onclick="openModalAssignStandby('${p.id}', '${safeName}', '${p.unit_code}')" class="text-[10px] text-sky-600 hover:text-sky-800 font-bold underline mt-1 block cursor-pointer">+ Tugaskan</button>
                             </td>
                             <td class="py-3 px-3 text-center">
                                 <div class="inline-flex items-center gap-1">
-                                    <button type="button" onclick="openModalEditStandbyPoint('${p.id}')" title="Edit Pos" class="p-1.5 text-slate-500 hover:text-emerald-600 rounded hover:bg-emerald-50 cursor-pointer">
+                                    <button type="button" onclick="openModalEditStandbyPoint('${p.id}')" title="Edit Pos" class="p-1.5 text-slate-500 hover:text-amber-600 rounded hover:bg-amber-50 cursor-pointer">
                                         <i class="fa-solid fa-pen-to-square"></i>
                                     </button>
                                     <a href="/standby/print-qr?point_id=${p.id}" target="_blank" title="Cetak QR" class="p-1.5 text-slate-500 hover:text-indigo-600 rounded hover:bg-indigo-50">
                                         <i class="fa-solid fa-qrcode"></i>
                                     </a>
-                                    <button type="button" onclick="deleteStandbyPoint('${p.id}', '${p.name}')" title="Hapus Pos" class="p-1.5 text-slate-500 hover:text-rose-600 rounded hover:bg-rose-50 cursor-pointer">
+                                    <button type="button" onclick="deleteStandbyPoint('${p.id}', '${safeName}')" title="Hapus Pos" class="p-1.5 text-slate-500 hover:text-rose-600 rounded hover:bg-rose-50 cursor-pointer">
                                         <i class="fa-solid fa-trash"></i>
                                     </button>
                                 </div>
@@ -4061,6 +4090,10 @@ HTML_TEMPLATE = """
             document.getElementById('standby-point-id').value = '';
             document.getElementById('standby-point-code').value = '';
             document.getElementById('standby-point-code').disabled = false;
+            document.getElementById('standby-point-unit').value = 'OB';
+            if (document.getElementById('standby-point-active')) {
+                document.getElementById('standby-point-active').value = '1';
+            }
             document.getElementById('standby-point-name').value = '';
             document.getElementById('standby-point-subscope').value = '';
             document.getElementById('standby-point-lat').value = '-6.347800';
@@ -4076,15 +4109,34 @@ HTML_TEMPLATE = """
             toggleModal('modal-create-standby-point');
         }
 
-        function openModalEditStandbyPoint(pointId) {
-            const p = cachedStandbyPoints.find(item => item.id === pointId);
-            if (!p) return;
+        async function openModalEditStandbyPoint(pointId) {
+            let p = cachedStandbyPoints.find(item => item.id === pointId);
+            if (!p) {
+                try {
+                    const res = await fetch(`/api/ops/standby/points/${encodeURIComponent(pointId)}`);
+                    const data = await res.json();
+                    if (data.success && data.point) {
+                        p = data.point;
+                        cachedStandbyPoints.push(p);
+                    }
+                } catch (e) {
+                    console.error("Gagal mengambil detail pos:", e);
+                }
+            }
 
-            document.getElementById('modal-standby-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-emerald-600"></i><span>Edit Titik Pos Standby</span>';
+            if (!p) {
+                alert("Data titik pos tidak ditemukan!");
+                return;
+            }
+
+            document.getElementById('modal-standby-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-amber-600"></i><span>Edit Titik Pos Standby</span>';
             document.getElementById('standby-point-id').value = p.id;
             document.getElementById('standby-point-code').value = p.code;
-            document.getElementById('standby-point-code').disabled = true;
+            document.getElementById('standby-point-code').disabled = false;
             document.getElementById('standby-point-unit').value = p.unit_code;
+            if (document.getElementById('standby-point-active')) {
+                document.getElementById('standby-point-active').value = (p.is_active !== undefined) ? String(p.is_active) : '1';
+            }
             document.getElementById('standby-point-name').value = p.name;
             document.getElementById('standby-point-subscope').value = p.sub_scope || '';
             document.getElementById('standby-point-lat').value = p.latitude;
@@ -4126,6 +4178,7 @@ HTML_TEMPLATE = """
             const payload = {
                 code: document.getElementById('standby-point-code').value.trim().toUpperCase(),
                 unit_code: document.getElementById('standby-point-unit').value,
+                is_active: document.getElementById('standby-point-active') ? (document.getElementById('standby-point-active').value === '1') : true,
                 name: document.getElementById('standby-point-name').value.trim(),
                 sub_scope: document.getElementById('standby-point-subscope').value.trim(),
                 latitude: parseFloat(document.getElementById('standby-point-lat').value),
@@ -4140,7 +4193,7 @@ HTML_TEMPLATE = """
                 target_group_jid: document.getElementById('standby-point-group-jid').value.trim()
             };
 
-            const url = pointId ? `/api/ops/standby/points/${pointId}/edit` : `/api/ops/standby/points/create`;
+            const url = pointId ? `/api/ops/standby/points/${encodeURIComponent(pointId)}/edit` : `/api/ops/standby/points/create`;
 
             try {
                 const res = await fetch(url, {
@@ -4150,12 +4203,12 @@ HTML_TEMPLATE = """
                 });
                 const data = await res.json();
                 if (data.success) {
-                    alert(data.message);
+                    alert(data.message || "Titik pos berhasil disimpan!");
                     toggleModal('modal-create-standby-point');
                     loadStandbyPoints();
                     loadStandbyRadar();
                 } else {
-                    alert("Gagal: " + (data.error || 'Terjadi kesalahan'));
+                    alert("Gagal: " + (data.error || 'Terjadi kesalahan sistem'));
                 }
             } catch (err) {
                 alert("Koneksi gagal: " + err.message);
@@ -4166,16 +4219,19 @@ HTML_TEMPLATE = """
         }
 
         async function deleteStandbyPoint(pointId, pointName) {
-            if (!confirm(`Apakah Anda yakin ingin menghapus titik pos "${pointName}"? Data penugasan juga akan terhapus.`)) return;
+            if (!confirm(`Apakah Anda yakin ingin menghapus titik pos "${pointName}"?\n\nPerhatian: Seluruh riwayat dan penugasan personel terkait titik pos ini akan ikut terhapus.`)) return;
             try {
-                const res = await fetch(`/api/ops/standby/points/${pointId}/delete`, { method: 'POST' });
+                const res = await fetch(`/api/ops/standby/points/${encodeURIComponent(pointId)}/delete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
                 const data = await res.json();
                 if (data.success) {
-                    alert(data.message);
+                    alert(data.message || "Titik pos berhasil dihapus!");
                     loadStandbyPoints();
                     loadStandbyRadar();
                 } else {
-                    alert("Gagal: " + (data.error || 'Terjadi kesalahan'));
+                    alert("Gagal menghapus: " + (data.error || 'Terjadi kesalahan sistem'));
                 }
             } catch (err) {
                 alert("Koneksi gagal: " + err.message);

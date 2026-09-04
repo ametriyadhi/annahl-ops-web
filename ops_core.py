@@ -1609,31 +1609,66 @@ def api_create_standby_point():
         return jsonify({"error": f"Kode pos '{code}' sudah digunakan, silakan pilih kode lain"}), 400
 
 
-@ops_core_bp.route("/api/ops/standby/points/<point_id>/edit", methods=["POST"])
+@ops_core_bp.route("/api/ops/standby/points/<point_id>", methods=["GET"])
+def api_get_single_standby_point(point_id):
+    """Mengambil detail satu titik pos standby beserta personelnya"""
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM ops_standby_points WHERE id = ? OR code = ?", (point_id, point_id.upper()))
+    row = cur.fetchone()
+    if not row:
+        conn.close()
+        return jsonify({"success": False, "error": "Titik pos tidak ditemukan"}), 404
+    point = dict(row)
+    cur.execute("SELECT * FROM ops_standby_assignments WHERE point_id = ? AND is_active = 1", (point['id'],))
+    point['assignments'] = [dict(a) for a in cur.fetchall()]
+    conn.close()
+    return jsonify({"success": True, "point": point})
+
+
+@ops_core_bp.route("/api/ops/standby/points/<point_id>/edit", methods=["POST", "PUT"])
+@ops_core_bp.route("/api/ops/standby/points/<point_id>", methods=["PUT", "PATCH"])
 def api_edit_standby_point(point_id):
     """Mengubah parameter titik pos standby (radius dinamis, jam cut-off, pengingat, kontak)"""
     if session.get('ops_role_code') not in ['manager', 'koordinator_ob', 'koordinator_gardener', 'koordinator_security']:
         return jsonify({"error": "Akses ditolak"}), 403
 
-    data = request.get_json(silent=True) or {}
-    name = data.get("name", "").strip()
-    code = data.get("code", "").strip().upper()
-    unit_code = data.get("unit_code", "OB").strip().upper()
-    sub_scope = data.get("sub_scope", "").strip()
-    latitude = data.get("latitude")
-    longitude = data.get("longitude")
-    radius_meters = int(data.get("radius_meters") or 35)
-    morning_start = data.get("morning_start", "09:45").strip()
-    morning_cutoff = data.get("morning_cutoff", "10:00").strip()
-    noon_start = data.get("noon_start", "12:45").strip()
-    noon_cutoff = data.get("noon_cutoff", "13:00").strip()
-    nudge_minutes = int(data.get("nudge_minutes") or 5)
-    target_group_jid = data.get("target_group_jid", "").strip()
-    target_personal_wa = data.get("target_personal_wa", "").strip()
-    is_active = 1 if data.get("is_active", True) else 0
-
     conn = get_db()
     cur = conn.cursor()
+    cur.execute("SELECT * FROM ops_standby_points WHERE id = ? OR code = ?", (point_id, point_id.upper()))
+    existing = cur.fetchone()
+    if not existing:
+        conn.close()
+        return jsonify({"error": "Titik pos tidak ditemukan"}), 404
+    actual_id = existing["id"]
+
+    data = request.get_json(silent=True) or {}
+    name = data.get("name", "").strip() or existing["name"]
+    code = data.get("code", "").strip().upper() or existing["code"]
+    unit_code = data.get("unit_code", "OB").strip().upper() or existing["unit_code"]
+    sub_scope = data.get("sub_scope", "").strip() if data.get("sub_scope") is not None else existing["sub_scope"]
+    
+    latitude = data.get("latitude")
+    if latitude is None:
+        latitude = existing["latitude"]
+        
+    longitude = data.get("longitude")
+    if longitude is None:
+        longitude = existing["longitude"]
+
+    radius_meters = int(data.get("radius_meters") or existing["radius_meters"] or 35)
+    morning_start = data.get("morning_start", "").strip() or existing["morning_start"]
+    morning_cutoff = data.get("morning_cutoff", "").strip() or existing["morning_cutoff"]
+    noon_start = data.get("noon_start", "").strip() or existing["noon_start"]
+    noon_cutoff = data.get("noon_cutoff", "").strip() or existing["noon_cutoff"]
+    nudge_minutes = int(data.get("nudge_minutes") or existing["nudge_minutes"] or 5)
+    target_group_jid = data.get("target_group_jid", "").strip() if data.get("target_group_jid") is not None else existing["target_group_jid"]
+    target_personal_wa = data.get("target_personal_wa", "").strip() if data.get("target_personal_wa") is not None else existing["target_personal_wa"]
+    
+    is_active = existing["is_active"]
+    if "is_active" in data:
+        is_active = 1 if data.get("is_active") in [True, 1, "1", "true"] else 0
+
     cur.execute("""
         UPDATE ops_standby_points SET
             code = ?, name = ?, unit_code = ?, sub_scope = ?, latitude = ?, longitude = ?,
@@ -1644,23 +1679,31 @@ def api_edit_standby_point(point_id):
     """, (
         code, name, unit_code, sub_scope, float(latitude), float(longitude),
         radius_meters, morning_start, morning_cutoff, noon_start, noon_cutoff,
-        nudge_minutes, target_group_jid, target_personal_wa, is_active, point_id
+        nudge_minutes, target_group_jid, target_personal_wa, is_active, actual_id
     ))
     conn.commit()
     conn.close()
     return jsonify({"success": True, "message": f"Konfigurasi titik pos {name} berhasil diperbarui"})
 
 
-@ops_core_bp.route("/api/ops/standby/points/<point_id>/delete", methods=["POST"])
+@ops_core_bp.route("/api/ops/standby/points/<point_id>/delete", methods=["POST", "DELETE"])
+@ops_core_bp.route("/api/ops/standby/points/<point_id>", methods=["DELETE"])
 def api_delete_standby_point(point_id):
     """Menghapus atau menonaktifkan titik pos standby"""
-    if session.get('ops_role_code') != 'manager':
-        return jsonify({"error": "Hanya Manager yang dapat menghapus titik pos standby"}), 403
+    if session.get('ops_role_code') not in ['manager', 'koordinator_ob', 'koordinator_gardener', 'koordinator_security']:
+        return jsonify({"error": "Akses ditolak"}), 403
 
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("DELETE FROM ops_standby_points WHERE id = ?", (point_id,))
-    cur.execute("DELETE FROM ops_standby_assignments WHERE point_id = ?", (point_id,))
+    cur.execute("SELECT id FROM ops_standby_points WHERE id = ? OR code = ?", (point_id, point_id.upper()))
+    row = cur.fetchone()
+    if not row:
+        conn.close()
+        return jsonify({"error": "Titik pos tidak ditemukan"}), 404
+    actual_id = row["id"]
+
+    cur.execute("DELETE FROM ops_standby_points WHERE id = ?", (actual_id,))
+    cur.execute("DELETE FROM ops_standby_assignments WHERE point_id = ?", (actual_id,))
     conn.commit()
     conn.close()
     return jsonify({"success": True, "message": "Titik pos berhasil dihapus"})
