@@ -321,6 +321,13 @@ HTML_TEMPLATE = """
 
             <div class="px-3 text-[10px] font-bold tracking-wider text-slate-500 uppercase mt-4 mb-2">Log Lapangan & Sarpras</div>
 
+            {% if user_role in ['manager', 'koordinator_ob', 'koordinator_gardener', 'koordinator_security'] %}
+            <button onclick="showTab('tab-standby')" id="btn-tab-standby" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-satellite-dish text-base w-5 text-sky-400"></i>
+                <span>Kesiagaan Pos (Standby)</span>
+            </button>
+            {% endif %}
+
             {% if user_role in ['manager', 'koordinator_ob', 'koordinator_security'] %}
             <button onclick="showTab('tab-mutabaah')" id="btn-tab-mutabaah" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-hands-praying text-base w-5"></i>
@@ -1400,6 +1407,195 @@ HTML_TEMPLATE = """
                                 {% endfor %}
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB STANDBY: KESIAGAAN POS & GEOTAGGING -->
+            <div id="tab-standby" class="tab-content hidden space-y-6">
+                <!-- Header & Action Bar -->
+                <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 sm:p-6 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                        <div>
+                            <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+                                <i class="fa-solid fa-satellite-dish text-sky-600"></i>
+                                Pusat Komando Kesiagaan Pos & Standby Lapangan
+                            </h2>
+                            <p class="text-xs text-slate-500 mt-0.5">Pemantauan kedisiplinan kembali ke pos (OB, Gardener, Security) pasca istirahat pagi & siang dengan geotagging.</p>
+                        </div>
+                        <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+                            <button type="button" onclick="loadStandbyRadar()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 cursor-pointer">
+                                <i class="fa-solid fa-arrows-rotate"></i> Refresh Radar
+                            </button>
+                            <a href="/standby/print-qr" target="_blank" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition shadow-xs flex items-center gap-1.5">
+                                <i class="fa-solid fa-qrcode"></i> Cetak Stiker QR Pos
+                            </a>
+                            {% if user_role in ['manager', 'koordinator_ob', 'koordinator_gardener', 'koordinator_security'] %}
+                            <button type="button" onclick="openModalCreateStandbyPoint()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition shadow-xs flex items-center gap-1.5 cursor-pointer">
+                                <i class="fa-solid fa-plus"></i> Tambah Titik Pos
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Metric Summary Cards -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 sm:p-4">
+                            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Total Pos Terdaftar</span>
+                            <span id="stat-standby-total" class="text-xl sm:text-2xl font-black text-slate-800">0</span>
+                            <span class="text-[10px] text-slate-400 block mt-0.5">OB, Gardener, Security</span>
+                        </div>
+                        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 sm:p-4">
+                            <span class="text-[11px] font-bold text-emerald-700 uppercase tracking-wider block">🟢 Standby Tepat Waktu</span>
+                            <span id="stat-standby-ontime" class="text-xl sm:text-2xl font-black text-emerald-700">0</span>
+                            <span class="text-[10px] text-emerald-600 block mt-0.5">Dalam radius & sebelum cut-off</span>
+                        </div>
+                        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 sm:p-4">
+                            <span class="text-[11px] font-bold text-amber-700 uppercase tracking-wider block">🟡 Terlambat Lapor</span>
+                            <span id="stat-standby-late" class="text-xl sm:text-2xl font-black text-amber-700">0</span>
+                            <span class="text-[10px] text-amber-600 block mt-0.5">Lapor melewati cut-off waktu</span>
+                        </div>
+                        <div class="bg-rose-50 border border-rose-200 rounded-xl p-3 sm:p-4">
+                            <span class="text-[11px] font-bold text-rose-700 uppercase tracking-wider block">🔴 Pos Kosong / Belum Siaga</span>
+                            <span id="stat-standby-empty" class="text-xl sm:text-2xl font-black text-rose-700">0</span>
+                            <span class="text-[10px] text-rose-600 block mt-0.5">Perlu atensi & cek lapangan</span>
+                        </div>
+                    </div>
+
+                    <!-- Filter & Sub-Nav Bar -->
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-50 p-2 sm:p-3 rounded-xl border border-slate-200 text-xs">
+                        <!-- Sesi Toggle -->
+                        <div class="flex items-center space-x-1 bg-white p-1 rounded-lg border border-slate-200 shadow-2xs">
+                            <button type="button" onclick="switchStandbySession('PAGI')" id="btn-sess-pagi" class="px-3 py-1 rounded-md font-bold transition text-emerald-700 bg-emerald-50 cursor-pointer">
+                                <i class="fa-regular fa-sun mr-1"></i> Istirahat Pagi
+                            </button>
+                            <button type="button" onclick="switchStandbySession('SIANG')" id="btn-sess-siang" class="px-3 py-1 rounded-md font-bold transition text-slate-500 hover:text-slate-800 cursor-pointer">
+                                <i class="fa-solid fa-cloud-sun mr-1"></i> Istirahat Siang (Ishoma)
+                            </button>
+                        </div>
+
+                        <!-- Unit Filter -->
+                        <div class="flex items-center gap-2">
+                            <label class="text-slate-500 font-semibold shrink-0">Filter Unit:</label>
+                            <select id="filter-standby-unit" onchange="loadStandbyRadar()" class="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                <option value="ALL">Semua Unit (OB, Gardener, Security)</option>
+                                <option value="OB">Office Boy (OB)</option>
+                                <option value="GARDENER">Gardener (Taman & Ecopark)</option>
+                                <option value="SECURITY">Security (Keamanan & Pos)</option>
+                            </select>
+                        </div>
+
+                        <!-- View Switcher Tabs -->
+                        <div class="flex items-center space-x-1">
+                            <button type="button" onclick="switchStandbySubView('radar')" id="btn-subview-radar" class="px-2.5 py-1 rounded-md font-semibold bg-white text-slate-800 shadow-2xs border border-slate-200 cursor-pointer">
+                                <i class="fa-solid fa-tower-broadcast mr-1 text-emerald-600"></i> Radar Siaga
+                            </button>
+                            <button type="button" onclick="switchStandbySubView('points')" id="btn-subview-points" class="px-2.5 py-1 rounded-md font-semibold text-slate-500 hover:text-slate-800 cursor-pointer">
+                                <i class="fa-solid fa-map-pin mr-1 text-sky-600"></i> Kelola Pos
+                            </button>
+                            <button type="button" onclick="switchStandbySubView('logs')" id="btn-subview-logs" class="px-2.5 py-1 rounded-md font-semibold text-slate-500 hover:text-slate-800 cursor-pointer">
+                                <i class="fa-solid fa-clock-rotate-left mr-1 text-indigo-600"></i> Riwayat Check-in
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUBVIEW 1: RADAR SIAGA REAL-TIME -->
+                <div id="standby-subview-radar" class="space-y-4">
+                    <div class="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                                    <tr>
+                                        <th class="py-3 px-4">Titik Pos & Kode</th>
+                                        <th class="py-3 px-4">Unit Kerja</th>
+                                        <th class="py-3 px-4">Personel Ditugaskan</th>
+                                        <th class="py-3 px-4">Batas Cut-off</th>
+                                        <th class="py-3 px-4">Laporan Masuk</th>
+                                        <th class="py-3 px-4">Jarak & Radius</th>
+                                        <th class="py-3 px-4">Status Siaga</th>
+                                        <th class="py-3 px-4 text-center">Aksi Cepat</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="standby-radar-tbody" class="divide-y divide-slate-100">
+                                    <tr><td colspan="8" class="text-center py-6 text-slate-400">Memuat status radar...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUBVIEW 2: KELOLA TITIK POS & PENUGASAN -->
+                <div id="standby-subview-points" class="hidden space-y-4">
+                    <div class="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden p-4 sm:p-6 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-bold text-sm text-slate-800">Daftar Titik Pos Standby & Parameter Geofencing</h3>
+                                <p class="text-[11px] text-slate-500">Radius toleransi dan jam wajib siaga dapat disesuaikan per unit/pos.</p>
+                            </div>
+                            <button type="button" onclick="openModalCreateStandbyPoint()" class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-semibold hover:bg-emerald-700 flex items-center gap-1.5 cursor-pointer">
+                                <i class="fa-solid fa-plus"></i> Tambah Pos Baru
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                                    <tr>
+                                        <th class="py-3 px-3">Kode & Nama Pos</th>
+                                        <th class="py-3 px-3">Unit</th>
+                                        <th class="py-3 px-3">Koordinat GPS</th>
+                                        <th class="py-3 px-3">Radius</th>
+                                        <th class="py-3 px-3">Batas Pagi</th>
+                                        <th class="py-3 px-3">Batas Siang</th>
+                                        <th class="py-3 px-3">Target Alert (WA & Group)</th>
+                                        <th class="py-3 px-3">Personel</th>
+                                        <th class="py-3 px-3 text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="standby-points-tbody" class="divide-y divide-slate-100">
+                                    <tr><td colspan="9" class="text-center py-6 text-slate-400">Memuat daftar pos...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUBVIEW 3: RIWAYAT LOG CHECK-IN STANDBY -->
+                <div id="standby-subview-logs" class="hidden space-y-4">
+                    <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 sm:p-6 space-y-4">
+                        <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                            <div>
+                                <h3 class="font-bold text-sm text-slate-800">Riwayat Check-in Standby Geotagging</h3>
+                                <p class="text-[11px] text-slate-500">Rekap transaksi kehadiran personel berbasis lokasi GPS.</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="date" id="filter-standby-log-date" onchange="loadStandbyLogs()" class="bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-slate-800">
+                                <select id="filter-standby-log-status" onchange="loadStandbyLogs()" class="bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-slate-800">
+                                    <option value="ALL">Semua Status</option>
+                                    <option value="TEPAT_WAKTU">Tepat Waktu</option>
+                                    <option value="TERLAMBAT">Terlambat</option>
+                                    <option value="DILUAR_RADIUS">Di Luar Radius</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                                    <tr>
+                                        <th class="py-3 px-3">Waktu Lapor</th>
+                                        <th class="py-3 px-3">Sesi</th>
+                                        <th class="py-3 px-3">Pos & Kode</th>
+                                        <th class="py-3 px-3">Petugas</th>
+                                        <th class="py-3 px-3">Jarak GPS</th>
+                                        <th class="py-3 px-3">Status</th>
+                                        <th class="py-3 px-3">Kanal</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="standby-logs-tbody" class="divide-y divide-slate-100">
+                                    <tr><td colspan="7" class="text-center py-6 text-slate-400">Memuat riwayat log...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -3321,9 +3517,182 @@ HTML_TEMPLATE = """
         </div>
     </div>
 
+    <!-- MODAL TAMBAH / EDIT TITIK POS STANDBY -->
+    <div id="modal-create-standby-point" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 id="modal-standby-title" class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-map-location-dot text-emerald-600"></i>
+                    <span>Tambah Titik Pos Standby Baru</span>
+                </h3>
+                <button type="button" onclick="toggleModal('modal-create-standby-point')" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            </div>
+
+            <form id="form-standby-point" onsubmit="saveStandbyPoint(event)" class="space-y-3.5 text-xs">
+                <input type="hidden" id="standby-point-id" value="">
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Kode Pos (Unik) *</label>
+                        <input type="text" id="standby-point-code" required placeholder="Contoh: POS-OB-SD03" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-mono font-bold uppercase focus:bg-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Unit Kerja *</label>
+                        <select id="standby-point-unit" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-bold focus:bg-white focus:outline-none focus:border-emerald-500">
+                            <option value="OB">Office Boy (OB)</option>
+                            <option value="GARDENER">Gardener (Taman/Ecopark)</option>
+                            <option value="SECURITY">Security (Keamanan)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Nama Titik Pos Standby *</label>
+                    <input type="text" id="standby-point-name" required placeholder="Contoh: Gedung SD Lantai 3 & Laboratorium" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-semibold focus:bg-white focus:outline-none focus:border-emerald-500">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Deskripsi / Sub-Lingkup Area</label>
+                    <input type="text" id="standby-point-subscope" placeholder="Misal: Koridor Kelas 5-6 & Ruang Lab Komputer" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:border-emerald-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Latitude GPS *</label>
+                        <input type="number" step="any" id="standby-point-lat" required placeholder="-6.347800" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-mono focus:bg-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Longitude GPS *</label>
+                        <input type="number" step="any" id="standby-point-lon" required placeholder="106.964600" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-mono focus:bg-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between bg-sky-50 p-2 rounded-xl border border-sky-100 text-[11px] text-sky-800">
+                    <span>Gunakan titik koordinat saat ini:</span>
+                    <button type="button" onclick="fillCurrentLocationToPointForm()" class="px-2.5 py-1 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-lg transition flex items-center gap-1">
+                        <i class="fa-solid fa-crosshairs"></i> Ambil GPS HP Saya
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Toleransi Radius Geofence (Meter) *</label>
+                        <input type="number" id="standby-point-radius" required value="35" min="10" max="200" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-bold focus:bg-white focus:outline-none focus:border-emerald-500">
+                        <span class="text-[10px] text-slate-400">Default: 35m (Gedung) / 50-60m (Outdoor)</span>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Menit Pengingat (T-X Menit) *</label>
+                        <input type="number" id="standby-point-nudge" required value="5" min="1" max="30" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-bold focus:bg-white focus:outline-none focus:border-emerald-500">
+                        <span class="text-[10px] text-slate-400">Waktu broadcast sebelum cut-off</span>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-100 pt-2 grid grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                        <span class="font-bold text-slate-700 block text-[11px] uppercase">Jadwal Sesi Pagi</span>
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <div>
+                                <span class="text-[9px] text-slate-400 block">Mulai</span>
+                                <input type="time" id="standby-point-morning-start" value="09:45" class="w-full p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold">
+                            </div>
+                            <div>
+                                <span class="text-[9px] text-slate-400 block font-bold text-rose-600">Cut-off *</span>
+                                <input type="time" id="standby-point-morning-cutoff" value="10:00" required class="w-full p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-rose-600">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-1">
+                        <span class="font-bold text-slate-700 block text-[11px] uppercase">Jadwal Sesi Siang</span>
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <div>
+                                <span class="text-[9px] text-slate-400 block">Mulai</span>
+                                <input type="time" id="standby-point-noon-start" value="12:45" class="w-full p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold">
+                            </div>
+                            <div>
+                                <span class="text-[9px] text-slate-400 block font-bold text-rose-600">Cut-off *</span>
+                                <input type="time" id="standby-point-noon-cutoff" value="13:00" required class="w-full p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-rose-600">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-100 pt-2 space-y-2">
+                    <span class="font-bold text-slate-700 block text-[11px] uppercase">Target Notifikasi & Eskalasi Pos Kosong</span>
+                    <div>
+                        <label class="block text-[11px] text-slate-600 font-semibold mb-0.5">No. WhatsApp Pribadi Koordinator</label>
+                        <input type="tel" id="standby-point-personal-wa" placeholder="Contoh: 6289516458570" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-600 font-semibold mb-0.5">JID Group WhatsApp Unit</label>
+                        <input type="text" id="standby-point-group-jid" placeholder="Contoh: 120363133177081285@g.us" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-mono text-[11px]">
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="toggleModal('modal-create-standby-point')" class="px-4 py-2 text-xs font-semibold bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition cursor-pointer">Batal</button>
+                    <button type="submit" id="btn-save-standby-point" class="px-5 py-2 text-xs font-bold bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition shadow-xs flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>Simpan Titik Pos</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL PENUGASAN PERSONEL POS STANDBY -->
+    <div id="modal-assign-standby" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-user-plus text-sky-600"></i>
+                    <span>Tugaskan Personel ke Titik Pos</span>
+                </h3>
+                <button type="button" onclick="toggleModal('modal-assign-standby')" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            </div>
+
+            <form id="form-assign-standby" onsubmit="saveStandbyAssignment(event)" class="space-y-3.5 text-xs">
+                <input type="hidden" id="assign-point-id" value="">
+
+                <div>
+                    <span class="text-[10px] text-slate-400 uppercase font-bold block">Titik Pos Terpilih:</span>
+                    <p id="assign-point-display" class="font-bold text-slate-800 text-sm mt-0.5">-</p>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Nama Lengkap Personel *</label>
+                    <input type="text" id="assign-petugas-name" required placeholder="Contoh: Kusmawan" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-semibold focus:bg-white focus:outline-none focus:border-emerald-500">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Nomor WhatsApp Personel *</label>
+                    <input type="tel" id="assign-petugas-wa" required placeholder="Contoh: 081220795285 atau 6281220795285" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-mono focus:bg-white focus:outline-none focus:border-emerald-500">
+                    <span class="text-[10px] text-slate-400">Digunakan untuk pencocokan otomatis saat lapor via WhatsApp.</span>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Unit Kerja *</label>
+                    <select id="assign-unit-code" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-bold focus:bg-white focus:outline-none focus:border-emerald-500">
+                        <option value="OB">Office Boy (OB)</option>
+                        <option value="GARDENER">Gardener (Taman & Ecopark)</option>
+                        <option value="SECURITY">Security (Keamanan)</option>
+                    </select>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="toggleModal('modal-assign-standby')" class="px-4 py-2 text-xs font-semibold bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition cursor-pointer">Batal</button>
+                    <button type="submit" id="btn-save-assign" class="px-5 py-2 text-xs font-bold bg-sky-600 text-white rounded-xl hover:bg-sky-700 transition shadow-xs flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-user-check"></i>
+                        <span>Simpan Penugasan</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         const titles = {
             'tab-dashboard': 'Dashboard Utama',
+            'tab-standby': 'Kesiagaan Pos & Standby Geotagging',
             'tab-kuma': 'Infrastructure Uptime Kuma Monitor & WA Alert',
             'tab-analytics': 'Grafik Analitik & Tren Kinerja Operasional',
             'tab-journal': 'Jurnal Kegiatan Harian Mr Slam',
@@ -3414,6 +3783,9 @@ HTML_TEMPLATE = """
             if (tabId === 'tab-kebersihan') {
                 filterKebersihanTable();
             }
+            if (tabId === 'tab-standby') {
+                loadStandbyRadar();
+            }
 
             if (window.innerWidth < 768) {
                 const sidebar = document.getElementById('sidebar');
@@ -3426,6 +3798,449 @@ HTML_TEMPLATE = """
         function toggleModal(modalId) {
             const modal = document.getElementById(modalId);
             modal.classList.toggle('hidden');
+        }
+
+        // ============ SISTEM KESIAGAAN POS & STANDBY GEOTAGGING ============
+        let currentStandbySession = 'PAGI';
+        let cachedStandbyPoints = [];
+
+        function switchStandbySession(sess) {
+            currentStandbySession = sess;
+            const btnPagi = document.getElementById('btn-sess-pagi');
+            const btnSiang = document.getElementById('btn-sess-siang');
+            if (sess === 'PAGI') {
+                btnPagi.className = "px-3 py-1 rounded-md font-bold transition text-emerald-700 bg-emerald-50 cursor-pointer";
+                btnSiang.className = "px-3 py-1 rounded-md font-bold transition text-slate-500 hover:text-slate-800 cursor-pointer";
+            } else {
+                btnSiang.className = "px-3 py-1 rounded-md font-bold transition text-emerald-700 bg-emerald-50 cursor-pointer";
+                btnPagi.className = "px-3 py-1 rounded-md font-bold transition text-slate-500 hover:text-slate-800 cursor-pointer";
+            }
+            loadStandbyRadar();
+        }
+
+        function switchStandbySubView(view) {
+            document.getElementById('standby-subview-radar').classList.add('hidden');
+            document.getElementById('standby-subview-points').classList.add('hidden');
+            document.getElementById('standby-subview-logs').classList.add('hidden');
+
+            document.getElementById('btn-subview-radar').className = "px-2.5 py-1 rounded-md font-semibold text-slate-500 hover:text-slate-800 cursor-pointer";
+            document.getElementById('btn-subview-points').className = "px-2.5 py-1 rounded-md font-semibold text-slate-500 hover:text-slate-800 cursor-pointer";
+            document.getElementById('btn-subview-logs').className = "px-2.5 py-1 rounded-md font-semibold text-slate-500 hover:text-slate-800 cursor-pointer";
+
+            if (view === 'radar') {
+                document.getElementById('standby-subview-radar').classList.remove('hidden');
+                document.getElementById('btn-subview-radar').className = "px-2.5 py-1 rounded-md font-semibold bg-white text-slate-800 shadow-2xs border border-slate-200 cursor-pointer";
+                loadStandbyRadar();
+            } else if (view === 'points') {
+                document.getElementById('standby-subview-points').classList.remove('hidden');
+                document.getElementById('btn-subview-points').className = "px-2.5 py-1 rounded-md font-semibold bg-white text-slate-800 shadow-2xs border border-slate-200 cursor-pointer";
+                loadStandbyPoints();
+            } else if (view === 'logs') {
+                document.getElementById('standby-subview-logs').classList.remove('hidden');
+                document.getElementById('btn-subview-logs').className = "px-2.5 py-1 rounded-md font-semibold bg-white text-slate-800 shadow-2xs border border-slate-200 cursor-pointer";
+                loadStandbyLogs();
+            }
+        }
+
+        function loadStandbyRadar() {
+            const tbody = document.getElementById('standby-radar-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-6 text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat data kesiagaan pos...</td></tr>';
+
+            const unit = document.getElementById('filter-standby-unit') ? document.getElementById('filter-standby-unit').value : 'ALL';
+            const url = `/api/ops/standby/radar?session=${currentStandbySession}&unit=${encodeURIComponent(unit)}`;
+
+            fetch(url)
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success) throw new Error(data.error || 'Gagal memuat radar');
+                    
+                    const s = data.summary;
+                    document.getElementById('stat-standby-total').innerText = s.total_points;
+                    document.getElementById('stat-standby-ontime').innerText = s.standby_on_time;
+                    document.getElementById('stat-standby-late').innerText = s.standby_late;
+                    document.getElementById('stat-standby-empty').innerText = s.empty_points;
+
+                    if (data.radar.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-6 text-slate-400">Tidak ada pos terdaftar untuk filter ini.</td></tr>';
+                        return;
+                    }
+
+                    let html = '';
+                    data.radar.forEach(item => {
+                        const p = item.point;
+                        const log = item.latest_log;
+
+                        let statusBadge = '';
+                        if (item.badge_status === 'ON_TIME') {
+                            statusBadge = `<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full border border-emerald-300 inline-flex items-center gap-1">
+                                <i class="fa-solid fa-circle-check"></i> Siaga On-Time
+                            </span>`;
+                        } else if (item.badge_status === 'LATE') {
+                            statusBadge = `<span class="px-2.5 py-1 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-full border border-amber-300 inline-flex items-center gap-1">
+                                <i class="fa-solid fa-clock-rotate-left"></i> Terlambat
+                            </span>`;
+                        } else if (item.badge_status === 'OUT_OF_RANGE') {
+                            statusBadge = `<span class="px-2.5 py-1 bg-rose-100 text-rose-800 text-[10px] font-bold rounded-full border border-rose-300 inline-flex items-center gap-1">
+                                <i class="fa-solid fa-triangle-exclamation"></i> Di Luar Radius
+                            </span>`;
+                        } else {
+                            statusBadge = `<span class="px-2.5 py-1 bg-rose-50 text-rose-700 text-[10px] font-bold rounded-full border border-rose-200 inline-flex items-center gap-1 animate-pulse">
+                                <i class="fa-solid fa-circle-xmark"></i> Belum Siaga / Kosong
+                            </span>`;
+                        }
+
+                        const unitColor = {
+                            'OB': 'bg-teal-50 text-teal-700 border-teal-200',
+                            'GARDENER': 'bg-amber-50 text-amber-700 border-amber-200',
+                            'SECURITY': 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                        }[p.unit_code] || 'bg-slate-50 text-slate-700 border-slate-200';
+
+                        const laporTime = log ? `<span class="font-bold text-slate-800">${log.checkin_time} WIB</span><span class="block text-[10px] text-slate-400 font-mono">${log.channel === 'WA_LOCATION' ? 'WhatsApp' : 'Scan QR'}</span>` : '<span class="text-slate-400 italic">Belum ada</span>';
+                        const jarakInfo = log ? `<span class="font-bold ${log.distance_meters <= p.radius_meters ? 'text-emerald-700' : 'text-rose-600'}">${log.distance_meters}m</span> / max ${p.radius_meters}m` : `<span class="text-slate-400">Toleransi: ${p.radius_meters}m</span>`;
+
+                        html += `
+                        <tr class="hover:bg-slate-50/80 transition">
+                            <td class="py-3 px-4">
+                                <span class="font-bold text-slate-800 block">${p.name}</span>
+                                <span class="text-[10px] text-slate-500 font-mono">${p.code} ${p.sub_scope ? '• ' + p.sub_scope : ''}</span>
+                            </td>
+                            <td class="py-3 px-4">
+                                <span class="px-2 py-0.5 text-[10px] font-bold rounded border ${unitColor}">${p.unit_code}</span>
+                            </td>
+                            <td class="py-3 px-4 text-slate-700 font-medium">${item.assigned_names}</td>
+                            <td class="py-3 px-4">
+                                <span class="font-bold text-slate-800">${item.cutoff_time} WIB</span>
+                            </td>
+                            <td class="py-3 px-4">${laporTime}</td>
+                            <td class="py-3 px-4">${jarakInfo}</td>
+                            <td class="py-3 px-4">${statusBadge}</td>
+                            <td class="py-3 px-4 text-center">
+                                <div class="inline-flex items-center gap-1">
+                                    <a href="/standby/c/${p.id}" target="_blank" title="Buka Halaman Check-in" class="p-1.5 text-slate-500 hover:text-emerald-600 rounded-lg hover:bg-emerald-50 transition">
+                                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                    </a>
+                                    <a href="/standby/print-qr?point_id=${p.id}" target="_blank" title="Cetak Stiker Pos" class="p-1.5 text-slate-500 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 transition">
+                                        <i class="fa-solid fa-qrcode"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>`;
+                    });
+                    tbody.innerHTML = html;
+                })
+                .catch(err => {
+                    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-rose-500 font-semibold">Gagal memuat radar: ${err.message}</td></tr>`;
+                });
+        }
+
+        function loadStandbyPoints() {
+            const tbody = document.getElementById('standby-points-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center py-6 text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat master pos...</td></tr>';
+
+            fetch('/api/ops/standby/points')
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success) throw new Error(data.error || 'Gagal memuat pos');
+                    cachedStandbyPoints = data.points;
+
+                    if (data.points.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-6 text-slate-400">Belum ada titik pos terdaftar.</td></tr>';
+                        return;
+                    }
+
+                    let html = '';
+                    data.points.forEach(p => {
+                        const assignees = p.assignments && p.assignments.length > 0 
+                            ? p.assignments.map(a => `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-slate-100 rounded text-[10px] text-slate-700 mr-1 mb-1">${a.petugas_name} <button onclick="deleteStandbyAssignment(${a.id})" class="text-rose-500 hover:text-rose-700 font-bold">&times;</button></span>`).join('') 
+                            : '<span class="text-slate-400 italic">Belum ada</span>';
+
+                        html += `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="py-3 px-3">
+                                <span class="font-bold text-slate-800 block">${p.name}</span>
+                                <span class="text-[10px] text-emerald-700 font-mono font-semibold">${p.code}</span>
+                            </td>
+                            <td class="py-3 px-3"><span class="px-2 py-0.5 bg-slate-100 rounded font-bold text-[10px] text-slate-700">${p.unit_code}</span></td>
+                            <td class="py-3 px-3 font-mono text-[10px] text-slate-500">${p.latitude.toFixed(6)}, ${p.longitude.toFixed(6)}</td>
+                            <td class="py-3 px-3 font-bold text-slate-700">${p.radius_meters}m</td>
+                            <td class="py-3 px-3 font-medium text-slate-700">${p.morning_start} - <b class="text-rose-600">${p.morning_cutoff}</b></td>
+                            <td class="py-3 px-3 font-medium text-slate-700">${p.noon_start} - <b class="text-rose-600">${p.noon_cutoff}</b></td>
+                            <td class="py-3 px-3 text-[10px]">
+                                <div>WA: <span class="font-mono text-slate-700 font-semibold">${p.target_personal_wa || '-'}</span></div>
+                                <div class="truncate max-w-[120px] text-slate-400" title="${p.target_group_jid || ''}">G: ${p.target_group_jid ? p.target_group_jid.split('@')[0] : '-'}</div>
+                            </td>
+                            <td class="py-3 px-3">
+                                <div>${assignees}</div>
+                                <button type="button" onclick="openModalAssignStandby('${p.id}', '${p.name}', '${p.unit_code}')" class="text-[10px] text-sky-600 hover:text-sky-800 font-bold underline mt-1 block cursor-pointer">+ Tugaskan</button>
+                            </td>
+                            <td class="py-3 px-3 text-center">
+                                <div class="inline-flex items-center gap-1">
+                                    <button type="button" onclick="openModalEditStandbyPoint('${p.id}')" title="Edit Pos" class="p-1.5 text-slate-500 hover:text-emerald-600 rounded hover:bg-emerald-50 cursor-pointer">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                    <a href="/standby/print-qr?point_id=${p.id}" target="_blank" title="Cetak QR" class="p-1.5 text-slate-500 hover:text-indigo-600 rounded hover:bg-indigo-50">
+                                        <i class="fa-solid fa-qrcode"></i>
+                                    </a>
+                                    <button type="button" onclick="deleteStandbyPoint('${p.id}', '${p.name}')" title="Hapus Pos" class="p-1.5 text-slate-500 hover:text-rose-600 rounded hover:bg-rose-50 cursor-pointer">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>`;
+                    });
+                    tbody.innerHTML = html;
+                })
+                .catch(err => {
+                    tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-rose-500 font-semibold">Gagal memuat titik pos: ${err.message}</td></tr>`;
+                });
+        }
+
+        function loadStandbyLogs() {
+            const tbody = document.getElementById('standby-logs-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat riwayat log...</td></tr>';
+
+            const dateInput = document.getElementById('filter-standby-log-date');
+            if (dateInput && !dateInput.value) {
+                const now = new Date();
+                const y = now.getFullYear();
+                const m = String(now.getMonth() + 1).padStart(2, '0');
+                const d = String(now.getDate()).padStart(2, '0');
+                dateInput.value = `${y}-${m}-${d}`;
+            }
+
+            const dateVal = dateInput ? dateInput.value : '';
+            const statusVal = document.getElementById('filter-standby-log-status') ? document.getElementById('filter-standby-log-status').value : 'ALL';
+            const url = `/api/ops/standby/logs?date=${encodeURIComponent(dateVal)}&status=${encodeURIComponent(statusVal)}`;
+
+            fetch(url)
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success) throw new Error(data.error || 'Gagal memuat log');
+                    if (data.logs.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-400">Belum ada transaksi check-in untuk tanggal ini.</td></tr>';
+                        return;
+                    }
+
+                    let html = '';
+                    data.logs.forEach(l => {
+                        let stBadge = '';
+                        if (l.status === 'TEPAT_WAKTU') {
+                            stBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded">Tepat Waktu</span>`;
+                        } else if (l.status === 'TERLAMBAT') {
+                            stBadge = `<span class="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded">Terlambat (+${Math.abs(l.minutes_diff)}m)</span>`;
+                        } else {
+                            stBadge = `<span class="px-2 py-0.5 bg-rose-100 text-rose-800 text-[10px] font-bold rounded">Di Luar Radius</span>`;
+                        }
+
+                        html += `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="py-3 px-3 font-mono font-bold text-slate-800">${l.checkin_time} WIB</td>
+                            <td class="py-3 px-3"><span class="px-1.5 py-0.5 bg-slate-100 rounded text-[10px] font-semibold">${l.session_type}</span></td>
+                            <td class="py-3 px-3">
+                                <span class="font-bold text-slate-800 block">${l.point_name}</span>
+                                <span class="text-[10px] font-mono text-slate-500">${l.point_code}</span>
+                            </td>
+                            <td class="py-3 px-3 font-semibold text-slate-800">${l.petugas_name}</td>
+                            <td class="py-3 px-3 font-mono font-semibold ${l.distance_meters <= l.radius_allowed ? 'text-emerald-700' : 'text-rose-600'}">${l.distance_meters}m (max ${l.radius_allowed}m)</td>
+                            <td class="py-3 px-3">${stBadge}</td>
+                            <td class="py-3 px-3 text-[10px] text-slate-500 font-mono">${l.channel === 'WA_LOCATION' ? 'WhatsApp' : 'Scan QR Web'}</td>
+                        </tr>`;
+                    });
+                    tbody.innerHTML = html;
+                })
+                .catch(err => {
+                    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-rose-500 font-semibold">Gagal memuat log: ${err.message}</td></tr>`;
+                });
+        }
+
+        function openModalCreateStandbyPoint() {
+            document.getElementById('modal-standby-title').innerHTML = '<i class="fa-solid fa-map-location-dot text-emerald-600"></i><span>Tambah Titik Pos Standby Baru</span>';
+            document.getElementById('standby-point-id').value = '';
+            document.getElementById('standby-point-code').value = '';
+            document.getElementById('standby-point-code').disabled = false;
+            document.getElementById('standby-point-name').value = '';
+            document.getElementById('standby-point-subscope').value = '';
+            document.getElementById('standby-point-lat').value = '-6.347800';
+            document.getElementById('standby-point-lon').value = '106.964600';
+            document.getElementById('standby-point-radius').value = '35';
+            document.getElementById('standby-point-nudge').value = '5';
+            document.getElementById('standby-point-morning-start').value = '09:45';
+            document.getElementById('standby-point-morning-cutoff').value = '10:00';
+            document.getElementById('standby-point-noon-start').value = '12:45';
+            document.getElementById('standby-point-noon-cutoff').value = '13:00';
+            document.getElementById('standby-point-personal-wa').value = '';
+            document.getElementById('standby-point-group-jid').value = '';
+            toggleModal('modal-create-standby-point');
+        }
+
+        function openModalEditStandbyPoint(pointId) {
+            const p = cachedStandbyPoints.find(item => item.id === pointId);
+            if (!p) return;
+
+            document.getElementById('modal-standby-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-emerald-600"></i><span>Edit Titik Pos Standby</span>';
+            document.getElementById('standby-point-id').value = p.id;
+            document.getElementById('standby-point-code').value = p.code;
+            document.getElementById('standby-point-code').disabled = true;
+            document.getElementById('standby-point-unit').value = p.unit_code;
+            document.getElementById('standby-point-name').value = p.name;
+            document.getElementById('standby-point-subscope').value = p.sub_scope || '';
+            document.getElementById('standby-point-lat').value = p.latitude;
+            document.getElementById('standby-point-lon').value = p.longitude;
+            document.getElementById('standby-point-radius').value = p.radius_meters;
+            document.getElementById('standby-point-nudge').value = p.nudge_minutes;
+            document.getElementById('standby-point-morning-start').value = p.morning_start;
+            document.getElementById('standby-point-morning-cutoff').value = p.morning_cutoff;
+            document.getElementById('standby-point-noon-start').value = p.noon_start;
+            document.getElementById('standby-point-noon-cutoff').value = p.noon_cutoff;
+            document.getElementById('standby-point-personal-wa').value = p.target_personal_wa || '';
+            document.getElementById('standby-point-group-jid').value = p.target_group_jid || '';
+            toggleModal('modal-create-standby-point');
+        }
+
+        function fillCurrentLocationToPointForm() {
+            if (!navigator.geolocation) {
+                alert("Browser tidak mendukung GPS.");
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    document.getElementById('standby-point-lat').value = pos.coords.latitude.toFixed(6);
+                    document.getElementById('standby-point-lon').value = pos.coords.longitude.toFixed(6);
+                    alert(`Koordinat GPS berhasil diambil! Akurasi: ±${Math.round(pos.coords.accuracy)}m`);
+                },
+                err => alert("Gagal mengambil lokasi GPS: " + err.message),
+                { enableHighAccuracy: true }
+            );
+        }
+
+        async function saveStandbyPoint(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-standby-point');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...`;
+
+            const pointId = document.getElementById('standby-point-id').value;
+            const payload = {
+                code: document.getElementById('standby-point-code').value.trim().toUpperCase(),
+                unit_code: document.getElementById('standby-point-unit').value,
+                name: document.getElementById('standby-point-name').value.trim(),
+                sub_scope: document.getElementById('standby-point-subscope').value.trim(),
+                latitude: parseFloat(document.getElementById('standby-point-lat').value),
+                longitude: parseFloat(document.getElementById('standby-point-lon').value),
+                radius_meters: parseInt(document.getElementById('standby-point-radius').value) || 35,
+                nudge_minutes: parseInt(document.getElementById('standby-point-nudge').value) || 5,
+                morning_start: document.getElementById('standby-point-morning-start').value,
+                morning_cutoff: document.getElementById('standby-point-morning-cutoff').value,
+                noon_start: document.getElementById('standby-point-noon-start').value,
+                noon_cutoff: document.getElementById('standby-point-noon-cutoff').value,
+                target_personal_wa: document.getElementById('standby-point-personal-wa').value.trim(),
+                target_group_jid: document.getElementById('standby-point-group-jid').value.trim()
+            };
+
+            const url = pointId ? `/api/ops/standby/points/${pointId}/edit` : `/api/ops/standby/points/create`;
+
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message);
+                    toggleModal('modal-create-standby-point');
+                    loadStandbyPoints();
+                    loadStandbyRadar();
+                } else {
+                    alert("Gagal: " + (data.error || 'Terjadi kesalahan'));
+                }
+            } catch (err) {
+                alert("Koneksi gagal: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i><span>Simpan Titik Pos</span>`;
+            }
+        }
+
+        async function deleteStandbyPoint(pointId, pointName) {
+            if (!confirm(`Apakah Anda yakin ingin menghapus titik pos "${pointName}"? Data penugasan juga akan terhapus.`)) return;
+            try {
+                const res = await fetch(`/api/ops/standby/points/${pointId}/delete`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message);
+                    loadStandbyPoints();
+                    loadStandbyRadar();
+                } else {
+                    alert("Gagal: " + (data.error || 'Terjadi kesalahan'));
+                }
+            } catch (err) {
+                alert("Koneksi gagal: " + err.message);
+            }
+        }
+
+        function openModalAssignStandby(pointId, pointName, unitCode) {
+            document.getElementById('assign-point-id').value = pointId;
+            document.getElementById('assign-point-display').innerText = `${pointName} (${unitCode})`;
+            document.getElementById('assign-unit-code').value = unitCode;
+            document.getElementById('assign-petugas-name').value = '';
+            document.getElementById('assign-petugas-wa').value = '';
+            toggleModal('modal-assign-standby');
+        }
+
+        async function saveStandbyAssignment(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-assign');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...`;
+
+            const payload = {
+                point_id: document.getElementById('assign-point-id').value,
+                petugas_name: document.getElementById('assign-petugas-name').value.trim(),
+                no_wa: document.getElementById('assign-petugas-wa').value.trim(),
+                unit_code: document.getElementById('assign-unit-code').value
+            };
+
+            try {
+                const res = await fetch('/api/ops/standby/assignments/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message);
+                    toggleModal('modal-assign-standby');
+                    loadStandbyPoints();
+                    loadStandbyRadar();
+                } else {
+                    alert("Gagal: " + (data.error || 'Terjadi kesalahan'));
+                }
+            } catch (err) {
+                alert("Koneksi gagal: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-user-check"></i><span>Simpan Penugasan</span>`;
+            }
+        }
+
+        async function deleteStandbyAssignment(assignId) {
+            if (!confirm("Hapus penugasan personel ini dari titik pos?")) return;
+            try {
+                const res = await fetch(`/api/ops/standby/assignments/${assignId}/delete`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    loadStandbyPoints();
+                    loadStandbyRadar();
+                } else {
+                    alert("Gagal: " + (data.error || 'Terjadi kesalahan'));
+                }
+            } catch (err) {
+                alert("Koneksi gagal: " + err.message);
+            }
         }
 
         // ============ Ops User & Role Management ============
