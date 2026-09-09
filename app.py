@@ -246,7 +246,7 @@ HTML_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>An Nahl Ops Dashboard - IT & General Affairs</title>
     <!-- Tailwind CSS (build lokal, anti CDN-failure) -->
-    <link rel="stylesheet" href="/static/tailwind.min.css?v=20260902_v4_active">
+    <link rel="stylesheet" href="/static/tailwind.min.css?v=20260909_v5_green_fix">
     <!-- FontAwesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js CDN -->
@@ -1791,17 +1791,17 @@ HTML_TEMPLATE = """
 
                 <!-- SUBVIEW 3: GREEN OPERATIONS INDEX -->
                 <div id="chk-subview-green" class="hidden space-y-6">
-                    <div class="bg-gradient-to-br from-emerald-900 to-teal-900 text-white rounded-2xl p-6 sm:p-8 shadow-md relative overflow-hidden">
+                    <div class="bg-gradient-to-br from-emerald-900 to-teal-900 text-white rounded-2xl p-6 sm:p-8 shadow-md relative overflow-hidden" style="background: linear-gradient(135deg, #064e3b 0%, #0f766e 100%) !important; color: #ffffff !important;">
                         <div class="relative z-10 max-w-2xl">
-                            <span class="px-2.5 py-1 bg-emerald-500/30 text-emerald-200 border border-emerald-400/40 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                            <span class="inline-block px-3 py-1 bg-emerald-500/30 text-emerald-200 border border-emerald-400/40 rounded-full text-[10px] font-bold uppercase tracking-wider mb-2" style="background-color: rgba(16, 185, 129, 0.25) !important; color: #a7f3d0 !important; border: 1px solid rgba(52, 211, 153, 0.4) !important;">
                                 🌿 Ekosistem Sekolah Berwawasan Lingkungan
                             </span>
-                            <h3 class="text-xl sm:text-2xl font-black mt-2">Green Operations Index & Konservasi Sumber Daya</h3>
-                            <p class="text-xs text-emerald-100/80 mt-1 leading-relaxed">
+                            <h3 class="text-xl sm:text-2xl font-black mt-1 text-white" style="color: #ffffff !important;">Green Operations Index & Konservasi Sumber Daya</h3>
+                            <p class="text-xs mt-2 leading-relaxed" style="color: #d1fae5 !important;">
                                 Rekapitulasi dampak positif operasional paperless, penghematan air bersih melalui deteksi dini kebocoran, serta efisiensi energi listrik malam hari di An Nahl Islamic School.
                             </p>
                         </div>
-                        <i class="fa-solid fa-leaf text-8xl text-emerald-500/10 absolute right-4 bottom-2 -rotate-12"></i>
+                        <i class="fa-solid fa-leaf text-8xl absolute right-4 bottom-2 -rotate-12 pointer-events-none" style="color: rgba(16, 185, 129, 0.15) !important;"></i>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
