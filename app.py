@@ -23,8 +23,10 @@ def now_wib():
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "annahl-ops-super-secret-key-2026-bismillah")
 from ops_core import ops_core_bp
+from checklist_core import checklist_bp
 app.register_blueprint(ops_auth_bp)
 app.register_blueprint(ops_core_bp)
+app.register_blueprint(checklist_bp)
 
 # Paths
 DATA_FILE = os.path.expanduser("~/annahl_ops_data.json")
@@ -325,6 +327,13 @@ HTML_TEMPLATE = """
             <button onclick="showTab('tab-standby')" id="btn-tab-standby" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-satellite-dish text-base w-5 text-sky-400"></i>
                 <span>Kesiagaan Pos (Standby)</span>
+            </button>
+            {% endif %}
+
+            {% if user_role in ['manager', 'koordinator_ob', 'koordinator_gardener', 'pic_sarpras'] %}
+            <button onclick="showTab('tab-checklist')" id="btn-tab-checklist" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-clipboard-check text-base w-5 text-emerald-400"></i>
+                <span>Checklist OB & Green Ops</span>
             </button>
             {% endif %}
 
@@ -1593,6 +1602,291 @@ HTML_TEMPLATE = """
                                 </thead>
                                 <tbody id="standby-logs-tbody" class="divide-y divide-slate-100">
                                     <tr><td colspan="7" class="text-center py-6 text-slate-400">Memuat riwayat log...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- TAB CHECKLIST: CHECKLIST PEMELIHARAAN OB & GREEN OPS -->
+            <div id="tab-checklist" class="tab-content hidden space-y-6">
+                <!-- Header & Action Bar -->
+                <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 sm:p-6 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                        <div>
+                            <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+                                <i class="fa-solid fa-clipboard-check text-emerald-600"></i>
+                                Monitoring Checklist Pemeliharaan & Green Operations
+                            </h2>
+                            <p class="text-xs text-slate-500 mt-0.5">Sistem inspeksi terpadu 100% paperless, pencegahan kebocoran air, dan closed-loop tiket perbaikan sarpras.</p>
+                        </div>
+                        <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+                            <button type="button" onclick="loadChecklistDashboard()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 cursor-pointer">
+                                <i class="fa-solid fa-arrows-rotate"></i> Refresh Data
+                            </button>
+                            <a href="/checklist/print-qr" target="_blank" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition shadow-xs flex items-center gap-1.5">
+                                <i class="fa-solid fa-qrcode"></i> Cetak Stiker QR Akrilik
+                            </a>
+                            {% if user_role in ['manager', 'koordinator_ob', 'koordinator_gardener', 'pic_sarpras'] %}
+                            <button type="button" onclick="openModalCreateChecklistZone()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition shadow-xs flex items-center gap-1.5 cursor-pointer">
+                                <i class="fa-solid fa-plus"></i> Tambah Titik Zona
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- 4 Summary Metric Cards -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                        <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-3 sm:p-4">
+                            <span class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider block">Titik Terkontrol Hari Ini</span>
+                            <div class="mt-1 flex items-baseline gap-2">
+                                <span id="stat-chk-controlled" class="text-xl sm:text-2xl font-black text-slate-800">0 / 0</span>
+                                <span class="text-[10px] text-slate-400 font-semibold">titik</span>
+                            </div>
+                            <span class="text-[10px] text-slate-500 mt-1 block">Shift Pagi, Siang & Sore</span>
+                        </div>
+
+                        <div class="bg-emerald-50/60 border border-emerald-200/80 rounded-xl p-3 sm:p-4">
+                            <span class="text-[10px] sm:text-xs font-bold text-emerald-700 uppercase tracking-wider block">Kepatuhan & Kebersihan</span>
+                            <div class="mt-1 flex items-baseline gap-2">
+                                <span id="stat-chk-compliance" class="text-xl sm:text-2xl font-black text-emerald-700">0%</span>
+                                <span class="text-[10px] text-emerald-600 font-semibold">prima</span>
+                            </div>
+                            <span class="text-[10px] text-emerald-600 mt-1 block">Inspeksi terisi & beres</span>
+                        </div>
+
+                        <div class="bg-rose-50/60 border border-rose-200/80 rounded-xl p-3 sm:p-4">
+                            <span class="text-[10px] sm:text-xs font-bold text-rose-700 uppercase tracking-wider block">Tiket Sarpras Aktif</span>
+                            <div class="mt-1 flex items-baseline gap-2">
+                                <span id="stat-chk-open-tickets" class="text-xl sm:text-2xl font-black text-rose-700">0</span>
+                                <span class="text-[10px] text-rose-600 font-semibold">tiket</span>
+                            </div>
+                            <span class="text-[10px] text-rose-600 mt-1 block">Kerusakan dalam antrean perbaikan</span>
+                        </div>
+
+                        <div class="bg-teal-50/60 border border-teal-200/80 rounded-xl p-3 sm:p-4">
+                            <span class="text-[10px] sm:text-xs font-bold text-teal-700 uppercase tracking-wider block">Dampak Green Ops</span>
+                            <div class="mt-1 flex items-baseline gap-2">
+                                <span id="stat-chk-green-impact" class="text-xl sm:text-2xl font-black text-teal-700">0 L</span>
+                                <span class="text-[10px] text-teal-600 font-semibold">air dicegah</span>
+                            </div>
+                            <span id="stat-chk-paper-sub" class="text-[10px] text-teal-600 mt-1 block">0 lembar kertas dihemat</span>
+                        </div>
+                    </div>
+
+                    <!-- Sub-Navigation Pills -->
+                    <div class="flex items-center justify-between gap-3 border-t border-slate-100 pt-3 flex-wrap">
+                        <div class="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl text-xs font-bold">
+                            <button type="button" onclick="switchChecklistSubview('radar')" id="btn-chk-sub-radar"
+                                class="chk-sub-tab px-3.5 py-1.5 rounded-lg bg-white text-emerald-700 shadow-xs transition cursor-pointer">
+                                <i class="fa-solid fa-table-cells mr-1.5"></i> Radar Shift & Zona
+                            </button>
+                            <button type="button" onclick="switchChecklistSubview('tickets')" id="btn-chk-sub-tickets"
+                                class="chk-sub-tab px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer">
+                                <i class="fa-solid fa-wrench mr-1.5"></i> Tiket Sarpras Closed-Loop
+                            </button>
+                            <button type="button" onclick="switchChecklistSubview('green')" id="btn-chk-sub-green"
+                                class="chk-sub-tab px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer">
+                                <i class="fa-solid fa-leaf mr-1.5"></i> Green Operations Index
+                            </button>
+                            <button type="button" onclick="switchChecklistSubview('zones')" id="btn-chk-sub-zones"
+                                class="chk-sub-tab px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer">
+                                <i class="fa-solid fa-location-dot mr-1.5"></i> Master Zona & QR
+                            </button>
+                        </div>
+
+                        <!-- Filter Unit Cepat -->
+                        <div class="flex items-center gap-2">
+                            <label class="text-[11px] font-bold text-slate-500">Filter Unit:</label>
+                            <select id="filter-chk-unit" onchange="loadChecklistDashboard()" class="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                <option value="">Semua Unit (OB & Gardener)</option>
+                                <option value="OB">Unit Office Boy (OB)</option>
+                                <option value="GARDENER">Unit Gardener & Ecopark</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUBVIEW 1: RADAR SHIFT & ZONA -->
+                <div id="chk-subview-radar" class="space-y-4">
+                    <div class="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                                <i class="fa-solid fa-layer-group text-emerald-600"></i>
+                                Status Pemeliharaan Shift Hari Ini
+                            </h3>
+                            <span class="text-xs text-slate-400 font-mono" id="chk-radar-date">Hari Ini</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs text-slate-600">
+                                <thead class="bg-slate-50 text-[10px] text-slate-500 uppercase tracking-wider font-bold border-b border-slate-200">
+                                    <tr>
+                                        <th class="py-3 px-4">Gedung / Sektor</th>
+                                        <th class="py-3 px-4">Titik & Zona Pemeliharaan</th>
+                                        <th class="py-3 px-3 text-center">Pagi (06:30-08:30)</th>
+                                        <th class="py-3 px-3 text-center">Siang 1 (Sanitasi)</th>
+                                        <th class="py-3 px-3 text-center">Siang 2 (Sanitasi)</th>
+                                        <th class="py-3 px-3 text-center">Sore (Closing/Hemat)</th>
+                                        <th class="py-3 px-4 text-center">Aksi Cepat</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="chk-radar-tbody" class="divide-y divide-slate-100">
+                                    <tr><td colspan="7" class="text-center py-8 text-slate-400">Memuat data radar checklist...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUBVIEW 2: TIKET SARPRAS CLOSED-LOOP -->
+                <div id="chk-subview-tickets" class="hidden space-y-4">
+                    <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 sm:p-6 space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
+                            <div>
+                                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                                    <i class="fa-solid fa-wrench text-rose-600"></i>
+                                    Daftar Tiket Kerusakan Fasilitas (Closed-Loop)
+                                </h3>
+                                <p class="text-[11px] text-slate-500 mt-0.5">Tiket diterbitkan otomatis dari checklist jika ditemukan kran bocor, kloset macet, atau saklar rusak.</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <select id="filter-chk-ticket-status" onchange="loadChecklistTickets()" class="bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-slate-800">
+                                    <option value="">Semua Status Tiket</option>
+                                    <option value="OPEN" selected>Aktif (OPEN & IN_PROGRESS)</option>
+                                    <option value="RESOLVED">Selesai (RESOLVED)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs text-slate-600">
+                                <thead class="bg-slate-50 text-[10px] text-slate-500 uppercase tracking-wider font-bold border-b border-slate-200">
+                                    <tr>
+                                        <th class="py-3 px-3">ID Tiket</th>
+                                        <th class="py-3 px-3">Prioritas & Kategori</th>
+                                        <th class="py-3 px-4">Lokasi / Zona</th>
+                                        <th class="py-3 px-4">Rincian Masalah Kerusakan</th>
+                                        <th class="py-3 px-3">Pelapor (OB)</th>
+                                        <th class="py-3 px-3">Target SLA</th>
+                                        <th class="py-3 px-3">Status</th>
+                                        <th class="py-3 px-3 text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="chk-tickets-tbody" class="divide-y divide-slate-100">
+                                    <tr><td colspan="8" class="text-center py-8 text-slate-400">Memuat tiket sarpras...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUBVIEW 3: GREEN OPERATIONS INDEX -->
+                <div id="chk-subview-green" class="hidden space-y-6">
+                    <div class="bg-gradient-to-br from-emerald-900 to-teal-900 text-white rounded-2xl p-6 sm:p-8 shadow-md relative overflow-hidden">
+                        <div class="relative z-10 max-w-2xl">
+                            <span class="px-2.5 py-1 bg-emerald-500/30 text-emerald-200 border border-emerald-400/40 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                                🌿 Ekosistem Sekolah Berwawasan Lingkungan
+                            </span>
+                            <h3 class="text-xl sm:text-2xl font-black mt-2">Green Operations Index & Konservasi Sumber Daya</h3>
+                            <p class="text-xs text-emerald-100/80 mt-1 leading-relaxed">
+                                Rekapitulasi dampak positif operasional paperless, penghematan air bersih melalui deteksi dini kebocoran, serta efisiensi energi listrik malam hari di An Nahl Islamic School.
+                            </p>
+                        </div>
+                        <i class="fa-solid fa-leaf text-8xl text-emerald-500/10 absolute right-4 bottom-2 -rotate-12"></i>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-3 shadow-xs">
+                            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-file-circle-check"></i>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Kertas Diselamatkan</span>
+                                <div class="mt-1 flex items-baseline gap-2">
+                                    <span id="green-metric-paper" class="text-2xl font-black text-slate-800">0</span>
+                                    <span class="text-xs text-slate-400 font-semibold">lembar form</span>
+                                </div>
+                                <p class="text-[11px] text-slate-500 mt-1">Setara dengan <strong id="green-metric-rim" class="text-amber-600">0</strong> rim kertas HVS dan 0 plastik binder.</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-3 shadow-xs">
+                            <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-faucet-drip"></i>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Air Bersih Diselamatkan</span>
+                                <div class="mt-1 flex items-baseline gap-2">
+                                    <span id="green-metric-water" class="text-2xl font-black text-sky-600">0</span>
+                                    <span class="text-xs text-sky-600 font-semibold">Liter</span>
+                                </div>
+                                <p class="text-[11px] text-slate-500 mt-1">Dari <strong id="green-metric-leaks" class="text-slate-800">0</strong> titik kran/toilet bocor yang diperbaiki cepat (&lt;2 jam).</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-3 shadow-xs">
+                            <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-bolt"></i>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Efisiensi Energi Listrik</span>
+                                <div class="mt-1 flex items-baseline gap-2">
+                                    <span id="green-metric-energy" class="text-2xl font-black text-teal-700">0</span>
+                                    <span class="text-xs text-teal-600 font-semibold">kWh</span>
+                                </div>
+                                <p class="text-[11px] text-slate-500 mt-1">Dari <strong id="green-metric-shutoff" class="text-slate-800">0</strong> checklist closing malam hari (AC & lampu OFF).</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-3 shadow-xs">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-recycle"></i>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Sampah Daun Terolah</span>
+                                <div class="mt-1 flex items-baseline gap-2">
+                                    <span id="green-metric-waste" class="text-2xl font-black text-emerald-700">0</span>
+                                    <span class="text-xs text-emerald-600 font-semibold">Kg Serasah</span>
+                                </div>
+                                <p class="text-[11px] text-slate-500 mt-1">100% Zero Burning diolah menjadi kompos organik sekolah.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUBVIEW 4: MASTER ZONA & CETAK QR -->
+                <div id="chk-subview-zones" class="hidden space-y-4">
+                    <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 sm:p-6 space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
+                            <div>
+                                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                                    <i class="fa-solid fa-qrcode text-indigo-600"></i>
+                                    Master Titik Kontrol & Manajemen Stiker QR
+                                </h3>
+                                <p class="text-[11px] text-slate-500 mt-0.5">Daftar lokasi fisik pintu toilet, ruang kelas, taman dan kandang ecopark yang terpasang stiker QR.</p>
+                            </div>
+                            <a href="/checklist/print-qr" target="_blank" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition shadow-xs flex items-center gap-1.5">
+                                <i class="fa-solid fa-print"></i> Cetak Semua Stiker QR
+                            </a>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs text-slate-600">
+                                <thead class="bg-slate-50 text-[10px] text-slate-500 uppercase tracking-wider font-bold border-b border-slate-200">
+                                    <tr>
+                                        <th class="py-3 px-3">ID Titik</th>
+                                        <th class="py-3 px-3">Unit & Sektor</th>
+                                        <th class="py-3 px-4">Nama Zona</th>
+                                        <th class="py-3 px-3">Koordinat GPS</th>
+                                        <th class="py-3 px-3">Radius</th>
+                                        <th class="py-3 px-3">Token QR</th>
+                                        <th class="py-3 px-3 text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="chk-zones-tbody" class="divide-y divide-slate-100">
+                                    <tr><td colspan="7" class="text-center py-8 text-slate-400">Memuat master zona...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -3696,10 +3990,126 @@ HTML_TEMPLATE = """
         </div>
     </div>
 
+
+    <!-- MODAL TAMBAH / EDIT ZONA PEMELIHARAAN -->
+    <div id="modal-create-checklist-zone" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-plus-circle text-emerald-600"></i>
+                    <span>Tambah Titik Zona Pemeliharaan</span>
+                </h3>
+                <button type="button" onclick="toggleModal('modal-create-checklist-zone')" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            </div>
+
+            <form id="form-checklist-zone" onsubmit="saveChecklistZone(event)" class="space-y-3.5 text-xs">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">ID Titik Zona *</label>
+                        <input type="text" id="chk-zone-id" required placeholder="ZONE-OB-TOILET-SD4" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-mono font-bold uppercase">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Unit Kerja *</label>
+                        <select id="chk-zone-unit" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-bold">
+                            <option value="OB">Office Boy (OB / Indoor)</option>
+                            <option value="GARDENER">Gardener (Taman / Ecopark)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Nama Zona Pemeliharaan *</label>
+                    <input type="text" id="chk-zone-name" required placeholder="Contoh: Toilet Siswa Gedung SD Lt 4" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-semibold">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Gedung / Sektor *</label>
+                        <input type="text" id="chk-zone-building" required placeholder="Gedung SD / Ecopark" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Sub-Lingkup *</label>
+                        <select id="chk-zone-subscope" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium">
+                            <option value="INDOOR_SANITASI">Indoor Sanitasi & Toilet</option>
+                            <option value="TAMAN_LANSKAP">Taman & Lanskap Luar</option>
+                            <option value="AGRO_TERNAK">Agro Sayur & Ecopark Ternak</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Latitude</label>
+                        <input type="number" step="any" id="chk-zone-lat" value="-6.339295" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-mono text-xs">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Longitude</label>
+                        <input type="number" step="any" id="chk-zone-lng" value="106.964365" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-mono text-xs">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Radius (meter)</label>
+                        <input type="number" id="chk-zone-radius" value="45" min="10" max="150" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-bold text-xs">
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="toggleModal('modal-create-checklist-zone')" class="px-4 py-2 text-xs font-semibold bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition cursor-pointer">Batal</button>
+                    <button type="submit" class="px-5 py-2 text-xs font-bold bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition shadow-xs flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>Simpan Titik Zona</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL SELESAIKAN TIKET SARPRAS -->
+    <div id="modal-resolve-checklist-ticket" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                    <span>Selesaikan Perbaikan Fasilitas</span>
+                </h3>
+                <button type="button" onclick="toggleModal('modal-resolve-checklist-ticket')" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            </div>
+
+            <form id="form-resolve-ticket" onsubmit="submitResolveTicket(event)" class="space-y-3.5 text-xs">
+                <input type="hidden" id="resolve-ticket-id" value="">
+
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                    <span class="text-[10px] text-slate-400 uppercase font-bold">ID Tiket:</span>
+                    <p id="resolve-ticket-display" class="font-mono font-bold text-slate-800 text-sm">-</p>
+                    <p id="resolve-ticket-desc" class="text-slate-600 text-xs mt-1">-</p>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Nama Teknisi Sarpras *</label>
+                    <input type="text" id="resolve-tech-name" required value="{{ user_nama }}" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-semibold">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Catatan Tindakan Perbaikan *</label>
+                    <textarea id="resolve-notes" rows="2" required placeholder="Contoh: Kran diganti baru merk Onda, sambungan selang di-seal tape..."
+                        class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800"></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="toggleModal('modal-resolve-checklist-ticket')" class="px-4 py-2 text-xs font-semibold bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition cursor-pointer">Batal</button>
+                    <button type="submit" id="btn-submit-resolve" class="px-5 py-2 text-xs font-bold bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition shadow-xs flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-check-double"></i>
+                        <span>Konfirmasi Selesai</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         const titles = {
             'tab-dashboard': 'Dashboard Utama',
             'tab-standby': 'Kesiagaan Pos & Standby Geotagging',
+            'tab-checklist': 'Monitoring Checklist OB & Green Ops',
             'tab-kuma': 'Infrastructure Uptime Kuma Monitor & WA Alert',
             'tab-analytics': 'Grafik Analitik & Tren Kinerja Operasional',
             'tab-journal': 'Jurnal Kegiatan Harian Mr Slam',
@@ -3792,6 +4202,9 @@ HTML_TEMPLATE = """
             }
             if (tabId === 'tab-standby') {
                 loadStandbyRadar();
+            }
+            if (tabId === 'tab-checklist') {
+                loadChecklistDashboard();
             }
 
             if (window.innerWidth < 768) {
@@ -6281,6 +6694,295 @@ HTML_TEMPLATE = """
                 alert('❌ Error: ' + err.message);
             }
         }
+
+        // ============ SISTEM MONITORING CHECKLIST PEMELIHARAAN & GREEN OPS ============
+        let currentChecklistSubview = 'radar';
+
+        function switchChecklistSubview(subviewId) {
+            currentChecklistSubview = subviewId;
+            document.querySelectorAll('.chk-sub-tab').forEach(b => {
+                b.className = "chk-sub-tab px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer";
+            });
+            document.getElementById(`btn-chk-sub-${subviewId}`).className = "chk-sub-tab px-3.5 py-1.5 rounded-lg bg-white text-emerald-700 shadow-xs transition cursor-pointer";
+
+            document.getElementById('chk-subview-radar').classList.add('hidden');
+            document.getElementById('chk-subview-tickets').classList.add('hidden');
+            document.getElementById('chk-subview-green').classList.add('hidden');
+            document.getElementById('chk-subview-zones').classList.add('hidden');
+
+            document.getElementById(`chk-subview-${subviewId}`).classList.remove('hidden');
+
+            if (subviewId === 'radar') loadChecklistDashboard();
+            if (subviewId === 'tickets') loadChecklistTickets();
+            if (subviewId === 'green') loadChecklistGreenStats();
+            if (subviewId === 'zones') loadChecklistZones();
+        }
+
+        async function loadChecklistDashboard() {
+            const unit = document.getElementById('filter-chk-unit').value;
+            const url = `/api/ops/checklist/radar?unit=${encodeURIComponent(unit)}`;
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                if (!data.success) return;
+
+                // Update Metric Cards
+                document.getElementById('stat-chk-controlled').innerText = `${data.filled_ok + data.filled_anomaly} / ${data.total_zones}`;
+                document.getElementById('stat-chk-compliance').innerText = `${data.compliance_pct}%`;
+                document.getElementById('stat-chk-open-tickets').innerText = data.open_tickets;
+                document.getElementById('chk-radar-date').innerText = `Tanggal: ${data.date}`;
+
+                // Render Radar Table
+                const tbody = document.getElementById('chk-radar-tbody');
+                if (!data.radar || data.radar.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-400">Belum ada data zona pemeliharaan.</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                data.radar.forEach(item => {
+                    const z = item.zone;
+                    const shifts = item.shifts;
+
+                    function renderPill(sData) {
+                        if (!sData.checked) {
+                            return '<span class="inline-block px-2.5 py-1 rounded-md text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200">Belum</span>';
+                        }
+                        if (sData.status === 'ALL_OK') {
+                            return `<div class="inline-flex flex-col items-center"><span class="px-2.5 py-1 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">✓ NORMAL</span><span class="text-[9px] text-slate-400 mt-0.5">${sData.time} &bull; ${sData.petugas}</span></div>`;
+                        }
+                        return `<div class="inline-flex flex-col items-center"><span class="px-2.5 py-1 rounded-md text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">⚠️ RUSAK</span><span class="text-[9px] text-rose-600 font-mono mt-0.5 font-bold">${sData.ticket_id || 'TIKET'}</span></div>`;
+                    }
+
+                    html += `
+                        <tr class="hover:bg-slate-50/80 transition">
+                            <td class="py-3 px-4 font-bold text-slate-700">
+                                <span class="text-[10px] font-black px-1.5 py-0.5 rounded ${z.unit_type === 'OB' ? 'bg-sky-100 text-sky-800' : 'bg-emerald-100 text-emerald-800'} uppercase mr-1">${z.unit_type}</span>
+                                ${z.building_or_sector}
+                            </td>
+                            <td class="py-3 px-4 font-semibold text-slate-800">${z.zone_name}</td>
+                            <td class="py-3 px-3 text-center">${renderPill(shifts.PAGI)}</td>
+                            <td class="py-3 px-3 text-center">${renderPill(shifts.SIANG_1)}</td>
+                            <td class="py-3 px-3 text-center">${renderPill(shifts.SIANG_2)}</td>
+                            <td class="py-3 px-3 text-center">${renderPill(shifts.SORE)}</td>
+                            <td class="py-3 px-4 text-center">
+                                <div class="flex items-center justify-center gap-1.5">
+                                    <a href="/c/${z.qr_token}" target="_blank" title="Buka Form Micro-Web" class="p-1.5 text-slate-500 hover:text-emerald-600 rounded-lg hover:bg-emerald-50 transition">
+                                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                    </a>
+                                    <a href="/checklist/print-qr?zone_id=${z.id}" target="_blank" title="Cetak Stiker QR" class="p-1.5 text-slate-500 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 transition">
+                                        <i class="fa-solid fa-qrcode"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+
+                // Auto-refresh stats green
+                loadChecklistGreenStats(false);
+            } catch (err) {
+                console.error("Gagal load checklist radar:", err);
+            }
+        }
+
+        async function loadChecklistTickets() {
+            const status = document.getElementById('filter-chk-ticket-status').value;
+            const url = `/api/ops/checklist/tickets?status=${encodeURIComponent(status)}`;
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                const tbody = document.getElementById('chk-tickets-tbody');
+                if (!data.tickets || data.tickets.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-slate-400">Tidak ada tiket kerusakan fasilitas saat ini.</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                data.tickets.forEach(t => {
+                    const isHigh = t.priority === 'HIGH' || t.priority === 'EMERGENCY';
+                    const prioBadge = isHigh ? 
+                        '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">🚨 TINGGI</span>' : 
+                        '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">⚠️ SEDANG</span>';
+
+                    const isResolved = t.status === 'RESOLVED';
+                    const statusBadge = isResolved ?
+                        '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">✓ SELESAI</span>' :
+                        '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">⏳ OPEN</span>';
+
+                    let actionBtn = '';
+                    if (!isResolved) {
+                        actionBtn = `<button type="button" onclick="openResolveTicketModal('${t.ticket_id}', '${escape(t.issue_description)}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold shadow-xs flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-wrench"></i> Selesaikan</button>`;
+                    } else {
+                        actionBtn = `<span class="text-[10px] text-slate-400 font-medium">Selesai: ${t.assigned_tech_name || 'Sarpras'}</span>`;
+                    }
+
+                    html += `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="py-3 px-3 font-mono font-bold text-slate-900">${t.ticket_id}</td>
+                            <td class="py-3 px-3 space-y-1">
+                                ${prioBadge}
+                                <div class="text-[10px] text-slate-500">${t.category}</div>
+                            </td>
+                            <td class="py-3 px-4">
+                                <div class="font-bold text-slate-800">${t.zone_name || '-'}</div>
+                                <div class="text-[10px] text-slate-400">${t.building_or_sector || '-'}</div>
+                            </td>
+                            <td class="py-3 px-4 text-slate-700 max-w-xs">
+                                <p class="font-medium">${t.issue_description}</p>
+                                ${t.photo_before_url ? `<a href="${t.photo_before_url}" target="_blank" class="text-[10px] text-indigo-600 underline hover:text-indigo-800 mt-1 inline-block"><i class="fa-solid fa-image"></i> Lihat Foto Bukti</a>` : ''}
+                            </td>
+                            <td class="py-3 px-3 font-semibold text-slate-800">${t.reporter_name}</td>
+                            <td class="py-3 px-3 font-bold text-slate-700">${t.sla_hours} Jam</td>
+                            <td class="py-3 px-3">${statusBadge}</td>
+                            <td class="py-3 px-3 text-center">${actionBtn}</td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            } catch (err) {
+                console.error("Gagal load tiket sarpras:", err);
+            }
+        }
+
+        function openResolveTicketModal(ticketId, descEscaped) {
+            document.getElementById('resolve-ticket-id').value = ticketId;
+            document.getElementById('resolve-ticket-display').innerText = ticketId;
+            document.getElementById('resolve-ticket-desc').innerText = unescape(descEscaped);
+            toggleModal('modal-resolve-checklist-ticket');
+        }
+
+        async function submitResolveTicket(event) {
+            event.preventDefault();
+            const btn = document.getElementById('btn-submit-resolve');
+            const ticketId = document.getElementById('resolve-ticket-id').value;
+            const techName = document.getElementById('resolve-tech-name').value.trim();
+            const notes = document.getElementById('resolve-notes').value.trim();
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+
+            try {
+                const res = await fetch(`/api/ops/checklist/tickets/${encodeURIComponent(ticketId)}/resolve`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tech_name: techName, resolution_notes: notes })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    toggleModal('modal-resolve-checklist-ticket');
+                    loadChecklistTickets();
+                    loadChecklistDashboard();
+                } else {
+                    alert('Gagal: ' + (data.error || 'Terjadi kesalahan'));
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check-double"></i> Konfirmasi Selesai';
+            }
+        }
+
+        async function loadChecklistGreenStats(updateCardsOnly = false) {
+            try {
+                const res = await fetch('/api/ops/checklist/green-stats');
+                const data = await res.json();
+                if (!data.success) return;
+                const m = data.metrics;
+
+                document.getElementById('stat-chk-green-impact').innerText = `${m.water_liters_saved.toLocaleString('id-ID')} L`;
+                document.getElementById('stat-chk-paper-sub').innerText = `${m.paper_sheets_saved} lembar kertas dihemat`;
+
+                if (!updateCardsOnly) {
+                    document.getElementById('green-metric-paper').innerText = m.paper_sheets_saved;
+                    document.getElementById('green-metric-rim').innerText = m.paper_rim_equivalent;
+                    document.getElementById('green-metric-water').innerText = m.water_liters_saved.toLocaleString('id-ID');
+                    document.getElementById('green-metric-leaks').innerText = m.leaks_resolved;
+                    document.getElementById('green-metric-energy').innerText = m.kwh_electricity_saved;
+                    document.getElementById('green-metric-shutoff').innerText = m.energy_closing_checks;
+                    document.getElementById('green-metric-waste').innerText = m.organic_waste_kg;
+                }
+            } catch (err) {
+                console.error("Gagal load green stats:", err);
+            }
+        }
+
+        async function loadChecklistZones() {
+            try {
+                const res = await fetch('/api/ops/checklist/zones');
+                const data = await res.json();
+                const tbody = document.getElementById('chk-zones-tbody');
+                if (!data.zones || data.zones.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-slate-400">Belum ada titik zona master.</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                data.zones.forEach(z => {
+                    html += `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="py-3 px-3 font-mono font-bold text-slate-800 text-[11px]">${z.id}</td>
+                            <td class="py-3 px-3 font-semibold text-slate-700">
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-black ${z.unit_type === 'OB' ? 'bg-sky-100 text-sky-800' : 'bg-emerald-100 text-emerald-800'} uppercase mr-1">${z.unit_type}</span>
+                                ${z.building_or_sector}
+                            </td>
+                            <td class="py-3 px-4 font-bold text-slate-800">${z.zone_name}</td>
+                            <td class="py-3 px-3 font-mono text-[10px] text-slate-500">${z.target_lat.toFixed(5)}, ${z.target_lng.toFixed(5)}</td>
+                            <td class="py-3 px-3 font-bold text-slate-700">${z.geofence_radius_m} m</td>
+                            <td class="py-3 px-3 font-mono text-[10px] text-slate-400">${z.qr_token}</td>
+                            <td class="py-3 px-3 text-center">
+                                <div class="flex items-center justify-center gap-1.5">
+                                    <a href="/c/${z.qr_token}" target="_blank" class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded text-[10px] font-bold hover:bg-emerald-100">Buka PWA</a>
+                                    <a href="/checklist/print-qr?zone_id=${z.id}" target="_blank" class="px-2 py-1 bg-indigo-50 text-indigo-700 rounded text-[10px] font-bold hover:bg-indigo-100">Cetak QR</a>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            } catch (err) {
+                console.error("Gagal load checklist zones:", err);
+            }
+        }
+
+        function openModalCreateChecklistZone() {
+            toggleModal('modal-create-checklist-zone');
+        }
+
+        async function saveChecklistZone(event) {
+            event.preventDefault();
+            const payload = {
+                id: document.getElementById('chk-zone-id').value.trim(),
+                unit_type: document.getElementById('chk-zone-unit').value,
+                zone_name: document.getElementById('chk-zone-name').value.trim(),
+                building_or_sector: document.getElementById('chk-zone-building').value.trim(),
+                sub_scope: document.getElementById('chk-zone-subscope').value,
+                target_lat: parseFloat(document.getElementById('chk-zone-lat').value),
+                target_lng: parseFloat(document.getElementById('chk-zone-lng').value),
+                geofence_radius_m: parseInt(document.getElementById('chk-zone-radius').value)
+            };
+
+            try {
+                const res = await fetch('/api/ops/checklist/zones/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    toggleModal('modal-create-checklist-zone');
+                    loadChecklistZones();
+                    loadChecklistDashboard();
+                } else {
+                    alert('Gagal: ' + (data.error || 'Terjadi kesalahan'));
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
     </script>
 </body>
 </html>
