@@ -833,10 +833,18 @@ def api_get_checklist_zone(token):
 
     cur.execute('''
         SELECT * FROM checklist_templates 
-        WHERE unit_type = ? AND (shift_code = ? OR shift_code = 'ALL_DAY') AND is_active = 1
-        ORDER BY item_order ASC
-    ''', (zone_dict['unit_type'], shift_code))
+        WHERE unit_type = ? AND sub_scope = ? AND (shift_code = ? OR shift_code = 'ALL_DAY') AND is_active = 1
+        ORDER BY item_order ASC, id ASC
+    ''', (zone_dict['unit_type'], zone_dict.get('sub_scope', ''), shift_code))
     items = [dict(r) for r in cur.fetchall()]
+
+    if not items:
+        cur.execute('''
+            SELECT * FROM checklist_templates 
+            WHERE unit_type = ? AND (shift_code = ? OR shift_code = 'ALL_DAY') AND is_active = 1
+            ORDER BY item_order ASC, id ASC
+        ''', (zone_dict['unit_type'], shift_code))
+        items = [dict(r) for r in cur.fetchall()]
     conn.close()
 
     return jsonify({
@@ -1316,6 +1324,216 @@ def api_delete_checklist_zone(zone_id):
 
     msg = "Zona dinonaktifkan (karena memiliki riwayat log)" if has_logs else "Zona berhasil dihapus"
     return jsonify({"success": True, "message": msg, "soft_deleted": has_logs})
+
+
+# ==================== CHECKLIST TEMPLATES (DYNAMIC CRUD) ====================
+
+@checklist_bp.route("/api/ops/checklist/templates", methods=["GET"])
+def api_get_checklist_templates():
+    """
+    Mengambil daftar butir template checklist secara dinamis dengan opsi filter:
+    - unit: 'OB', 'GARDENER', atau '' (semua)
+    - sub_scope: 'INDOOR_SANITASI', 'TAMAN_LANSKAP', 'AGRO_TERNAK', dll
+    - shift: 'PAGI', 'SIANG_1', 'SIANG_2', 'SORE', 'ALL_DAY', dll
+    - is_active: '1', '0', atau '' (semua)
+    """
+    unit_filter = request.args.get("unit", "").strip().upper()
+    sub_scope_filter = request.args.get("sub_scope", "").strip()
+    shift_filter = request.args.get("shift", "").strip().upper()
+    active_filter = request.args.get("is_active", "").strip()
+
+    query = "SELECT * FROM checklist_templates WHERE 1=1"
+    params = []
+
+    if unit_filter in ['OB', 'GARDENER']:
+        query += " AND unit_type = ?"
+        params.append(unit_filter)
+
+    if sub_scope_filter:
+        query += " AND sub_scope = ?"
+        params.append(sub_scope_filter)
+
+    if shift_filter in ['PAGI', 'SIANG_1', 'SIANG_2', 'SORE', 'ALL_DAY']:
+        query += " AND shift_code = ?"
+        params.append(shift_filter)
+
+    if active_filter in ['0', '1']:
+        query += " AND is_active = ?"
+        params.append(int(active_filter))
+
+    query += " ORDER BY unit_type ASC, sub_scope ASC, shift_code ASC, item_order ASC, id ASC"
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(query, tuple(params))
+    rows = [dict(r) for r in cur.fetchall()]
+    conn.close()
+
+    return jsonify({
+        "success": True,
+        "count": len(rows),
+        "templates": rows
+    })
+
+
+@checklist_bp.route("/api/ops/checklist/templates/<int:template_id>", methods=["GET"])
+def api_get_single_checklist_template(template_id):
+    """Mengambil satu butir template checklist untuk pengeditan"""
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM checklist_templates WHERE id = ?", (template_id,))
+    row = cur.fetchone()
+    conn.close()
+
+    if not row:
+        return jsonify({"success": False, "error": "Butir template checklist tidak ditemukan"}), 404
+
+    return jsonify({"success": True, "template": dict(row)})
+
+
+@checklist_bp.route("/api/ops/checklist/templates/create", methods=["POST"])
+@checklist_bp.route("/api/ops/checklist/templates", methods=["POST"])
+def api_create_checklist_template():
+    """Menambahkan butir checklist baru ke dalam master template"""
+    data = request.get_json(silent=True) or {}
+    unit_type = (data.get("unit_type") or "OB").strip().upper()
+    sub_scope = (data.get("sub_scope") or "INDOOR_SANITASI").strip()
+    shift_code = (data.get("shift_code") or "PAGI").strip().upper()
+    item_label = (data.get("item_label") or "").strip()
+    help_text = (data.get("help_text") or "").strip()
+    is_eco_critical = int(data.get("is_eco_critical") or 0)
+    is_active = int(data.get("is_active") if data.get("is_active") is not None else 1)
+    raw_order = data.get("item_order")
+
+    if not item_label:
+        return jsonify({"success": False, "error": "Label / isi checklist wajib diisi"}), 400
+
+    if unit_type not in ['OB', 'GARDENER']:
+        return jsonify({"success": False, "error": "Unit kerja harus OB atau GARDENER"}), 400
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    # Hitung item_order otomatis jika kosong/0
+    try:
+        item_order = int(raw_order)
+        if item_order <= 0:
+            raise ValueError()
+    except (ValueError, TypeError):
+        cur.execute("""
+            SELECT COALESCE(MAX(item_order), 0) + 1 
+            FROM checklist_templates 
+            WHERE unit_type = ? AND sub_scope = ? AND shift_code = ?
+        """, (unit_type, sub_scope, shift_code))
+        item_order = cur.fetchone()[0]
+
+    cur.execute('''
+        INSERT INTO checklist_templates (
+            unit_type, sub_scope, shift_code, item_order, item_label, help_text, is_eco_critical, is_active
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (unit_type, sub_scope, shift_code, item_order, item_label, help_text, is_eco_critical, is_active))
+    new_id = cur.lastrowid
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "success": True,
+        "message": f"Butir checklist berhasil ditambahkan!",
+        "id": new_id
+    }), 201
+
+
+@checklist_bp.route("/api/ops/checklist/templates/<int:template_id>/edit", methods=["POST", "PUT"])
+@checklist_bp.route("/api/ops/checklist/templates/<int:template_id>", methods=["PUT", "PATCH"])
+def api_edit_checklist_template(template_id):
+    """Memperbarui butir template checklist yang ada"""
+    data = request.get_json(silent=True) or {}
+    unit_type = (data.get("unit_type") or "OB").strip().upper()
+    sub_scope = (data.get("sub_scope") or "INDOOR_SANITASI").strip()
+    shift_code = (data.get("shift_code") or "PAGI").strip().upper()
+    item_label = (data.get("item_label") or "").strip()
+    help_text = (data.get("help_text") or "").strip()
+    is_eco_critical = int(data.get("is_eco_critical") or 0)
+    is_active = int(data.get("is_active") if data.get("is_active") is not None else 1)
+    
+    try:
+        item_order = int(data.get("item_order") or 1)
+    except (ValueError, TypeError):
+        item_order = 1
+
+    if not item_label:
+        return jsonify({"success": False, "error": "Label / isi checklist wajib diisi"}), 400
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('''
+        UPDATE checklist_templates
+        SET unit_type = ?,
+            sub_scope = ?,
+            shift_code = ?,
+            item_order = ?,
+            item_label = ?,
+            help_text = ?,
+            is_eco_critical = ?,
+            is_active = ?
+        WHERE id = ?
+    ''', (unit_type, sub_scope, shift_code, item_order, item_label, help_text, is_eco_critical, is_active, template_id))
+    affected = cur.rowcount
+    conn.commit()
+    conn.close()
+
+    if affected == 0:
+        return jsonify({"success": False, "error": "Butir template checklist tidak ditemukan"}), 404
+
+    return jsonify({
+        "success": True,
+        "message": f"Butir checklist #{template_id} berhasil diperbarui!"
+    })
+
+
+@checklist_bp.route("/api/ops/checklist/templates/<int:template_id>/toggle-active", methods=["POST"])
+def api_toggle_active_checklist_template(template_id):
+    """Mengubah status aktif/nonaktif butir template secara instan"""
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT is_active, item_label FROM checklist_templates WHERE id = ?", (template_id,))
+    row = cur.fetchone()
+    if not row:
+        conn.close()
+        return jsonify({"success": False, "error": "Butir template tidak ditemukan"}), 404
+
+    current_state = row[0]
+    new_state = 0 if current_state == 1 else 1
+    cur.execute("UPDATE checklist_templates SET is_active = ? WHERE id = ?", (new_state, template_id))
+    conn.commit()
+    conn.close()
+
+    status_str = "diaktifkan" if new_state == 1 else "dinonaktifkan"
+    return jsonify({
+        "success": True,
+        "is_active": new_state,
+        "message": f"Butir '{row[1][:25]}...' berhasil {status_str}."
+    })
+
+
+@checklist_bp.route("/api/ops/checklist/templates/<int:template_id>/delete", methods=["POST", "DELETE"])
+@checklist_bp.route("/api/ops/checklist/templates/<int:template_id>", methods=["DELETE"])
+def api_delete_checklist_template(template_id):
+    """Menghapus butir template checklist dari master"""
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM checklist_templates WHERE id = ?", (template_id,))
+    affected = cur.rowcount
+    conn.commit()
+    conn.close()
+
+    if affected == 0:
+        return jsonify({"success": False, "error": "Butir template tidak ditemukan"}), 404
+
+    return jsonify({
+        "success": True,
+        "message": f"Butir template #{template_id} berhasil dihapus dari sistem."
+    })
 
 
 

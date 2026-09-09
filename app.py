@@ -1630,6 +1630,9 @@ HTML_TEMPLATE = """
                                 <i class="fa-solid fa-qrcode"></i> Cetak Stiker QR Akrilik
                             </a>
                             {% if user_role in ['manager', 'koordinator_ob', 'koordinator_gardener', 'pic_sarpras'] %}
+                            <button type="button" onclick="openModalCreateChecklistTemplate()" class="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-lg transition shadow-xs flex items-center gap-1.5 cursor-pointer">
+                                <i class="fa-solid fa-plus"></i> Tambah Butir Checklist
+                            </button>
                             <button type="button" onclick="openModalCreateChecklistZone()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition shadow-xs flex items-center gap-1.5 cursor-pointer">
                                 <i class="fa-solid fa-plus"></i> Tambah Titik Zona
                             </button>
@@ -1678,7 +1681,7 @@ HTML_TEMPLATE = """
 
                     <!-- Sub-Navigation Pills -->
                     <div class="flex items-center justify-between gap-3 border-t border-slate-100 pt-3 flex-wrap">
-                        <div class="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl text-xs font-bold">
+                        <div class="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl text-xs font-bold flex-wrap">
                             <button type="button" onclick="switchChecklistSubview('radar')" id="btn-chk-sub-radar"
                                 class="chk-sub-tab px-3.5 py-1.5 rounded-lg bg-white text-emerald-700 shadow-xs transition cursor-pointer">
                                 <i class="fa-solid fa-table-cells mr-1.5"></i> Radar Shift & Zona
@@ -1694,6 +1697,10 @@ HTML_TEMPLATE = """
                             <button type="button" onclick="switchChecklistSubview('zones')" id="btn-chk-sub-zones"
                                 class="chk-sub-tab px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer">
                                 <i class="fa-solid fa-location-dot mr-1.5"></i> Master Zona & QR
+                            </button>
+                            <button type="button" onclick="switchChecklistSubview('templates')" id="btn-chk-sub-templates"
+                                class="chk-sub-tab px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer">
+                                <i class="fa-solid fa-list-check mr-1.5"></i> Kelola Butir Checklist Dinamis
                             </button>
                         </div>
 
@@ -1887,6 +1894,91 @@ HTML_TEMPLATE = """
                                 </thead>
                                 <tbody id="chk-zones-tbody" class="divide-y divide-slate-100">
                                     <tr><td colspan="7" class="text-center py-8 text-slate-400">Memuat master zona...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUBVIEW 5: KELOLA BUTIR CHECKLIST DINAMIS -->
+                <div id="chk-subview-templates" class="hidden space-y-4">
+                    <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 sm:p-6 space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
+                            <div>
+                                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                                    <i class="fa-solid fa-list-check text-teal-600"></i>
+                                    Kelola Parameter & Butir Checklist Lapangan (Dinamis)
+                                </h3>
+                                <p class="text-[11px] text-slate-500 mt-0.5">Kustomisasi butir inspeksi OB & Gardener secara real-time. Perubahan langsung aktif di aplikasi micro-checkin mobile saat scan QR.</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span id="chk-templates-count-badge" class="px-2.5 py-1 bg-teal-50 text-teal-700 font-mono text-[11px] font-bold rounded-lg border border-teal-200">
+                                    0 Butir
+                                </span>
+                                {% if user_role in ['manager', 'koordinator_ob', 'koordinator_gardener', 'pic_sarpras'] %}
+                                <button type="button" onclick="openModalCreateChecklistTemplate()" class="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-lg transition shadow-xs flex items-center gap-1.5 cursor-pointer">
+                                    <i class="fa-solid fa-plus"></i> Tambah Butir Baru
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Filter Bar for Checklist Templates -->
+                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Filter Unit</label>
+                                <select id="filter-chk-tpl-unit" onchange="loadChecklistTemplates()" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 font-semibold focus:outline-none focus:ring-1 focus:ring-teal-500">
+                                    <option value="">Semua Unit</option>
+                                    <option value="OB">Unit Office Boy (OB)</option>
+                                    <option value="GARDENER">Unit Gardener & Ecopark</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Filter Sub-Lingkup</label>
+                                <select id="filter-chk-tpl-subscope" onchange="loadChecklistTemplates()" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 font-semibold focus:outline-none focus:ring-1 focus:ring-teal-500">
+                                    <option value="">Semua Sub-Lingkup</option>
+                                    <option value="INDOOR_SANITASI">Indoor Sanitasi & Toilet</option>
+                                    <option value="TAMAN_LANSKAP">Taman & Lanskap Luar</option>
+                                    <option value="AGRO_TERNAK">Agro Sayur & Ecopark Ternak</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Filter Shift</label>
+                                <select id="filter-chk-tpl-shift" onchange="loadChecklistTemplates()" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 font-semibold focus:outline-none focus:ring-1 focus:ring-teal-500">
+                                    <option value="">Semua Shift</option>
+                                    <option value="PAGI">Pagi (06:30 - 08:30)</option>
+                                    <option value="SIANG_1">Siang 1 (08:30 - 12:30)</option>
+                                    <option value="SIANG_2">Siang 2 (12:30 - 16:00)</option>
+                                    <option value="SORE">Sore (16:00 - 18:00)</option>
+                                    <option value="ALL_DAY">Sepanjang Hari (All Day)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Status Keaktifan</label>
+                                <select id="filter-chk-tpl-active" onchange="loadChecklistTemplates()" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 font-semibold focus:outline-none focus:ring-1 focus:ring-teal-500">
+                                    <option value="">Semua Status</option>
+                                    <option value="1">Hanya Aktif</option>
+                                    <option value="0">Hanya Non-Aktif (Arsip)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Template Items Table -->
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs text-slate-600">
+                                <thead class="bg-slate-50 text-[10px] text-slate-500 uppercase tracking-wider font-bold border-b border-slate-200">
+                                    <tr>
+                                        <th class="py-3 px-3 w-14 text-center">Urut</th>
+                                        <th class="py-3 px-3">Unit & Lingkup</th>
+                                        <th class="py-3 px-3">Shift Tugas</th>
+                                        <th class="py-3 px-4">Pertanyaan & Panduan Inspeksi</th>
+                                        <th class="py-3 px-3 text-center">Klasifikasi</th>
+                                        <th class="py-3 px-3 text-center">Status</th>
+                                        <th class="py-3 px-4 text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="chk-templates-tbody" class="divide-y divide-slate-100">
+                                    <tr><td colspan="7" class="text-center py-8 text-slate-400">Memuat butir checklist...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -4077,6 +4169,93 @@ HTML_TEMPLATE = """
                     <button type="submit" id="btn-save-chk-zone" class="px-5 py-2 text-xs font-bold bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition shadow-xs flex items-center gap-1.5 cursor-pointer">
                         <i class="fa-solid fa-floppy-disk"></i>
                         <span id="btn-save-chk-zone-text">Simpan Titik Zona</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL TAMBAH / EDIT BUTIR CHECKLIST DINAMIS -->
+    <div id="modal-manage-checklist-template" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 id="modal-chk-tpl-title" class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-teal-600"></i>
+                    <span>Tambah Butir Checklist Baru</span>
+                </h3>
+                <button type="button" onclick="toggleModal('modal-manage-checklist-template')" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            </div>
+
+            <form id="form-checklist-template" onsubmit="saveChecklistTemplate(event)" class="space-y-3.5 text-xs">
+                <input type="hidden" id="chk-tpl-id" value="">
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Unit Kerja *</label>
+                        <select id="chk-tpl-unit" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-bold focus:bg-white focus:outline-none focus:border-teal-500">
+                            <option value="OB">Office Boy (OB / Indoor)</option>
+                            <option value="GARDENER">Gardener (Taman & Ecopark)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Sub-Lingkup Area *</label>
+                        <select id="chk-tpl-subscope" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium focus:bg-white focus:outline-none focus:border-teal-500">
+                            <option value="INDOOR_SANITASI">Indoor Sanitasi & Toilet</option>
+                            <option value="TAMAN_LANSKAP">Taman & Lanskap Luar</option>
+                            <option value="AGRO_TERNAK">Agro Sayur & Ecopark Ternak</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Shift Tugas *</label>
+                        <select id="chk-tpl-shift" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-semibold focus:bg-white focus:outline-none focus:border-teal-500">
+                            <option value="PAGI">Pagi (06:30 - 08:30)</option>
+                            <option value="SIANG_1">Siang 1 (08:30 - 12:30)</option>
+                            <option value="SIANG_2">Siang 2 (12:30 - 16:00)</option>
+                            <option value="SORE">Sore (16:00 - 18:00)</option>
+                            <option value="ALL_DAY">Sepanjang Hari (All Day)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Nomor Urutan Tampil</label>
+                        <input type="number" id="chk-tpl-order" value="1" min="1" max="99" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-bold focus:bg-white focus:outline-none focus:border-teal-500" placeholder="Auto jika kosong">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Pertanyaan / Butir Checklist *</label>
+                    <textarea id="chk-tpl-label" rows="2" required placeholder="Contoh: Kran wastafel/bak mengalir lancar & tidak bocor" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium focus:bg-white focus:outline-none focus:border-teal-500"></textarea>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Panduan / Petunjuk Inspeksi Lapangan (Help Text)</label>
+                    <textarea id="chk-tpl-help" rows="2" placeholder="Contoh: Cek dinding bak & sambungan pipa fleksibel untuk mencegah air terbuang" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:border-teal-500"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 pt-1">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Klasifikasi Lingkungan *</label>
+                        <select id="chk-tpl-eco" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-semibold focus:bg-white focus:outline-none focus:border-teal-500">
+                            <option value="0">Standar Pemeliharaan</option>
+                            <option value="1">🌱 Eco-Critical (Hemat Air/Energi/Kompos)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Status Keaktifan *</label>
+                        <select id="chk-tpl-active" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-semibold focus:bg-white focus:outline-none focus:border-teal-500">
+                            <option value="1">Aktif (Tampil di Form Petugas)</option>
+                            <option value="0">Non-Aktif (Diarsipkan)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="toggleModal('modal-manage-checklist-template')" class="px-4 py-2 text-xs font-semibold bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition cursor-pointer">Batal</button>
+                    <button type="submit" id="btn-save-chk-tpl" class="px-5 py-2 text-xs font-bold bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition shadow-xs flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span id="btn-save-chk-tpl-text">Simpan Butir Checklist</span>
                     </button>
                 </div>
             </form>
@@ -6729,6 +6908,7 @@ HTML_TEMPLATE = """
             document.getElementById('chk-subview-tickets').classList.add('hidden');
             document.getElementById('chk-subview-green').classList.add('hidden');
             document.getElementById('chk-subview-zones').classList.add('hidden');
+            document.getElementById('chk-subview-templates').classList.add('hidden');
 
             document.getElementById(`chk-subview-${subviewId}`).classList.remove('hidden');
 
@@ -6736,6 +6916,7 @@ HTML_TEMPLATE = """
             if (subviewId === 'tickets') loadChecklistTickets();
             if (subviewId === 'green') loadChecklistGreenStats();
             if (subviewId === 'zones') loadChecklistZones();
+            if (subviewId === 'templates') loadChecklistTemplates();
         }
 
         async function loadChecklistDashboard() {
@@ -7125,6 +7306,227 @@ HTML_TEMPLATE = """
                 }
             } catch (err) {
                 alert('Error: ' + err.message);
+            }
+        }
+
+        // ============ CHECKLIST TEMPLATES (DYNAMIC CRUD) ============
+        let cachedChecklistTemplates = [];
+
+        async function loadChecklistTemplates() {
+            const unit = document.getElementById('filter-chk-tpl-unit')?.value || '';
+            const subscope = document.getElementById('filter-chk-tpl-subscope')?.value || '';
+            const shift = document.getElementById('filter-chk-tpl-shift')?.value || '';
+            const active = document.getElementById('filter-chk-tpl-active')?.value || '';
+
+            const params = new URLSearchParams();
+            if (unit) params.append('unit', unit);
+            if (subscope) params.append('sub_scope', subscope);
+            if (shift) params.append('shift', shift);
+            if (active !== '') params.append('is_active', active);
+
+            const url = `/api/ops/checklist/templates?${params.toString()}`;
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                const tbody = document.getElementById('chk-templates-tbody');
+                const badge = document.getElementById('chk-templates-count-badge');
+
+                if (!data.success) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-rose-500 font-semibold">Gagal memuat butir checklist.</td></tr>';
+                    return;
+                }
+
+                cachedChecklistTemplates = data.templates || [];
+                if (badge) badge.innerText = `${cachedChecklistTemplates.length} Butir`;
+
+                if (cachedChecklistTemplates.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-slate-400">Tidak ada butir checklist yang cocok dengan filter.</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                cachedChecklistTemplates.forEach(tpl => {
+                    const isEco = tpl.is_eco_critical == 1;
+                    const isActive = tpl.is_active == 1;
+
+                    const unitBadge = tpl.unit_type === 'OB' ?
+                        '<span class="px-1.5 py-0.5 rounded text-[10px] font-black bg-sky-100 text-sky-800 uppercase mr-1">OB</span>' :
+                        '<span class="px-1.5 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-800 uppercase mr-1">GARDENER</span>';
+
+                    let shiftBadge = '';
+                    if (tpl.shift_code === 'PAGI') shiftBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">🌅 Pagi</span>';
+                    else if (tpl.shift_code === 'SIANG_1') shiftBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">☀️ Siang 1</span>';
+                    else if (tpl.shift_code === 'SIANG_2') shiftBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">🌤️ Siang 2</span>';
+                    else if (tpl.shift_code === 'SORE') shiftBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">🌆 Sore</span>';
+                    else shiftBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">🕒 All Day</span>';
+
+                    const ecoBadge = isEco ?
+                        '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1 justify-center"><i class="fa-solid fa-leaf text-emerald-600"></i> Eco-Critical</span>' :
+                        '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">Standar</span>';
+
+                    const statusBadge = isActive ?
+                        `<button type="button" onclick="toggleChecklistTemplateActive(${tpl.id})" title="Klik untuk nonaktifkan" class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200 transition cursor-pointer">✓ AKTIF</button>` :
+                        `<button type="button" onclick="toggleChecklistTemplateActive(${tpl.id})" title="Klik untuk aktifkan" class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200 hover:bg-slate-200 transition cursor-pointer">NON-AKTIF</button>`;
+
+                    let scopeName = tpl.sub_scope;
+                    if (tpl.sub_scope === 'INDOOR_SANITASI') scopeName = 'Indoor & Toilet';
+                    else if (tpl.sub_scope === 'TAMAN_LANSKAP') scopeName = 'Taman & Lanskap';
+                    else if (tpl.sub_scope === 'AGRO_TERNAK') scopeName = 'Agro & Ternak';
+
+                    html += `
+                        <tr class="hover:bg-slate-50 transition ${isActive ? '' : 'opacity-60 bg-slate-50/50'}">
+                            <td class="py-3 px-3 text-center font-bold text-slate-700 text-[11px]">${tpl.item_order}</td>
+                            <td class="py-3 px-3 font-semibold text-slate-700">
+                                <div>${unitBadge}</div>
+                                <div class="text-[10px] text-slate-400 mt-0.5 font-medium">${scopeName}</div>
+                            </td>
+                            <td class="py-3 px-3 whitespace-nowrap">${shiftBadge}</td>
+                            <td class="py-3 px-4">
+                                <div class="font-bold text-slate-800 text-xs">${tpl.item_label}</div>
+                                ${tpl.help_text ? `<div class="text-[11px] text-slate-500 mt-0.5 italic flex items-center gap-1"><i class="fa-solid fa-circle-info text-slate-400 text-[9px]"></i> ${tpl.help_text}</div>` : ''}
+                            </td>
+                            <td class="py-3 px-3 text-center whitespace-nowrap">${ecoBadge}</td>
+                            <td class="py-3 px-3 text-center whitespace-nowrap">${statusBadge}</td>
+                            <td class="py-3 px-4 text-center whitespace-nowrap">
+                                <div class="flex items-center justify-center gap-1.5">
+                                    <button type="button" onclick="openModalEditChecklistTemplate(${tpl.id})" title="Edit Butir" class="p-1.5 text-slate-500 hover:text-amber-600 rounded-lg hover:bg-amber-50 transition cursor-pointer">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                    <button type="button" onclick="deleteChecklistTemplate(${tpl.id}, '${escape(tpl.item_label)}')" title="Hapus Butir" class="p-1.5 text-slate-500 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition cursor-pointer">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            } catch (err) {
+                console.error("Gagal load checklist templates:", err);
+            }
+        }
+
+        function openModalCreateChecklistTemplate() {
+            document.getElementById('modal-chk-tpl-title').innerHTML = '<i class="fa-solid fa-plus-circle text-teal-600"></i><span>Tambah Butir Checklist Baru</span>';
+            document.getElementById('chk-tpl-id').value = '';
+            document.getElementById('chk-tpl-unit').value = 'OB';
+            document.getElementById('chk-tpl-subscope').value = 'INDOOR_SANITASI';
+            document.getElementById('chk-tpl-shift').value = 'PAGI';
+            document.getElementById('chk-tpl-order').value = '';
+            document.getElementById('chk-tpl-label').value = '';
+            document.getElementById('chk-tpl-help').value = '';
+            document.getElementById('chk-tpl-eco').value = '0';
+            document.getElementById('chk-tpl-active').value = '1';
+            document.getElementById('btn-save-chk-tpl-text').innerText = 'Simpan Butir Checklist';
+            toggleModal('modal-manage-checklist-template');
+        }
+
+        async function openModalEditChecklistTemplate(templateId) {
+            let tpl = cachedChecklistTemplates.find(t => t.id === templateId);
+            if (!tpl) {
+                try {
+                    const res = await fetch(`/api/ops/checklist/templates/${templateId}`);
+                    const data = await res.json();
+                    if (data.success && data.template) {
+                        tpl = data.template;
+                    }
+                } catch (e) {
+                    console.error("Gagal fetch detail template:", e);
+                }
+            }
+
+            if (!tpl) {
+                alert("Data butir template tidak ditemukan!");
+                return;
+            }
+
+            document.getElementById('modal-chk-tpl-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-amber-600"></i><span>Edit Butir Checklist</span>';
+            document.getElementById('chk-tpl-id').value = tpl.id;
+            document.getElementById('chk-tpl-unit').value = tpl.unit_type;
+            document.getElementById('chk-tpl-subscope').value = tpl.sub_scope || 'INDOOR_SANITASI';
+            document.getElementById('chk-tpl-shift').value = tpl.shift_code;
+            document.getElementById('chk-tpl-order').value = tpl.item_order;
+            document.getElementById('chk-tpl-label').value = tpl.item_label;
+            document.getElementById('chk-tpl-help').value = tpl.help_text || '';
+            document.getElementById('chk-tpl-eco').value = String(tpl.is_eco_critical || 0);
+            document.getElementById('chk-tpl-active').value = (tpl.is_active !== undefined) ? String(tpl.is_active) : '1';
+            document.getElementById('btn-save-chk-tpl-text').innerText = 'Perbarui Butir Checklist';
+
+            toggleModal('modal-manage-checklist-template');
+        }
+
+        async function saveChecklistTemplate(event) {
+            event.preventDefault();
+            const tplId = document.getElementById('chk-tpl-id').value.trim();
+            const btn = document.getElementById('btn-save-chk-tpl');
+
+            const payload = {
+                unit_type: document.getElementById('chk-tpl-unit').value,
+                sub_scope: document.getElementById('chk-tpl-subscope').value,
+                shift_code: document.getElementById('chk-tpl-shift').value,
+                item_order: parseInt(document.getElementById('chk-tpl-order').value) || 0,
+                item_label: document.getElementById('chk-tpl-label').value.trim(),
+                help_text: document.getElementById('chk-tpl-help').value.trim(),
+                is_eco_critical: parseInt(document.getElementById('chk-tpl-eco').value) || 0,
+                is_active: parseInt(document.getElementById('chk-tpl-active').value)
+            };
+
+            const url = tplId ? `/api/ops/checklist/templates/${tplId}/edit` : `/api/ops/checklist/templates/create`;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    toggleModal('modal-manage-checklist-template');
+                    loadChecklistTemplates();
+                } else {
+                    alert('Gagal: ' + (data.error || 'Terjadi kesalahan'));
+                }
+            } catch (err) {
+                alert('Error koneksi: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> <span id="btn-save-chk-tpl-text">' + (tplId ? 'Perbarui Butir Checklist' : 'Simpan Butir Checklist') + '</span>';
+            }
+        }
+
+        async function toggleChecklistTemplateActive(templateId) {
+            try {
+                const res = await fetch(`/api/ops/checklist/templates/${templateId}/toggle-active`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    loadChecklistTemplates();
+                } else {
+                    alert('Gagal: ' + (data.error || 'Gagal mengubah status'));
+                }
+            } catch (e) {
+                alert('Error koneksi: ' + e.message);
+            }
+        }
+
+        async function deleteChecklistTemplate(templateId, labelEscaped) {
+            const label = unescape(labelEscaped);
+            if (!confirm(`Apakah Anda yakin ingin menghapus butir checklist berikut dari sistem?\n\n"${label}"\n\n(Catatan: Jika hanya ingin menonaktifkan sementara, gunakan tombol status AKTIF/NON-AKTIF).`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/ops/checklist/templates/${templateId}/delete`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    loadChecklistTemplates();
+                } else {
+                    alert('Gagal: ' + (data.error || 'Gagal menghapus'));
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
             }
         }
 
