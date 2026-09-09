@@ -1878,11 +1878,11 @@ HTML_TEMPLATE = """
                                     <tr>
                                         <th class="py-3 px-3">ID Titik</th>
                                         <th class="py-3 px-3">Unit & Sektor</th>
-                                        <th class="py-3 px-4">Nama Zona</th>
+                                        <th class="py-3 px-4">Nama Zona Pemeliharaan</th>
                                         <th class="py-3 px-3">Koordinat GPS</th>
                                         <th class="py-3 px-3">Radius</th>
-                                        <th class="py-3 px-3">Token QR</th>
-                                        <th class="py-3 px-3 text-center">Aksi</th>
+                                        <th class="py-3 px-3 text-center">Status</th>
+                                        <th class="py-3 px-4 text-center">Aksi Manajemen</th>
                                     </tr>
                                 </thead>
                                 <tbody id="chk-zones-tbody" class="divide-y divide-slate-100">
@@ -3995,7 +3995,7 @@ HTML_TEMPLATE = """
     <div id="modal-create-checklist-zone" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
         <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-                <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                <h3 id="modal-chk-zone-title" class="font-bold text-sm text-slate-800 flex items-center gap-2">
                     <i class="fa-solid fa-plus-circle text-emerald-600"></i>
                     <span>Tambah Titik Zona Pemeliharaan</span>
                 </h3>
@@ -4003,14 +4003,17 @@ HTML_TEMPLATE = """
             </div>
 
             <form id="form-checklist-zone" onsubmit="saveChecklistZone(event)" class="space-y-3.5 text-xs">
+                <input type="hidden" id="chk-zone-original-id" value="">
+
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block font-semibold text-slate-700 mb-1">ID Titik Zona *</label>
-                        <input type="text" id="chk-zone-id" required placeholder="ZONE-OB-TOILET-SD4" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-mono font-bold uppercase">
+                        <input type="text" id="chk-zone-id" required placeholder="ZONE-OB-TOILET-SD4" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-mono font-bold uppercase focus:bg-white focus:outline-none focus:border-emerald-500">
+                        <span id="chk-zone-id-hint" class="text-[10px] text-slate-400 hidden">ID unik tidak dapat diubah saat edit</span>
                     </div>
                     <div>
                         <label class="block font-semibold text-slate-700 mb-1">Unit Kerja *</label>
-                        <select id="chk-zone-unit" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-bold">
+                        <select id="chk-zone-unit" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-bold focus:bg-white focus:outline-none focus:border-emerald-500">
                             <option value="OB">Office Boy (OB / Indoor)</option>
                             <option value="GARDENER">Gardener (Taman / Ecopark)</option>
                         </select>
@@ -4019,17 +4022,17 @@ HTML_TEMPLATE = """
 
                 <div>
                     <label class="block font-semibold text-slate-700 mb-1">Nama Zona Pemeliharaan *</label>
-                    <input type="text" id="chk-zone-name" required placeholder="Contoh: Toilet Siswa Gedung SD Lt 4" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-semibold">
+                    <input type="text" id="chk-zone-name" required placeholder="Contoh: Toilet Siswa Gedung SD Lt 4" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-semibold focus:bg-white focus:outline-none focus:border-emerald-500">
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block font-semibold text-slate-700 mb-1">Gedung / Sektor *</label>
-                        <input type="text" id="chk-zone-building" required placeholder="Gedung SD / Ecopark" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800">
+                        <input type="text" id="chk-zone-building" required placeholder="Gedung SD / Ecopark" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:border-emerald-500">
                     </div>
                     <div>
                         <label class="block font-semibold text-slate-700 mb-1">Sub-Lingkup *</label>
-                        <select id="chk-zone-subscope" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium">
+                        <select id="chk-zone-subscope" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium focus:bg-white focus:outline-none focus:border-emerald-500">
                             <option value="INDOOR_SANITASI">Indoor Sanitasi & Toilet</option>
                             <option value="TAMAN_LANSKAP">Taman & Lanskap Luar</option>
                             <option value="AGRO_TERNAK">Agro Sayur & Ecopark Ternak</option>
@@ -4039,24 +4042,41 @@ HTML_TEMPLATE = """
 
                 <div class="grid grid-cols-3 gap-3">
                     <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Latitude</label>
-                        <input type="number" step="any" id="chk-zone-lat" value="-6.339295" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-mono text-xs">
+                        <label class="block font-semibold text-slate-700 mb-1">Latitude *</label>
+                        <input type="number" step="any" id="chk-zone-lat" value="-6.339295" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-mono text-xs focus:bg-white focus:outline-none focus:border-emerald-500">
                     </div>
                     <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Longitude</label>
-                        <input type="number" step="any" id="chk-zone-lng" value="106.964365" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-mono text-xs">
+                        <label class="block font-semibold text-slate-700 mb-1">Longitude *</label>
+                        <input type="number" step="any" id="chk-zone-lng" value="106.964365" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-mono text-xs focus:bg-white focus:outline-none focus:border-emerald-500">
                     </div>
                     <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Radius (meter)</label>
-                        <input type="number" id="chk-zone-radius" value="45" min="10" max="150" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-bold text-xs">
+                        <label class="block font-semibold text-slate-700 mb-1">Radius (meter) *</label>
+                        <input type="number" id="chk-zone-radius" value="45" min="10" max="150" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-bold text-xs focus:bg-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 pt-1">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Status Keaktifan *</label>
+                        <select id="chk-zone-active" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-semibold focus:bg-white focus:outline-none focus:border-emerald-500">
+                            <option value="1">Aktif (Muncul di Checklist & Radar)</option>
+                            <option value="0">Non-Aktif (Diarsipkan)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Bantuan Titik Koordinat</label>
+                        <button type="button" onclick="fillCurrentGpsToChecklistZone()" class="w-full p-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 font-semibold rounded-xl flex items-center justify-center gap-1.5 transition text-xs cursor-pointer">
+                            <i class="fa-solid fa-crosshairs text-emerald-600"></i>
+                            <span>Gunakan GPS Sekarang</span>
+                        </button>
                     </div>
                 </div>
 
                 <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100">
                     <button type="button" onclick="toggleModal('modal-create-checklist-zone')" class="px-4 py-2 text-xs font-semibold bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition cursor-pointer">Batal</button>
-                    <button type="submit" class="px-5 py-2 text-xs font-bold bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition shadow-xs flex items-center gap-1.5 cursor-pointer">
+                    <button type="submit" id="btn-save-chk-zone" class="px-5 py-2 text-xs font-bold bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition shadow-xs flex items-center gap-1.5 cursor-pointer">
                         <i class="fa-solid fa-floppy-disk"></i>
-                        <span>Simpan Titik Zona</span>
+                        <span id="btn-save-chk-zone-text">Simpan Titik Zona</span>
                     </button>
                 </div>
             </form>
@@ -6773,6 +6793,9 @@ HTML_TEMPLATE = """
                                     <a href="/checklist/print-qr?zone_id=${z.id}" target="_blank" title="Cetak Stiker QR" class="p-1.5 text-slate-500 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 transition">
                                         <i class="fa-solid fa-qrcode"></i>
                                     </a>
+                                    <button type="button" onclick="openModalEditChecklistZone('${z.id}')" title="Edit Titik Zona" class="p-1.5 text-slate-500 hover:text-amber-600 rounded-lg hover:bg-amber-50 transition cursor-pointer">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -6909,6 +6932,8 @@ HTML_TEMPLATE = """
             }
         }
 
+        let cachedChecklistZones = [];
+
         async function loadChecklistZones() {
             try {
                 const res = await fetch('/api/ops/checklist/zones');
@@ -6919,8 +6944,13 @@ HTML_TEMPLATE = """
                     return;
                 }
 
+                cachedChecklistZones = data.zones || [];
                 let html = '';
-                data.zones.forEach(z => {
+                cachedChecklistZones.forEach(z => {
+                    const statusBadge = (z.is_active === undefined || z.is_active == 1) ?
+                        '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">AKTIF</span>' :
+                        '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">NON-AKTIF</span>';
+
                     html += `
                         <tr class="hover:bg-slate-50 transition">
                             <td class="py-3 px-3 font-mono font-bold text-slate-800 text-[11px]">${z.id}</td>
@@ -6929,13 +6959,23 @@ HTML_TEMPLATE = """
                                 ${z.building_or_sector}
                             </td>
                             <td class="py-3 px-4 font-bold text-slate-800">${z.zone_name}</td>
-                            <td class="py-3 px-3 font-mono text-[10px] text-slate-500">${z.target_lat.toFixed(5)}, ${z.target_lng.toFixed(5)}</td>
+                            <td class="py-3 px-3 font-mono text-[10px] text-slate-500">${Number(z.target_lat).toFixed(5)}, ${Number(z.target_lng).toFixed(5)}</td>
                             <td class="py-3 px-3 font-bold text-slate-700">${z.geofence_radius_m} m</td>
-                            <td class="py-3 px-3 font-mono text-[10px] text-slate-400">${z.qr_token}</td>
-                            <td class="py-3 px-3 text-center">
-                                <div class="flex items-center justify-center gap-1.5">
-                                    <a href="/c/${z.qr_token}" target="_blank" class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded text-[10px] font-bold hover:bg-emerald-100">Buka PWA</a>
-                                    <a href="/checklist/print-qr?zone_id=${z.id}" target="_blank" class="px-2 py-1 bg-indigo-50 text-indigo-700 rounded text-[10px] font-bold hover:bg-indigo-100">Cetak QR</a>
+                            <td class="py-3 px-3 text-center">${statusBadge}</td>
+                            <td class="py-3 px-4 text-center">
+                                <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                                    <a href="/c/${z.qr_token}" target="_blank" title="Buka Form Micro-Web PWA" class="p-1.5 text-slate-500 hover:text-emerald-600 rounded-lg hover:bg-emerald-50 transition">
+                                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                    </a>
+                                    <a href="/checklist/print-qr?zone_id=${z.id}" target="_blank" title="Cetak Stiker QR Akrilik" class="p-1.5 text-slate-500 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 transition">
+                                        <i class="fa-solid fa-qrcode"></i>
+                                    </a>
+                                    <button type="button" onclick="openModalEditChecklistZone('${z.id}')" title="Edit Titik Zona" class="p-1.5 text-slate-500 hover:text-amber-600 rounded-lg hover:bg-amber-50 transition cursor-pointer">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                    <button type="button" onclick="deleteChecklistZone('${z.id}', '${escape(z.zone_name)}')" title="Hapus / Nonaktifkan Zona" class="p-1.5 text-slate-500 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition cursor-pointer">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -6948,11 +6988,84 @@ HTML_TEMPLATE = """
         }
 
         function openModalCreateChecklistZone() {
+            document.getElementById('modal-chk-zone-title').innerHTML = '<i class="fa-solid fa-plus-circle text-emerald-600"></i><span>Tambah Titik Zona Pemeliharaan</span>';
+            document.getElementById('chk-zone-original-id').value = '';
+            document.getElementById('chk-zone-id').value = '';
+            document.getElementById('chk-zone-id').disabled = false;
+            document.getElementById('chk-zone-id-hint').classList.add('hidden');
+            document.getElementById('chk-zone-unit').value = 'OB';
+            document.getElementById('chk-zone-name').value = '';
+            document.getElementById('chk-zone-building').value = '';
+            document.getElementById('chk-zone-subscope').value = 'INDOOR_SANITASI';
+            document.getElementById('chk-zone-lat').value = '-6.339295';
+            document.getElementById('chk-zone-lng').value = '106.964365';
+            document.getElementById('chk-zone-radius').value = '45';
+            document.getElementById('chk-zone-active').value = '1';
+            document.getElementById('btn-save-chk-zone-text').innerText = 'Simpan Titik Zona';
             toggleModal('modal-create-checklist-zone');
+        }
+
+        async function openModalEditChecklistZone(zoneId) {
+            let z = cachedChecklistZones.find(item => item.id === zoneId);
+            if (!z) {
+                try {
+                    const res = await fetch(`/api/ops/checklist/zones/${encodeURIComponent(zoneId)}`);
+                    const data = await res.json();
+                    if (data.success && data.zone) {
+                        z = data.zone;
+                        cachedChecklistZones.push(z);
+                    }
+                } catch (e) {
+                    console.error("Gagal fetch detail zone:", e);
+                }
+            }
+
+            if (!z) {
+                alert("Data titik zona tidak ditemukan!");
+                return;
+            }
+
+            document.getElementById('modal-chk-zone-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-amber-600"></i><span>Edit Titik Zona Pemeliharaan</span>';
+            document.getElementById('chk-zone-original-id').value = z.id;
+            document.getElementById('chk-zone-id').value = z.id;
+            document.getElementById('chk-zone-id').disabled = true;
+            document.getElementById('chk-zone-id-hint').classList.remove('hidden');
+            document.getElementById('chk-zone-unit').value = z.unit_type;
+            document.getElementById('chk-zone-name').value = z.zone_name;
+            document.getElementById('chk-zone-building').value = z.building_or_sector;
+            document.getElementById('chk-zone-subscope').value = z.sub_scope || 'INDOOR_SANITASI';
+            document.getElementById('chk-zone-lat').value = z.target_lat;
+            document.getElementById('chk-zone-lng').value = z.target_lng;
+            document.getElementById('chk-zone-radius').value = z.geofence_radius_m;
+            document.getElementById('chk-zone-active').value = (z.is_active !== undefined) ? String(z.is_active) : '1';
+            document.getElementById('btn-save-chk-zone-text').innerText = 'Perbarui Titik Zona';
+
+            toggleModal('modal-create-checklist-zone');
+        }
+
+        function fillCurrentGpsToChecklistZone() {
+            if (!navigator.geolocation) {
+                alert("Browser tidak mendukung GPS.");
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    document.getElementById('chk-zone-lat').value = pos.coords.latitude.toFixed(6);
+                    document.getElementById('chk-zone-lng').value = pos.coords.longitude.toFixed(6);
+                    alert(`Koordinat GPS terkunci: ${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`);
+                },
+                err => {
+                    alert("Gagal mengunci GPS: " + err.message);
+                },
+                { enableHighAccuracy: true, timeout: 8000 }
+            );
         }
 
         async function saveChecklistZone(event) {
             event.preventDefault();
+            const originalId = document.getElementById('chk-zone-original-id').value.trim();
+            const btn = document.getElementById('btn-save-chk-zone');
+            
             const payload = {
                 id: document.getElementById('chk-zone-id').value.trim(),
                 unit_type: document.getElementById('chk-zone-unit').value,
@@ -6961,11 +7074,17 @@ HTML_TEMPLATE = """
                 sub_scope: document.getElementById('chk-zone-subscope').value,
                 target_lat: parseFloat(document.getElementById('chk-zone-lat').value),
                 target_lng: parseFloat(document.getElementById('chk-zone-lng').value),
-                geofence_radius_m: parseInt(document.getElementById('chk-zone-radius').value)
+                geofence_radius_m: parseInt(document.getElementById('chk-zone-radius').value),
+                is_active: parseInt(document.getElementById('chk-zone-active').value)
             };
 
+            const url = originalId ? `/api/ops/checklist/zones/${encodeURIComponent(originalId)}/edit` : `/api/ops/checklist/zones/create`;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+
             try {
-                const res = await fetch('/api/ops/checklist/zones/create', {
+                const res = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -6973,6 +7092,32 @@ HTML_TEMPLATE = """
                 const data = await res.json();
                 if (data.success) {
                     toggleModal('modal-create-checklist-zone');
+                    loadChecklistZones();
+                    loadChecklistDashboard();
+                } else {
+                    alert('Gagal: ' + (data.error || 'Terjadi kesalahan'));
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> <span id="btn-save-chk-zone-text">' + (originalId ? 'Perbarui Titik Zona' : 'Simpan Titik Zona') + '</span>';
+            }
+        }
+
+        async function deleteChecklistZone(zoneId, zoneNameEscaped) {
+            const name = unescape(zoneNameEscaped);
+            if (!confirm(`Apakah Anda yakin ingin menghapus atau menonaktifkan titik zona "${name}" (${zoneId})?`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/ops/checklist/zones/${encodeURIComponent(zoneId)}/delete`, {
+                    method: 'POST'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message || 'Zona berhasil dihapus/dinonaktifkan.');
                     loadChecklistZones();
                     loadChecklistDashboard();
                 } else {

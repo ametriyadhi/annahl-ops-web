@@ -1239,6 +1239,86 @@ def api_create_checklist_zone():
     return jsonify({"success": True, "message": f"Zona {zone_name} berhasil disimpan!"})
 
 
+@checklist_bp.route("/api/ops/checklist/zones/<zone_id>", methods=["GET"])
+def api_get_single_checklist_zone(zone_id):
+    """Mengambil data spesifik satu titik zona pemeliharaan"""
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM maintenance_zones WHERE id = ? OR qr_token = ?", (zone_id, zone_id))
+    row = cur.fetchone()
+    conn.close()
+    if not row:
+        return jsonify({"success": False, "error": "Zona pemeliharaan tidak ditemukan"}), 404
+    return jsonify({"success": True, "zone": dict(row)})
+
+
+@checklist_bp.route("/api/ops/checklist/zones/<zone_id>/edit", methods=["POST", "PUT"])
+@checklist_bp.route("/api/ops/checklist/zones/<zone_id>", methods=["PUT", "PATCH"])
+def api_edit_checklist_zone(zone_id):
+    """Memperbarui informasi zona pemeliharaan yang sudah ada"""
+    data = request.get_json(silent=True) or {}
+    zone_name = (data.get("zone_name") or "").strip()
+    unit_type = (data.get("unit_type") or "OB").strip().upper()
+    sub_scope = (data.get("sub_scope") or "INDOOR_SANITASI").strip()
+    building = (data.get("building_or_sector") or "").strip()
+    target_lat = float(data.get("target_lat") or -6.339295)
+    target_lng = float(data.get("target_lng") or 106.964365)
+    radius = int(data.get("geofence_radius_m") or 45)
+    is_active = int(data.get("is_active") if data.get("is_active") is not None else 1)
+
+    if not zone_name:
+        return jsonify({"success": False, "error": "Nama Zona wajib diisi"}), 400
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('''
+        UPDATE maintenance_zones
+        SET zone_name = ?,
+            unit_type = ?,
+            sub_scope = ?,
+            building_or_sector = ?,
+            target_lat = ?,
+            target_lng = ?,
+            geofence_radius_m = ?,
+            is_active = ?
+        WHERE id = ?
+    ''', (zone_name, unit_type, sub_scope, building, target_lat, target_lng, radius, is_active, zone_id))
+    affected = cur.rowcount
+    conn.commit()
+    conn.close()
+
+    if affected == 0:
+        return jsonify({"success": False, "error": "Zona tidak ditemukan"}), 404
+
+    return jsonify({"success": True, "message": f"Zona {zone_name} berhasil diperbarui!"})
+
+
+@checklist_bp.route("/api/ops/checklist/zones/<zone_id>/delete", methods=["POST", "DELETE"])
+@checklist_bp.route("/api/ops/checklist/zones/<zone_id>", methods=["DELETE"])
+def api_delete_checklist_zone(zone_id):
+    """Menghapus zona pemeliharaan (atau soft delete jika sudah memiliki riwayat log)"""
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) FROM maintenance_checklist_logs WHERE zone_id = ?", (zone_id,))
+    has_logs = cur.fetchone()[0] > 0
+
+    if has_logs:
+        cur.execute("UPDATE maintenance_zones SET is_active = 0 WHERE id = ?", (zone_id,))
+    else:
+        cur.execute("DELETE FROM maintenance_zones WHERE id = ?", (zone_id,))
+
+    affected = cur.rowcount
+    conn.commit()
+    conn.close()
+
+    if affected == 0:
+        return jsonify({"success": False, "error": "Zona tidak ditemukan"}), 404
+
+    msg = "Zona dinonaktifkan (karena memiliki riwayat log)" if has_logs else "Zona berhasil dihapus"
+    return jsonify({"success": True, "message": msg, "soft_deleted": has_logs})
+
+
+
 @checklist_bp.route("/checklist/print-qr", methods=["GET"])
 def web_checklist_print_qr():
     """
