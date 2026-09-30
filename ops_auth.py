@@ -219,7 +219,11 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'ops_user_id' not in session:
-            return redirect(url_for('ops_auth.login', next=request.url))
+            # Cegah redirect ke localhost 127.0.0.1: gunakan path relatif
+            next_path = request.full_path if request.query_string else request.path
+            if not next_path or next_path.startswith('//') or '127.0.0.1' in next_path or 'localhost' in next_path:
+                next_path = '/'
+            return redirect(url_for('ops_auth.login', next=next_path))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -236,7 +240,7 @@ def role_required(allowed_roles):
         return decorated_function
     return decorator
 
-# ==================== TEMPLATES ====================
+# ==================== TEMPLATES (SPLIT SCREEN SAS-ANNAHL STYLE) ====================
 LOGIN_HTML = """
 <!DOCTYPE html>
 <html lang="id">
@@ -247,141 +251,125 @@ LOGIN_HTML = """
     <link rel="icon" type="image/png" href="/static/favicon.png?v=20260930">
     <link rel="apple-touch-icon" href="/static/logo-icon.png?v=20260930">
     <link rel="stylesheet" href="/static/tailwind.min.css?v=20260930_taste">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
-        body { 
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: #FAF8F5;
-        }
-        .login-card {
-            background: #FFFFFF;
-            border: 1px solid #E8E4DD;
-            box-shadow: 0 10px 30px -10px rgba(30, 61, 52, 0.08), 0 4px 6px -2px rgba(30, 61, 52, 0.03);
-        }
+        body { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif; }
     </style>
 </head>
-<body class="min-h-[100dvh] flex flex-col justify-center items-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8 text-slate-800 bg-[#FAF8F5] relative overflow-y-auto selection:bg-[#4F786C]/10 selection:text-[#1E3D34]">
+<body class="bg-slate-50 antialiased selection:bg-emerald-600/10 selection:text-emerald-900">
+<div class="min-h-screen flex">
+  
+  <!-- SISI KIRI (DESKTOP BRANDING HERO IDENTIK SAS-ANNAHL) -->
+  <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-emerald-950 items-center justify-center">
+    <div class="absolute inset-0 opacity-[0.07]" style="background-image:url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='1'%3E%3Cpath d='M30 2 L58 30 L30 58 L2 30 Z'/%3E%3Ccircle cx='30' cy='30' r='12'/%3E%3C/g%3E%3C/svg%3E');"></div>
+    <div class="absolute -top-24 -left-24 w-96 h-96 bg-emerald-800/40 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl"></div>
     
-    <!-- Ambient Warm Canvas Accent -->
-    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div class="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-[#E8F0EC]/70 blur-3xl"></div>
-        <div class="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-[#E5EEF3]/70 blur-3xl"></div>
+    <div class="relative z-10 px-14 text-center">
+      <img src="/static/logo.png" alt="An Nahl" class="h-28 mx-auto mb-7 drop-shadow-2xl rounded-2xl bg-white p-3 object-contain">
+      <h1 class="text-white font-bold text-3xl leading-snug">An Nahl Ops<br><span class="text-emerald-300 font-semibold text-2xl">Command Center</span></h1>
+      <p class="text-emerald-200/90 mt-4 text-sm leading-relaxed max-w-md mx-auto">Portal komando terpadu IT, Sarpras, dan General Affairs — koordinasi 4 unit lapangan (OB, Gardener, Security, IT), pemantauan server, dan mutabaah ibadah.</p>
+      
+      <div class="mt-9 flex items-center justify-center gap-6 text-emerald-200/70 text-xs font-medium">
+        <span><i class="fa-solid fa-tower-broadcast text-emerald-400 mr-1.5"></i> Uptime Monitor</span>
+        <span><i class="fa-solid fa-users-gear text-emerald-400 mr-1.5"></i> Multi-Unit Koordinator</span>
+        <span><i class="fa-solid fa-shield-halved text-emerald-400 mr-1.5"></i> Akses Terkendali</span>
+      </div>
     </div>
+    <div class="absolute bottom-5 inset-x-0 text-center text-emerald-300/40 text-[11px] z-10">&copy; 2026 An Nahl Islamic School &bull; IT & General Affairs Department</div>
+  </div>
 
-    <div class="w-full max-w-md my-auto space-y-5 z-10 relative">
-        
-        <!-- Logo & Brand Header -->
-        <div class="text-center pt-2">
-            <div class="inline-flex items-center justify-center p-3 sm:p-3.5 bg-white rounded-2xl shadow-sm border border-[#E8E4DD] mb-3.5 hover:shadow-md transition">
-                <img src="/static/logo.png" alt="An Nahl Islamic School" class="h-16 sm:h-20 w-auto object-contain">
-            </div>
-            <div class="space-y-1">
-                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#EAF1EE] text-[#2E584C] text-[11px] font-semibold border border-[#D5E3DD]">
-                    <span class="w-1.5 h-1.5 rounded-full bg-[#4F786C] animate-pulse"></span>
-                    Portal Terpadu Operasional
-                </div>
-                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#1E3D34]">An Nahl Ops</h1>
-                <p class="text-xs sm:text-sm text-slate-600 font-medium">Command Center IT, Sarpras & General Affairs</p>
-            </div>
+  <!-- SISI KANAN (FORM LOGIN) -->
+  <div class="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-10 bg-slate-50">
+    <div class="w-full max-w-md">
+      
+      <!-- Mobile Logo Header -->
+      <div class="lg:hidden flex flex-col items-center mb-8">
+        <img src="/static/logo.png" alt="An Nahl" class="h-20 rounded-2xl shadow-lg bg-white p-2.5 mb-3 object-contain border border-slate-200/60">
+        <h1 class="font-bold text-xl text-slate-800">An Nahl Ops</h1>
+        <p class="text-xs text-emerald-700 font-semibold">Command Center IT & General Affairs</p>
+      </div>
+
+      <!-- Card Container -->
+      <div class="bg-white rounded-3xl shadow-xl shadow-slate-200/60 border border-slate-100 p-8 sm:p-10">
+        <div class="mb-7">
+          <p class="text-xs font-semibold tracking-widest text-emerald-700 uppercase mb-1">Selamat Datang Kembali</p>
+          <h2 class="text-2xl font-bold text-slate-800">Masuk ke Command Center</h2>
+          <p class="text-sm text-slate-500 mt-1.5">Silakan login untuk mengakses dashboard operasional An Nahl Ops.</p>
         </div>
 
-        <!-- Login Card -->
-        <div class="login-card py-7 px-6 sm:px-9 rounded-2xl">
-            
-            {% if error %}
-            <div class="mb-5 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center space-x-3 animate-in fade-in duration-200">
-                <i class="fa-solid fa-circle-exclamation text-base text-rose-500 shrink-0"></i>
-                <span class="font-medium">{{ error }}</span>
+        {% if error %}
+        <div class="mb-6 flex items-center gap-2.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium px-4 py-3 rounded-2xl animate-in fade-in duration-200">
+          <i class="fa-solid fa-circle-exclamation text-rose-500 text-sm shrink-0"></i>
+          <span>{{ error }}</span>
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/login" class="space-y-5">
+          <input type="hidden" name="next" value="{{ next_url }}">
+          
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">Username</label>
+            <div class="relative">
+              <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+              <input name="username" id="username" placeholder="Masukkan username (contoh: admin atau koord_ob)" required autofocus autocomplete="username"
+                     class="w-full pl-11 pr-4 py-3.5 text-sm border border-slate-200 rounded-2xl focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100 outline-none transition bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400">
             </div>
-            {% endif %}
+          </div>
 
-            <form class="space-y-4 sm:space-y-5" action="/login" method="POST">
-                <input type="hidden" name="next" value="{{ next_url }}">
-                
-                <div>
-                    <label for="username" class="block text-xs font-bold text-slate-700 tracking-wide mb-1.5">Nama Pengguna (Username)</label>
-                    <div class="relative rounded-xl">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                            <i class="fa-solid fa-user-shield text-xs"></i>
-                        </div>
-                        <input type="text" id="username" name="username" required autofocus autocomplete="username"
-                               placeholder="Contoh: admin atau koord_ob"
-                               class="w-full pl-9 pr-4 py-2.5 bg-[#FAF9F6] border border-[#DDD8CF] rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#4F786C]/25 focus:border-[#4F786C] transition">
-                    </div>
-                </div>
-
-                <div>
-                    <div class="flex items-center justify-between mb-1.5">
-                        <label for="password" class="block text-xs font-bold text-slate-700 tracking-wide">Kata Sandi (Password)</label>
-                    </div>
-                    <div class="relative rounded-xl">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                            <i class="fa-solid fa-lock text-xs"></i>
-                        </div>
-                        <input type="password" id="password" name="password" required autocomplete="current-password"
-                               placeholder="Masukkan kata sandi"
-                               class="w-full pl-9 pr-10 py-2.5 bg-[#FAF9F6] border border-[#DDD8CF] rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#4F786C]/25 focus:border-[#4F786C] transition">
-                        <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none" title="Lihat/Sembunyikan password">
-                            <i class="fa-solid fa-eye text-xs" id="toggle-pwd-icon"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-between pt-1 text-xs">
-                    <label class="flex items-center cursor-pointer select-none text-slate-600 hover:text-slate-900">
-                        <input id="remember_me" name="remember_me" type="checkbox" checked
-                               class="h-4 w-4 rounded border-[#D5CFC5] text-[#4F786C] focus:ring-[#4F786C]/30 accent-[#4F786C]">
-                        <span class="ml-2 font-medium">Ingat sesi saya</span>
-                    </label>
-                    <span class="text-[11px] font-semibold text-[#4F786C]">Sekolah Islam An Nahl</span>
-                </div>
-
-                <div class="pt-2">
-                    <button type="submit"
-                            class="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-xs text-sm font-bold text-white bg-[#4F786C] hover:bg-[#3F6359] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4F786C] transition active:scale-[0.98]">
-                        <i class="fa-solid fa-right-to-bracket text-xs"></i>
-                        <span>Masuk ke Command Center</span>
-                    </button>
-                </div>
-            </form>
-
-            <div class="mt-6 pt-5 border-t border-[#EFECE6]">
-                <div class="text-[11px] text-slate-500 text-center space-y-1.5">
-                    <p class="font-bold text-slate-700">Akses Unit Koordinator & Operasional:</p>
-                    <div class="flex flex-wrap justify-center gap-1.5 pt-1 text-[10px]">
-                        <span class="px-2 py-0.5 rounded-lg bg-[#EAF1EE] text-[#2E584C] font-semibold border border-[#D5E3DD]">IT</span>
-                        <span class="px-2 py-0.5 rounded-lg bg-[#E6ECE8] text-[#3B5F54] font-semibold border border-[#CCD8D2]">Office Boy</span>
-                        <span class="px-2 py-0.5 rounded-lg bg-[#F7F2E6] text-[#635129] font-semibold border border-[#EADBBD]">Gardener</span>
-                        <span class="px-2 py-0.5 rounded-lg bg-[#E5EEF3] text-[#2A5266] font-semibold border border-[#CCDCE4]">Security</span>
-                        <span class="px-2 py-0.5 rounded-lg bg-[#EAE8F2] text-[#443864] font-semibold border border-[#D3CDE2]">Sarpras</span>
-                        <span class="px-2 py-0.5 rounded-lg bg-[#F5EAE8] text-[#683935] font-semibold border border-[#E5CEC9]">Pengadaan</span>
-                    </div>
-                </div>
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wide">Password</label>
             </div>
+            <div class="relative">
+              <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+              <input type="password" id="pwfield" name="password" placeholder="Masukkan password" required autocomplete="current-password"
+                     class="w-full pl-11 pr-12 py-3.5 text-sm border border-slate-200 rounded-2xl focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100 outline-none transition bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400">
+              <button type="button" onclick="const f=document.getElementById('pwfield');f.type=f.type==='password'?'text':'password'" 
+                      class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-700 transition" title="Lihat password">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+          </div>
 
+          <div class="flex items-center justify-between text-xs pt-1">
+            <label class="flex items-center cursor-pointer select-none text-slate-600 hover:text-slate-800">
+              <input id="remember_me" name="remember_me" type="checkbox" checked
+                     class="h-4 w-4 rounded border-slate-300 text-emerald-700 focus:ring-emerald-500 accent-emerald-700">
+              <span class="ml-2 font-medium">Ingat sesi saya</span>
+            </label>
+            <span class="font-semibold text-emerald-700/80">Sekolah Islam An Nahl</span>
+          </div>
+
+          <button type="submit" 
+                  class="w-full py-4 bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-sm rounded-2xl shadow-lg shadow-emerald-800/25 hover:shadow-emerald-800/35 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+            <span>Masuk ke Dashboard</span>
+            <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
+          </button>
+        </form>
+
+        <div class="mt-7 pt-5 border-t border-slate-100 space-y-2">
+          <p class="text-[11px] font-semibold text-slate-500 text-center uppercase tracking-wider">Unit Koordinator Terdaftar:</p>
+          <div class="flex flex-wrap justify-center gap-1.5 text-[10px]">
+            <span class="px-2.5 py-1 rounded-xl bg-slate-100 text-slate-700 font-semibold border border-slate-200">IT</span>
+            <span class="px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200">Office Boy</span>
+            <span class="px-2.5 py-1 rounded-xl bg-amber-50 text-amber-800 font-semibold border border-amber-200">Gardener</span>
+            <span class="px-2.5 py-1 rounded-xl bg-sky-50 text-sky-800 font-semibold border border-sky-200">Security</span>
+            <span class="px-2.5 py-1 rounded-xl bg-indigo-50 text-indigo-800 font-semibold border border-indigo-200">Sarpras</span>
+            <span class="px-2.5 py-1 rounded-xl bg-rose-50 text-rose-800 font-semibold border border-rose-200">Pengadaan</span>
+          </div>
         </div>
 
-        <p class="text-center text-[11px] text-slate-400 font-medium">
-            &copy; 2026 An Nahl Islamic School &bull; IT & General Affairs Department
-        </p>
-    </div>
+      </div>
 
-    <script>
-        function togglePasswordVisibility() {
-            const pwd = document.getElementById('password');
-            const icon = document.getElementById('toggle-pwd-icon');
-            if (pwd.type === 'password') {
-                pwd.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                pwd.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-        }
-    </script>
+      <div class="mt-6 text-center text-xs text-slate-400">
+        <i class="fa-solid fa-circle-question mr-1"></i> Bantuan kendala akses? Hubungi Admin IT An Nahl
+      </div>
+
+    </div>
+  </div>
+</div>
 </body>
 </html>
 """
@@ -394,11 +382,18 @@ def login():
 
     error = None
     next_url = request.args.get('next', '/')
+    # Sanitize next_url agar tidak redirect ke localhost / domain asing
+    if not next_url or not next_url.startswith('/') or next_url.startswith('//') or '127.0.0.1' in next_url or 'localhost' in next_url:
+        next_url = '/'
 
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '').strip()
-        next_url = request.form.get('next', '/') or '/'
+        raw_next = request.form.get('next', '/') or '/'
+        if not raw_next or not raw_next.startswith('/') or raw_next.startswith('//') or '127.0.0.1' in raw_next or 'localhost' in raw_next:
+            next_url = '/'
+        else:
+            next_url = raw_next
 
         if not username or not password:
             error = "Username dan password wajib diisi."

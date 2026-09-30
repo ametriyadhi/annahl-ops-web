@@ -22,6 +22,10 @@ def now_wib():
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "annahl-ops-super-secret-key-2026-bismillah")
+
+from werkzeug.middleware.proxy_fix import ProxyFix
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
 from ops_core import ops_core_bp
 from checklist_core import checklist_bp
 app.register_blueprint(ops_auth_bp)
@@ -294,7 +298,7 @@ HTML_TEMPLATE = """
         }
     </style>
 </head>
-<body class="bg-[#FAF8F5] text-slate-800 min-h-[100dvh] flex selection:bg-[#4F786C]/10 selection:text-[#1E3D34]">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex selection:bg-emerald-600/10 selection:text-emerald-950">
 
     <!-- BACKDROP MOBILE -->
     <div id="sidebar-backdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-30 hidden transition-opacity"></div>
@@ -5745,96 +5749,122 @@ HTML_TEMPLATE = """
 
         // ===== CHART.JS INITIALIZATION =====
         window.addEventListener('DOMContentLoaded', () => {
-            const mutabaahDates = {{ chart_data.mutabaah_dates | tojson }};
-            const mutabaahCounts = {{ chart_data.mutabaah_counts | tojson }};
-            const kebersihanUnits = {{ chart_data.kebersihan_units | tojson }};
-            const kebersihanCounts = {{ chart_data.kebersihan_counts | tojson }};
-            const journalCategories = {{ chart_data.journal_categories | tojson }};
-            const journalCounts = {{ chart_data.journal_counts | tojson }};
-            const taskStats = {{ chart_data.task_stats | tojson }};
+            try {
+                if (typeof Chart === 'undefined') {
+                    console.warn("Chart.js belum dimuat.");
+                } else {
+                    const mutabaahDates = {{ chart_data.mutabaah_dates | tojson }};
+                    const mutabaahCounts = {{ chart_data.mutabaah_counts | tojson }};
+                    const kebersihanUnits = {{ chart_data.kebersihan_units | tojson }};
+                    const kebersihanCounts = {{ chart_data.kebersihan_counts | tojson }};
+                    const journalCategories = {{ chart_data.journal_categories | tojson }};
+                    const journalCounts = {{ chart_data.journal_counts | tojson }};
+                    const taskStats = {{ chart_data.task_stats | tojson }};
 
-            const colors = ['#0d9488', '#8b5cf6', '#3b82f6', '#f59e0b', '#ef4444', '#10b981', '#6366f1'];
+                    const colors = ['#0d9488', '#8b5cf6', '#3b82f6', '#f59e0b', '#ef4444', '#10b981', '#6366f1'];
 
-            // Dashboard Preview Mutabaah
-            new Chart(document.getElementById('dashMutabaahChart'), {
-                type: 'line',
-                data: {
-                    labels: mutabaahDates,
-                    datasets: [{
-                        label: 'Laporan Mutabaah',
-                        data: mutabaahCounts,
-                        borderColor: '#0d9488',
-                        backgroundColor: 'rgba(13, 148, 136, 0.15)',
-                        fill: true,
-                        tension: 0.3,
-                        borderWidth: 3
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
+                    // Dashboard Preview Mutabaah
+                    const elDashMut = document.getElementById('dashMutabaahChart');
+                    if (elDashMut) {
+                        new Chart(elDashMut, {
+                            type: 'line',
+                            data: {
+                                labels: mutabaahDates,
+                                datasets: [{
+                                    label: 'Laporan Mutabaah',
+                                    data: mutabaahCounts,
+                                    borderColor: '#0d9488',
+                                    backgroundColor: 'rgba(13, 148, 136, 0.15)',
+                                    fill: true,
+                                    tension: 0.3,
+                                    borderWidth: 3
+                                }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false }
+                        });
+                    }
 
-            // Dashboard Preview Kebersihan
-            new Chart(document.getElementById('dashKebersihanChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: kebersihanUnits,
-                    datasets: [{ data: kebersihanCounts, backgroundColor: colors }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
+                    // Dashboard Preview Kebersihan
+                    const elDashKeb = document.getElementById('dashKebersihanChart');
+                    if (elDashKeb) {
+                        new Chart(elDashKeb, {
+                            type: 'doughnut',
+                            data: {
+                                labels: kebersihanUnits,
+                                datasets: [{ data: kebersihanCounts, backgroundColor: colors }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false }
+                        });
+                    }
 
-            // Full Mutabaah Bar Chart
-            new Chart(document.getElementById('fullMutabaahChart'), {
-                type: 'bar',
-                data: {
-                    labels: mutabaahDates,
-                    datasets: [{
-                        label: 'Jumlah Laporan Petugas',
-                        data: mutabaahCounts,
-                        backgroundColor: '#0d9488',
-                        borderRadius: 8
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
+                    // Full Mutabaah Bar Chart
+                    const elFullMut = document.getElementById('fullMutabaahChart');
+                    if (elFullMut) {
+                        new Chart(elFullMut, {
+                            type: 'bar',
+                            data: {
+                                labels: mutabaahDates,
+                                datasets: [{
+                                    label: 'Jumlah Laporan Petugas',
+                                    data: mutabaahCounts,
+                                    backgroundColor: '#0d9488',
+                                    borderRadius: 8
+                                }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false }
+                        });
+                    }
 
-            // Full Kebersihan Doughnut Chart
-            new Chart(document.getElementById('fullKebersihanChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: kebersihanUnits,
-                    datasets: [{ data: kebersihanCounts, backgroundColor: colors }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
+                    // Full Kebersihan Doughnut Chart
+                    const elFullKeb = document.getElementById('fullKebersihanChart');
+                    if (elFullKeb) {
+                        new Chart(elFullKeb, {
+                            type: 'doughnut',
+                            data: {
+                                labels: kebersihanUnits,
+                                datasets: [{ data: kebersihanCounts, backgroundColor: colors }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false }
+                        });
+                    }
 
-            // Full Journal Bar Chart
-            new Chart(document.getElementById('fullJournalChart'), {
-                type: 'bar',
-                data: {
-                    labels: journalCategories,
-                    datasets: [{
-                        label: 'Catatan Jurnal',
-                        data: journalCounts,
-                        backgroundColor: '#10b981',
-                        borderRadius: 8
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
+                    // Full Journal Bar Chart
+                    const elFullJour = document.getElementById('fullJournalChart');
+                    if (elFullJour) {
+                        new Chart(elFullJour, {
+                            type: 'bar',
+                            data: {
+                                labels: journalCategories,
+                                datasets: [{
+                                    label: 'Catatan Jurnal',
+                                    data: journalCounts,
+                                    backgroundColor: '#10b981',
+                                    borderRadius: 8
+                                }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false }
+                        });
+                    }
 
-            // Full Task Status Chart
-            new Chart(document.getElementById('fullTaskChart'), {
-                type: 'pie',
-                data: {
-                    labels: ['Pending', 'Proses', 'Selesai'],
-                    datasets: [{
-                        data: [taskStats.pending, taskStats.proses, taskStats.selesai],
-                        backgroundColor: ['#f59e0b', '#3b82f6', '#10b981']
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
+                    // Full Task Status Chart
+                    const elFullTask = document.getElementById('fullTaskChart');
+                    if (elFullTask) {
+                        new Chart(elFullTask, {
+                            type: 'pie',
+                            data: {
+                                labels: ['Pending', 'Proses', 'Selesai'],
+                                datasets: [{
+                                    data: [taskStats.pending, taskStats.proses, taskStats.selesai],
+                                    backgroundColor: ['#f59e0b', '#3b82f6', '#10b981']
+                                }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false }
+                        });
+                    }
+                }
+            } catch (err) {
+                console.warn("Chart.js render caught exception:", err);
+            }
 
             // Set default dates for report (start = 7 days ago, end = today)
             const today = new Date();
