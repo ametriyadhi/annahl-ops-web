@@ -2208,27 +2208,28 @@ HTML_TEMPLATE = """
                                     <td class="p-3 text-xs font-bold text-slate-700">{{ log.area }}</td>
                                     <td class="p-3 text-xs text-slate-700 leading-relaxed">{{ log.keterangan }}</td>
                                     <td class="p-3 text-xs whitespace-nowrap">
+                                        {% set is_vid = log.hasVideo or log.mediaType == 'video' or (log.local_photo_url and log.local_photo_url.endswith('.mp4')) %}
                                         {% if p_link and p_link != '-' and not p_link.startswith('Error') %}
                                         <a href="{{ p_link }}" target="_blank" rel="noopener noreferrer"
                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-600 hover:text-white transition shadow-2xs group"
-                                           title="Buka Foto di Google Drive">
+                                           title="Buka Media di Google Drive">
                                             <i class="fa-brands fa-google-drive text-blue-600 group-hover:text-white"></i>
-                                            <span>Foto Drive</span>
+                                            <span>{% if is_vid %}Video Drive{% else %}Foto Drive{% endif %}</span>
                                             <i class="fa-solid fa-arrow-up-right-from-square text-[10px] opacity-70 group-hover:text-white"></i>
                                         </a>
                                         {% elif log.local_photo_url %}
                                         <a href="{{ log.local_photo_url }}" target="_blank" rel="noopener noreferrer"
-                                           class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-600 hover:text-white transition shadow-2xs group"
-                                           title="Lihat Foto Bukti">
-                                            <i class="fa-solid fa-image text-emerald-600 group-hover:text-white"></i>
-                                            <span>Lihat Foto</span>
+                                           class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold {% if is_vid %}bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-600{% else %}bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-600{% endif %} hover:text-white transition shadow-2xs group"
+                                           title="Lihat Bukti Lapangan">
+                                            <i class="fa-solid {% if is_vid %}fa-video text-purple-600{% else %}fa-image text-emerald-600{% endif %} group-hover:text-white"></i>
+                                            <span>{% if is_vid %}Putar Video{% else %}Lihat Foto{% endif %}</span>
                                             <i class="fa-solid fa-arrow-up-right-from-square text-[10px] opacity-70 group-hover:text-white"></i>
                                         </a>
-                                        {% elif log.hasImage or log.imageBase64 %}
+                                        {% elif log.hasImage or log.hasVideo or log.imageBase64 %}
                                         <div class="inline-flex items-center gap-1.5">
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200" title="Foto dilampirkan via WhatsApp (Tersimpan di Sheet/Drive)">
-                                                <i class="fa-solid fa-camera text-amber-500"></i>
-                                                <span>Foto Terlampir</span>
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium {% if is_vid %}bg-purple-50 text-purple-700 border border-purple-200{% else %}bg-amber-50 text-amber-700 border border-amber-200{% endif %}" title="Media dilampirkan via WhatsApp (Tersimpan di Sheet/Drive)">
+                                                <i class="fa-solid {% if is_vid %}fa-video text-purple-500{% else %}fa-camera text-amber-500{% endif %}"></i>
+                                                <span>{% if is_vid %}Video Terlampir{% else %}Foto Terlampir{% endif %}</span>
                                             </span>
                                             <button type="button" onclick="openSetPhotoModal('{{ log.timestamp }}', '{{ log.nama|replace("'", "\\'") }}', '{{ log.area|replace("'", "\\'") }}', '')"
                                                     class="p-1 text-slate-400 hover:text-blue-600 transition rounded" title="Tautkan / Edit Link Drive">
@@ -8231,6 +8232,8 @@ def api_kebersihan_laporan():
             "wibDate": wib_date,
             "imageMime": data.get("imageMime", "image/jpeg"),
             "hasImage": bool(data.get("hasImage") or data.get("photoUrl") or data.get("local_photo_url")),
+            "hasVideo": bool(data.get("hasVideo") or (data.get("local_photo_url") and data.get("local_photo_url").endswith(".mp4")) or (data.get("mediaType") == "video")),
+            "mediaType": data.get("mediaType", "video" if (str(data.get("local_photo_url", "")).endswith(".mp4") or data.get("hasVideo")) else "image"),
             "local_photo_url": data.get("local_photo_url", ""),
             "photoUrl": data.get("photoUrl", ""),
             "photo_url": data.get("photo_url", "") or data.get("photoUrl", ""),
