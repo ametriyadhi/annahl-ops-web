@@ -495,16 +495,16 @@ HTML_TEMPLATE = """
         <!-- Top Header Bar -->
         <header class="h-14 sm:h-16 bg-white/95 backdrop-blur-md border-b border-[#E8E4DD] px-3 sm:px-6 flex items-center justify-between shadow-2xs sticky top-0 z-20">
             <div class="flex items-center space-x-2.5 sm:space-x-3">
-                <button onclick="toggleSidebar()" class="p-2 rounded-xl text-slate-600 hover:bg-[#F4F2EE] hover:text-slate-900 focus:outline-none transition active:scale-95" title="Buka/Tutup Menu">
+                <button onclick="toggleSidebar()" class="p-2 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus:outline-none transition active:scale-95" title="Buka/Tutup Menu">
                     <i class="fa-solid fa-bars text-base sm:text-lg"></i>
                 </button>
                 <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-xl bg-white p-1 border border-[#E8E4DD] shadow-2xs flex items-center justify-center shrink-0">
-                        <img src="/static/logo-icon.png?v=20260930_opt" alt="An Nahl" class="brand-icon-nav" style="height:22px;width:22px;max-width:24px;max-height:24px;object-fit:contain;display:block;">
-                    </div>
+                    <span class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-800 flex items-center justify-center text-xs font-bold border border-emerald-200 shadow-2xs">
+                        <i class="fa-solid fa-gauge-high"></i>
+                    </span>
                     <div>
-                        <h2 id="page-title" class="text-xs sm:text-sm font-bold text-[#1E3D34] leading-tight">Dashboard Utama</h2>
-                        <p class="text-[10px] text-slate-600 font-medium hidden sm:block leading-tight">Sekolah Islam An Nahl &bull; Command Center</p>
+                        <h2 id="page-title" class="text-xs sm:text-sm font-bold text-slate-800 leading-tight">Dashboard Utama</h2>
+                        <p class="text-[10px] text-slate-500 font-medium hidden sm:block leading-tight">Sekolah Islam An Nahl &bull; Command Center</p>
                     </div>
                 </div>
             </div>
@@ -545,44 +545,86 @@ HTML_TEMPLATE = """
             <div id="tab-dashboard" class="tab-content space-y-6">
 
                 <!-- Taste Skill: Executive Cockpit Hero Banner with Official Branding -->
-                <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-[#FAF9F6] to-[#F1F6F3] border border-[#E4DFD7] p-5 sm:p-7 shadow-xs">
-                    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
-                        <div class="flex items-start sm:items-center gap-4">
-                            <div class="p-2 sm:p-2.5 bg-white rounded-2xl border border-slate-200 shadow-2xs shrink-0 flex items-center justify-center">
-                                <img src="/static/logo.png?v=20260930_opt" alt="Sekolah Islam An Nahl" class="brand-logo-hero" style="height:48px;width:auto;max-width:56px;max-height:50px;object-fit:contain;display:block;">
+                <div class="relative overflow-hidden rounded-3xl bg-white border border-slate-200/90 shadow-sm p-6 sm:p-7">
+                    <!-- Subtle ambient background -->
+                    <div class="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-emerald-50/70 pointer-events-none blur-3xl"></div>
+                    <div class="absolute -left-20 -bottom-20 w-80 h-80 rounded-full bg-slate-50/80 pointer-events-none blur-3xl"></div>
+
+                    <div class="relative z-10 space-y-5">
+                        <!-- Top Row: Logo + Headings Full Width -->
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
+                            <div class="p-2.5 sm:p-3 bg-slate-50 rounded-2xl border border-slate-200 shadow-2xs shrink-0 flex items-center justify-center">
+                                <img src="/static/logo.png?v=20260930_opt" alt="Sekolah Islam An Nahl" class="brand-logo-hero" style="height:52px;width:auto;max-width:60px;max-height:56px;object-fit:contain;display:block;">
                             </div>
-                            <div class="space-y-1">
-                                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#EAF1EE] text-[#2E584C] text-[10.5px] font-bold border border-[#D5E3DD]">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-[#4F786C] animate-pulse"></span>
-                                    Sistem Terpadu Aktif &bull; IT & General Affairs
+                            <div class="space-y-1.5 flex-1 min-w-0">
+                                <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-bold border border-emerald-200">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                                    <span>Command Center &bull; IT & General Affairs</span>
                                 </div>
-                                <h1 class="text-xl sm:text-2xl font-extrabold text-[#1E3D34] tracking-tight">
+                                <h1 class="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight leading-snug">
                                     Bismillah, Selamat Datang di Command Center An Nahl Ops
                                 </h1>
-                                <p class="text-xs sm:text-sm text-slate-600 font-medium max-w-2xl leading-relaxed">
-                                    Pusat monitoring infrastruktur, orkestrasi 4 unit koordinator lapangan (IT, OB, Gardener, Security), tata kelola Sarpras, dan pembiasaan ibadah civitas.
+                                <p class="text-xs sm:text-sm text-slate-500 font-medium max-w-3xl leading-relaxed">
+                                    Pusat monitoring infrastruktur server, koordinasi 4 unit kerja koordinator lapangan (IT, OB, Gardener, Security), tata kelola Sarpras, dan habit tracker ibadah civitas.
                                 </p>
                             </div>
                         </div>
 
-                        <!-- Right / Quick Unit Status Badges -->
-                        <div class="flex flex-wrap md:flex-col items-start md:items-end gap-1.5 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-[#EFECE6]">
-                            <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-0.5 hidden md:block">Status Kesiagaan Pos & Unit</div>
-                            <div class="flex flex-wrap gap-1.5 text-[10.5px]">
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white text-[#2E584C] font-semibold border border-[#D5E3DD] shadow-2xs">
-                                    <i class="fa-solid fa-laptop-code text-[10px] text-[#4F786C]"></i> IT Terhubung
-                                </span>
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white text-[#3B5F54] font-semibold border border-[#CCD8D2] shadow-2xs">
-                                    <i class="fa-solid fa-broom text-[10px] text-[#3B5F54]"></i> OB Siaga
-                                </span>
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white text-[#635129] font-semibold border border-[#EADBBD] shadow-2xs">
-                                    <i class="fa-solid fa-leaf text-[10px] text-[#7A6330]"></i> Gardener Siap
-                                </span>
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white text-[#2A5266] font-semibold border border-[#CCDCE4] shadow-2xs">
-                                    <i class="fa-solid fa-shield-halved text-[10px] text-[#3B6E85]"></i> Security Patrol
-                                </span>
+                        <!-- Bottom Row: 4 Unit Coordinator Status Cards (Grid 4 Kolom) -->
+                        <div class="pt-4 border-t border-slate-100 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-200/80 hover:bg-white hover:shadow-xs transition">
+                                <div class="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center text-sm shrink-0 shadow-xs">
+                                    <i class="fa-solid fa-laptop-code text-emerald-400"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-xs font-bold text-slate-800 truncate">Unit IT</span>
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                    </div>
+                                    <p class="text-[10.5px] text-slate-500 font-medium truncate">Terhubung & Monitoring</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-200/80 hover:bg-white hover:shadow-xs transition">
+                                <div class="w-9 h-9 rounded-xl bg-emerald-950 text-white flex items-center justify-center text-sm shrink-0 shadow-xs">
+                                    <i class="fa-solid fa-broom text-emerald-400"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-xs font-bold text-slate-800 truncate">Unit Office Boy</span>
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                    </div>
+                                    <p class="text-[10.5px] text-slate-500 font-medium truncate">Siaga Kebersihan & PWA</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-200/80 hover:bg-white hover:shadow-xs transition">
+                                <div class="w-9 h-9 rounded-xl bg-amber-950 text-white flex items-center justify-center text-sm shrink-0 shadow-xs">
+                                    <i class="fa-solid fa-leaf text-amber-400"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-xs font-bold text-slate-800 truncate">Unit Gardener</span>
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                    </div>
+                                    <p class="text-[10.5px] text-slate-500 font-medium truncate">Taman & Budidaya Siap</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-200/80 hover:bg-white hover:shadow-xs transition">
+                                <div class="w-9 h-9 rounded-xl bg-sky-950 text-white flex items-center justify-center text-sm shrink-0 shadow-xs">
+                                    <i class="fa-solid fa-shield-halved text-sky-400"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-xs font-bold text-slate-800 truncate">Unit Security</span>
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                    </div>
+                                    <p class="text-[10.5px] text-slate-500 font-medium truncate">Patroli & Pos Aktif</p>
+                                </div>
                             </div>
                         </div>
+
                     </div>
                 </div>
 
