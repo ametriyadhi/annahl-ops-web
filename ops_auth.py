@@ -256,134 +256,210 @@ LOGIN_HTML = """
     <style>
         body { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif; }
         .brand-logo-login {
-            height: 76px !important;
-            max-height: 80px !important;
+            height: 72px !important;
+            max-height: 76px !important;
             width: auto !important;
-            max-width: 140px !important;
+            max-width: 130px !important;
             object-fit: contain !important;
             display: block !important;
         }
         .brand-logo-mobile {
-            height: 52px !important;
-            max-height: 56px !important;
+            height: 48px !important;
+            max-height: 52px !important;
             width: auto !important;
-            max-width: 100px !important;
+            max-width: 90px !important;
             object-fit: contain !important;
             display: block !important;
+        }
+        .field-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        .field-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            -webkit-transform: translateY(-50%);
+            color: #94A3B8;
+            font-size: 14px;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .field-input {
+            width: 100%;
+            padding-left: 40px !important;
+            padding-right: 14px !important;
+            padding-top: 11px !important;
+            padding-bottom: 11px !important;
+            font-size: 14px;
+            border: 1px solid #E2E8F0;
+            border-radius: 14px;
+            background-color: #F8FAFC;
+            transition: all 0.2s ease;
+            outline: none;
+            color: #1E293B;
+            box-sizing: border-box;
+        }
+        .field-input:focus {
+            background-color: #FFFFFF;
+            border-color: #059669;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+        }
+        .pwd-toggle-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            -webkit-transform: translateY(-50%);
+            color: #94A3B8;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            font-size: 13px;
+            z-index: 5;
+        }
+        .pwd-toggle-btn:hover {
+            color: #047857;
         }
     </style>
 </head>
 <body class="bg-slate-50 antialiased selection:bg-emerald-600/10 selection:text-emerald-900">
 <div class="min-h-screen flex">
   
-  <!-- SISI KIRI (DESKTOP BRANDING HERO IDENTIK SAS-ANNAHL) -->
-  <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-emerald-950 items-center justify-center">
+  <!-- SISI KIRI (DESKTOP & TABLET BRANDING HERO) -->
+  <div class="hidden md:flex md:w-5/12 lg:w-1/2 relative overflow-hidden bg-emerald-950 flex-col justify-between p-8 lg:p-12 text-white">
     <div class="absolute inset-0 opacity-[0.07]" style="background-image:url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='1'%3E%3Cpath d='M30 2 L58 30 L30 58 L2 30 Z'/%3E%3Ccircle cx='30' cy='30' r='12'/%3E%3C/g%3E%3C/svg%3E');"></div>
     <div class="absolute -top-24 -left-24 w-96 h-96 bg-emerald-800/40 rounded-full blur-3xl"></div>
     <div class="absolute bottom-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl"></div>
     
-    <div class="relative z-10 px-12 text-center max-w-lg">
-      <div class="inline-flex items-center justify-center p-3 rounded-2xl bg-white shadow-xl mb-6 border border-white/20">
-        <img src="/static/logo.png?v=20260930_opt" alt="An Nahl" class="brand-logo-login" style="height:76px;width:auto;max-width:140px;max-height:80px;object-fit:contain;display:block;">
+    <!-- Top badge -->
+    <div class="relative z-10 flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span class="text-xs font-semibold text-emerald-200 tracking-wider uppercase">Command Center Portal</span>
+    </div>
+
+    <!-- Center Hero Info -->
+    <div class="relative z-10 my-auto py-8 text-center max-w-md mx-auto">
+      <div class="inline-flex items-center justify-center p-3 rounded-2xl bg-white shadow-xl mb-5 border border-white/20">
+        <img src="/static/logo.png?v=20260930_opt" alt="An Nahl" class="brand-logo-login" style="height:72px;width:auto;max-width:130px;max-height:76px;object-fit:contain;display:block;">
       </div>
-      <h1 class="text-white font-bold text-3xl leading-snug">An Nahl Ops<br><span class="text-emerald-300 font-semibold text-2xl">Command Center</span></h1>
-      <p class="text-emerald-200/90 mt-4 text-sm leading-relaxed max-w-md mx-auto">Portal komando terpadu IT, Sarpras, dan General Affairs — koordinasi 4 unit lapangan (OB, Gardener, Security, IT), pemantauan server, dan mutabaah ibadah.</p>
+      <h1 class="text-white font-extrabold text-2xl lg:text-3xl leading-snug">
+        An Nahl Ops<br>
+        <span class="text-emerald-300 font-semibold text-xl lg:text-2xl">Command Center</span>
+      </h1>
+      <p class="text-emerald-100 text-xs sm:text-sm leading-relaxed mt-3.5 max-w-sm mx-auto font-normal">
+        Portal komando terpadu IT, Sarpras, dan General Affairs — orkestrasi 4 unit lapangan (OB, Gardener, Security, IT), pemantauan server, dan mutabaah ibadah.
+      </p>
       
-      <div class="mt-9 flex items-center justify-center gap-6 text-emerald-200/70 text-xs font-medium">
-        <span><i class="fa-solid fa-tower-broadcast text-emerald-400 mr-1.5"></i> Uptime Monitor</span>
-        <span><i class="fa-solid fa-users-gear text-emerald-400 mr-1.5"></i> Multi-Unit Koordinator</span>
-        <span><i class="fa-solid fa-shield-halved text-emerald-400 mr-1.5"></i> Akses Terkendali</span>
+      <div class="mt-8 flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs font-medium">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-900/80 border border-emerald-700/80 text-white shadow-xs">
+          <i class="fa-solid fa-tower-broadcast text-emerald-400"></i> Uptime Monitor
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-900/80 border border-emerald-700/80 text-white shadow-xs">
+          <i class="fa-solid fa-users-gear text-emerald-400"></i> 4 Unit Koordinator
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-900/80 border border-emerald-700/80 text-white shadow-xs">
+          <i class="fa-solid fa-shield-halved text-emerald-400"></i> Akses Terkendali
+        </span>
       </div>
     </div>
-    <div class="absolute bottom-5 inset-x-0 text-center text-emerald-300/40 text-[11px] z-10">&copy; 2026 An Nahl Islamic School &bull; IT & General Affairs Department</div>
+
+    <!-- Bottom Footer (Natural Flow, no overlap) -->
+    <div class="relative z-10 text-center text-emerald-200/80 text-[11px] font-medium pt-4">
+      &copy; 2026 An Nahl Islamic School &bull; IT & General Affairs Department
+    </div>
   </div>
 
   <!-- SISI KANAN (FORM LOGIN) -->
-  <div class="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-10 bg-slate-50">
-    <div class="w-full max-w-md">
+  <div class="w-full md:w-7/12 lg:w-1/2 flex items-center justify-center p-5 sm:p-8 lg:p-10 bg-slate-50 min-h-screen">
+    <div class="w-full max-w-md my-auto">
       
-      <!-- Mobile Logo Header -->
-      <div class="lg:hidden flex flex-col items-center mb-6">
-        <div class="inline-flex items-center justify-center p-2 rounded-2xl bg-white shadow-md mb-2.5 border border-slate-200/60">
-          <img src="/static/logo.png?v=20260930_opt" alt="An Nahl" class="brand-logo-mobile" style="height:52px;width:auto;max-width:100px;max-height:56px;object-fit:contain;display:block;">
+      <!-- Mobile Logo Header (hanya muncul di HP < md, tidak muncul di tablet/desktop) -->
+      <div class="md:hidden flex flex-col items-center mb-5">
+        <div class="inline-flex items-center justify-center p-2 rounded-2xl bg-white shadow-md mb-2 border border-slate-200/60">
+          <img src="/static/logo.png?v=20260930_opt" alt="An Nahl" class="brand-logo-mobile" style="height:48px;width:auto;max-width:90px;max-height:52px;object-fit:contain;display:block;">
         </div>
-        <h1 class="font-bold text-xl text-slate-800">An Nahl Ops</h1>
+        <h1 class="font-bold text-lg text-slate-800">An Nahl Ops</h1>
         <p class="text-xs text-emerald-700 font-semibold">Command Center IT & General Affairs</p>
       </div>
 
       <!-- Card Container -->
-      <div class="bg-white rounded-3xl shadow-xl shadow-slate-200/60 border border-slate-100 p-8 sm:p-10">
-        <div class="mb-7">
-          <p class="text-xs font-semibold tracking-widest text-emerald-700 uppercase mb-1">Selamat Datang Kembali</p>
-          <h2 class="text-2xl font-bold text-slate-800">Masuk ke Command Center</h2>
-          <p class="text-sm text-slate-500 mt-1.5">Silakan login untuk mengakses dashboard operasional An Nahl Ops.</p>
+      <div class="bg-white rounded-3xl shadow-xl shadow-slate-200/60 border border-slate-100 p-6 sm:p-8">
+        <div class="mb-5">
+          <p class="text-[11px] font-bold tracking-widest text-emerald-700 uppercase mb-1">Selamat Datang Kembali</p>
+          <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800">Masuk ke Command Center</h2>
+          <p class="text-xs text-slate-500 mt-1">Silakan login untuk mengakses dashboard operasional An Nahl Ops.</p>
         </div>
 
         {% if error %}
-        <div class="mb-6 flex items-center gap-2.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium px-4 py-3 rounded-2xl animate-in fade-in duration-200">
+        <div class="mb-5 flex items-center gap-2.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium px-3.5 py-2.5 rounded-2xl animate-in fade-in duration-200">
           <i class="fa-solid fa-circle-exclamation text-rose-500 text-sm shrink-0"></i>
           <span>{{ error }}</span>
         </div>
         {% endif %}
 
-        <form method="POST" action="/login" class="space-y-5">
+        <form method="POST" action="/login" class="space-y-4">
           <input type="hidden" name="next" value="{{ next_url }}">
           
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">Username</label>
-            <div class="relative">
-              <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <label class="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Username</label>
+            <div class="field-container">
+              <i class="fa-solid fa-user field-icon"></i>
               <input name="username" id="username" placeholder="Masukkan username (contoh: admin atau koord_ob)" required autofocus autocomplete="username"
-                     class="w-full pl-11 pr-4 py-3.5 text-sm border border-slate-200 rounded-2xl focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100 outline-none transition bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400">
+                     class="field-input">
             </div>
           </div>
 
           <div>
-            <div class="flex items-center justify-between mb-2">
-              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wide">Password</label>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wide">Password</label>
             </div>
-            <div class="relative">
-              <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <div class="field-container">
+              <i class="fa-solid fa-lock field-icon"></i>
               <input type="password" id="pwfield" name="password" placeholder="Masukkan password" required autocomplete="current-password"
-                     class="w-full pl-11 pr-12 py-3.5 text-sm border border-slate-200 rounded-2xl focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100 outline-none transition bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400">
+                     class="field-input" style="padding-right: 38px !important;">
               <button type="button" onclick="const f=document.getElementById('pwfield');f.type=f.type==='password'?'text':'password'" 
-                      class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-700 transition" title="Lihat password">
+                      class="pwd-toggle-btn" title="Lihat password">
                 <i class="fa-regular fa-eye"></i>
               </button>
             </div>
           </div>
 
-          <div class="flex items-center justify-between text-xs pt-1">
+          <div class="flex items-center justify-between text-xs pt-0.5">
             <label class="flex items-center cursor-pointer select-none text-slate-600 hover:text-slate-800">
               <input id="remember_me" name="remember_me" type="checkbox" checked
                      class="h-4 w-4 rounded border-slate-300 text-emerald-700 focus:ring-emerald-500 accent-emerald-700">
               <span class="ml-2 font-medium">Ingat sesi saya</span>
             </label>
-            <span class="font-semibold text-emerald-700/80">Sekolah Islam An Nahl</span>
+            <span class="text-[11px] font-semibold text-emerald-800">Sekolah Islam An Nahl</span>
           </div>
 
           <button type="submit" 
-                  class="w-full py-4 bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-sm rounded-2xl shadow-lg shadow-emerald-800/25 hover:shadow-emerald-800/35 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                  class="w-full py-3.5 bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-sm rounded-2xl shadow-lg shadow-emerald-800/25 hover:shadow-emerald-800/35 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
             <span>Masuk ke Dashboard</span>
             <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
           </button>
         </form>
 
-        <div class="mt-7 pt-5 border-t border-slate-100 space-y-2">
-          <p class="text-[11px] font-semibold text-slate-500 text-center uppercase tracking-wider">Unit Koordinator Terdaftar:</p>
+        <div class="mt-5 pt-4 border-t border-slate-100 space-y-1.5">
+          <p class="text-[10.5px] font-bold text-slate-500 text-center uppercase tracking-wider">Unit Koordinator Terdaftar:</p>
           <div class="flex flex-wrap justify-center gap-1.5 text-[10px]">
-            <span class="px-2.5 py-1 rounded-xl bg-slate-100 text-slate-700 font-semibold border border-slate-200">IT</span>
-            <span class="px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200">Office Boy</span>
-            <span class="px-2.5 py-1 rounded-xl bg-amber-50 text-amber-800 font-semibold border border-amber-200">Gardener</span>
-            <span class="px-2.5 py-1 rounded-xl bg-sky-50 text-sky-800 font-semibold border border-sky-200">Security</span>
-            <span class="px-2.5 py-1 rounded-xl bg-indigo-50 text-indigo-800 font-semibold border border-indigo-200">Sarpras</span>
-            <span class="px-2.5 py-1 rounded-xl bg-rose-50 text-rose-800 font-semibold border border-rose-200">Pengadaan</span>
+            <span class="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-semibold border border-slate-200">IT</span>
+            <span class="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200">Office Boy</span>
+            <span class="px-2 py-0.5 rounded-lg bg-amber-50 text-amber-800 font-semibold border border-amber-200">Gardener</span>
+            <span class="px-2 py-0.5 rounded-lg bg-sky-50 text-sky-800 font-semibold border border-sky-200">Security</span>
+            <span class="px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-800 font-semibold border border-indigo-200">Sarpras</span>
+            <span class="px-2 py-0.5 rounded-lg bg-rose-50 text-rose-800 font-semibold border border-rose-200">Pengadaan</span>
           </div>
         </div>
 
       </div>
 
-      <div class="mt-6 text-center text-xs text-slate-400">
+      <div class="mt-4 text-center text-[11px] text-slate-400">
         <i class="fa-solid fa-circle-question mr-1"></i> Bantuan kendala akses? Hubungi Admin IT An Nahl
       </div>
 
