@@ -13,7 +13,7 @@ from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
-from flask import Flask, render_template_string, request, jsonify, Response, session, redirect, url_for
+from flask import Flask, render_template_string, request, jsonify, Response, session, redirect, url_for, send_from_directory
 
 WIB = ZoneInfo("Asia/Jakarta")
 
@@ -27,6 +27,15 @@ from checklist_core import checklist_bp
 app.register_blueprint(ops_auth_bp)
 app.register_blueprint(ops_core_bp)
 app.register_blueprint(checklist_bp)
+
+@app.route("/favicon.ico")
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, "static"), "favicon.png", mimetype="image/png")
+
+@app.route("/apple-touch-icon.png")
+@app.route("/apple-touch-icon-precomposed.png")
+def apple_touch_icon():
+    return send_from_directory(os.path.join(app.root_path, "static"), "logo-icon.png", mimetype="image/png")
 
 # Paths
 DATA_FILE = os.path.expanduser("~/annahl_ops_data.json")
@@ -243,17 +252,28 @@ HTML_TEMPLATE = """
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>An Nahl Ops Dashboard - IT & General Affairs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>An Nahl Ops - Command Center IT & General Affairs</title>
+    <!-- Favicon & App Icons -->
+    <link rel="icon" type="image/png" href="/static/favicon.png?v=20260930">
+    <link rel="apple-touch-icon" href="/static/logo-icon.png?v=20260930">
     <!-- Tailwind CSS (build lokal, anti CDN-failure) -->
-    <link rel="stylesheet" href="/static/tailwind.min.css?v=20260909_v5_green_fix">
+    <link rel="stylesheet" href="/static/tailwind.min.css?v=20260930_taste">
     <!-- FontAwesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body { 
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #FAF8F5;
+        }
+        .ops-card {
+            background-color: #FFFFFF;
+            border: 1px solid #E8E4DD;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
+        }
         @media print {
             #sidebar, #sidebar-backdrop, header, .no-print {
                 display: none !important;
@@ -274,7 +294,7 @@ HTML_TEMPLATE = """
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex">
+<body class="bg-[#FAF8F5] text-slate-800 min-h-[100dvh] flex selection:bg-[#4F786C]/10 selection:text-[#1E3D34]">
 
     <!-- BACKDROP MOBILE -->
     <div id="sidebar-backdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-30 hidden transition-opacity"></div>
@@ -282,18 +302,21 @@ HTML_TEMPLATE = """
     <!-- RESPONSIVE SIDEBAR -->
     <aside id="sidebar" class="w-64 bg-slate-900 text-slate-300 min-h-screen flex flex-col border-r border-slate-800 fixed inset-y-0 left-0 z-40 transition-transform duration-300 transform -translate-x-full md:translate-x-0">
         <!-- Brand / Header -->
-        <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-emerald-800 text-white">
-            <div class="flex items-center space-x-3">
-                <div class="p-2 bg-white/20 rounded-lg">
-                    <i class="fa-solid fa-school text-xl"></i>
+        <div class="p-4 sm:p-4.5 border-b border-slate-800/80 flex items-center justify-between bg-gradient-to-r from-slate-900 via-[#132721] to-slate-900 text-white">
+            <div class="flex items-center space-x-3 min-w-0">
+                <div class="w-10 h-10 rounded-xl bg-white p-1 shrink-0 flex items-center justify-center shadow-xs border border-white/20">
+                    <img src="/static/logo-icon.png" alt="Logo An Nahl" class="w-full h-full object-contain">
                 </div>
-                <div>
-                    <h1 class="font-bold text-sm leading-tight">An Nahl Ops</h1>
-                    <p class="text-[11px] text-emerald-200">IT & General Affairs</p>
+                <div class="min-w-0">
+                    <div class="flex items-center gap-1.5">
+                        <h1 class="font-bold text-sm tracking-tight text-white truncate">An Nahl Ops</h1>
+                        <span class="px-1.5 py-0.2 rounded-md bg-[#4F786C]/40 text-emerald-200 text-[9px] font-mono uppercase tracking-wider border border-[#4F786C]/50">HQ</span>
+                    </div>
+                    <p class="text-[10.5px] text-slate-400 truncate">IT & General Affairs</p>
                 </div>
             </div>
-            <button onclick="toggleSidebar()" class="text-white hover:text-slate-200 p-1 rounded-md md:hidden">
-                <i class="fa-solid fa-xmark text-lg"></i>
+            <button onclick="toggleSidebar()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800/80 md:hidden" title="Tutup Menu">
+                <i class="fa-solid fa-xmark text-base"></i>
             </button>
         </div>
 
@@ -442,26 +465,32 @@ HTML_TEMPLATE = """
     <main id="main-content" class="flex-1 transition-all duration-300 md:ml-64 min-h-screen flex flex-col w-full">
 
         <!-- Top Header Bar -->
-        <header class="h-14 sm:h-16 bg-white border-b border-slate-200 px-3 sm:px-6 flex items-center justify-between shadow-xs sticky top-0 z-20">
-            <div class="flex items-center space-x-3">
-                <button onclick="toggleSidebar()" class="p-2 rounded-lg text-slate-600 hover:bg-slate-100 focus:outline-none" title="Toggle Sidebar">
-                    <i class="fa-solid fa-bars text-lg"></i>
+        <header class="h-14 sm:h-16 bg-white/95 backdrop-blur-md border-b border-[#E8E4DD] px-3 sm:px-6 flex items-center justify-between shadow-2xs sticky top-0 z-20">
+            <div class="flex items-center space-x-2.5 sm:space-x-3">
+                <button onclick="toggleSidebar()" class="p-2 rounded-xl text-slate-600 hover:bg-[#F4F2EE] hover:text-slate-900 focus:outline-none transition active:scale-95" title="Buka/Tutup Menu">
+                    <i class="fa-solid fa-bars text-base sm:text-lg"></i>
                 </button>
-                <h2 id="page-title" class="text-sm sm:text-base font-bold text-slate-800">Dashboard Utama</h2>
+                <div class="flex items-center gap-2.5">
+                    <img src="/static/logo-icon.png" alt="An Nahl" class="w-7 h-7 sm:w-8 sm:h-8 object-contain rounded-xl p-1 bg-[#FAF8F5] border border-[#E8E4DD] shadow-2xs">
+                    <div>
+                        <h2 id="page-title" class="text-xs sm:text-sm font-bold text-[#1E3D34] leading-tight">Dashboard Utama</h2>
+                        <p class="text-[10px] text-slate-600 font-medium hidden sm:block leading-tight">Sekolah Islam An Nahl &bull; Command Center</p>
+                    </div>
+                </div>
             </div>
             <div class="flex items-center space-x-2 sm:space-x-3 text-xs">
                 <div id="bot-status-badge" class="inline-flex items-center"></div>
-                <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 font-medium rounded-full border border-emerald-200 hidden lg:flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Tunnel Active
+                <span class="px-2.5 py-1 bg-[#EAF1EE] text-[#2E584C] font-semibold rounded-full border border-[#D5E3DD] hidden lg:flex items-center gap-1.5 text-[11px]">
+                    <span class="w-2 h-2 rounded-full bg-[#4F786C] animate-pulse"></span> Tunnel Active
                 </span>
-                <span class="text-slate-500 text-[11px] sm:text-xs hidden md:inline-flex items-center">
-                    <i class="fa-regular fa-clock mr-1"></i> {{ now_str }}
+                <span class="text-slate-500 text-[11px] sm:text-xs hidden md:inline-flex items-center font-medium">
+                    <i class="fa-regular fa-clock mr-1 text-[#4F786C]"></i> {{ now_str }}
                 </span>
 
                 <!-- Top Header User Info & Logout Button -->
-                <div class="flex items-center pl-2 sm:pl-3 border-l border-slate-200 space-x-2">
-                    <div class="hidden sm:flex items-center space-x-2 bg-slate-50 border border-slate-200/80 rounded-xl px-2.5 py-1">
-                        <div class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[10px] shrink-0">
+                <div class="flex items-center pl-2 sm:pl-3 border-l border-[#E8E4DD] space-x-2">
+                    <div class="hidden sm:flex items-center space-x-2 bg-[#FAF9F6] border border-[#E2DDD5] rounded-xl px-2.5 py-1 shadow-2xs">
+                        <div class="w-6 h-6 rounded-lg bg-[#4F786C] text-white flex items-center justify-center font-bold text-[10px] shrink-0">
                             {{ user_nama[:2]|upper }}
                         </div>
                         <div class="text-left">
@@ -471,8 +500,8 @@ HTML_TEMPLATE = """
                     </div>
 
                     <!-- Tombol Logout Terlihat Jelas -->
-                    <a href="/logout" onclick="return confirm('Apakah Anda yakin ingin keluar dari sistem?')" title="Keluar dari Sistem An Nahl Ops" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white border border-rose-200 rounded-xl transition shadow-xs">
-                        <i class="fa-solid fa-right-from-bracket"></i>
+                    <a href="/logout" onclick="return confirm('Apakah Anda yakin ingin keluar dari sistem?')" title="Keluar dari Sistem An Nahl Ops" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-600 hover:text-white border border-rose-200 rounded-xl transition shadow-2xs active:scale-95">
+                        <i class="fa-solid fa-right-from-bracket text-xs"></i>
                         <span>Logout</span>
                     </a>
                 </div>
@@ -484,6 +513,49 @@ HTML_TEMPLATE = """
 
             <!-- TAB 0: DASHBOARD UTAMA (OVERVIEW) -->
             <div id="tab-dashboard" class="tab-content space-y-6">
+
+                <!-- Taste Skill: Executive Cockpit Hero Banner with Official Branding -->
+                <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-[#FAF9F6] to-[#F1F6F3] border border-[#E4DFD7] p-5 sm:p-7 shadow-xs">
+                    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
+                        <div class="flex items-start sm:items-center gap-4">
+                            <div class="p-2 sm:p-2.5 bg-white rounded-2xl border border-[#E8E4DD] shadow-xs shrink-0">
+                                <img src="/static/logo.png" alt="Sekolah Islam An Nahl" class="h-12 sm:h-14 w-auto object-contain">
+                            </div>
+                            <div class="space-y-1">
+                                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#EAF1EE] text-[#2E584C] text-[10.5px] font-bold border border-[#D5E3DD]">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-[#4F786C] animate-pulse"></span>
+                                    Sistem Terpadu Aktif &bull; IT & General Affairs
+                                </div>
+                                <h1 class="text-xl sm:text-2xl font-extrabold text-[#1E3D34] tracking-tight">
+                                    Bismillah, Selamat Datang di Command Center An Nahl Ops
+                                </h1>
+                                <p class="text-xs sm:text-sm text-slate-600 font-medium max-w-2xl leading-relaxed">
+                                    Pusat monitoring infrastruktur, orkestrasi 4 unit koordinator lapangan (IT, OB, Gardener, Security), tata kelola Sarpras, dan pembiasaan ibadah civitas.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Right / Quick Unit Status Badges -->
+                        <div class="flex flex-wrap md:flex-col items-start md:items-end gap-1.5 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-[#EFECE6]">
+                            <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-0.5 hidden md:block">Status Kesiagaan Pos & Unit</div>
+                            <div class="flex flex-wrap gap-1.5 text-[10.5px]">
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white text-[#2E584C] font-semibold border border-[#D5E3DD] shadow-2xs">
+                                    <i class="fa-solid fa-laptop-code text-[10px] text-[#4F786C]"></i> IT Terhubung
+                                </span>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white text-[#3B5F54] font-semibold border border-[#CCD8D2] shadow-2xs">
+                                    <i class="fa-solid fa-broom text-[10px] text-[#3B5F54]"></i> OB Siaga
+                                </span>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white text-[#635129] font-semibold border border-[#EADBBD] shadow-2xs">
+                                    <i class="fa-solid fa-leaf text-[10px] text-[#7A6330]"></i> Gardener Siap
+                                </span>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white text-[#2A5266] font-semibold border border-[#CCDCE4] shadow-2xs">
+                                    <i class="fa-solid fa-shield-halved text-[10px] text-[#3B6E85]"></i> Security Patrol
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Top Summary Metric Cards -->
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
                     <div class="bg-white rounded-xl shadow-xs p-4 sm:p-5 border border-slate-200 flex items-center justify-between">

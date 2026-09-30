@@ -239,105 +239,130 @@ def role_required(allowed_roles):
 # ==================== TEMPLATES ====================
 LOGIN_HTML = """
 <!DOCTYPE html>
-<html lang="id" class="bg-slate-950">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - An Nahl Ops Command Center</title>
-    <link rel="stylesheet" href="/static/tailwind.min.css?v=20260902_login_fix2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Masuk - An Nahl Ops Command Center</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png?v=20260930">
+    <link rel="apple-touch-icon" href="/static/logo-icon.png?v=20260930">
+    <link rel="stylesheet" href="/static/tailwind.min.css?v=20260930_taste">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body { 
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #FAF8F5;
+        }
+        .login-card {
+            background: #FFFFFF;
+            border: 1px solid #E8E4DD;
+            box-shadow: 0 10px 30px -10px rgba(30, 61, 52, 0.08), 0 4px 6px -2px rgba(30, 61, 52, 0.03);
+        }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-center items-center py-10 sm:py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 text-slate-100 overflow-y-auto">
+<body class="min-h-[100dvh] flex flex-col justify-center items-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8 text-slate-800 bg-[#FAF8F5] relative overflow-y-auto selection:bg-[#4F786C]/10 selection:text-[#1E3D34]">
     
-    <div class="w-full max-w-md my-auto space-y-6">
-        <!-- Logo & Header -->
+    <!-- Ambient Warm Canvas Accent -->
+    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div class="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-[#E8F0EC]/70 blur-3xl"></div>
+        <div class="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-[#E5EEF3]/70 blur-3xl"></div>
+    </div>
+
+    <div class="w-full max-w-md my-auto space-y-5 z-10 relative">
+        
+        <!-- Logo & Brand Header -->
         <div class="text-center pt-2">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 shadow-xl shadow-emerald-950/50 mb-3.5">
-                <i class="fa-solid fa-school text-3xl"></i>
+            <div class="inline-flex items-center justify-center p-3 sm:p-3.5 bg-white rounded-2xl shadow-sm border border-[#E8E4DD] mb-3.5 hover:shadow-md transition">
+                <img src="/static/logo.png" alt="An Nahl Islamic School" class="h-16 sm:h-20 w-auto object-contain">
             </div>
-            <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">An Nahl Ops</h2>
-            <p class="mt-1.5 text-xs sm:text-sm text-emerald-300 font-medium">Command Center IT & General Affairs</p>
-            <p class="mt-0.5 text-xs text-slate-400">Portal Kolaborasi & Pendelegasian Tim Koordinator</p>
+            <div class="space-y-1">
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#EAF1EE] text-[#2E584C] text-[11px] font-semibold border border-[#D5E3DD]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#4F786C] animate-pulse"></span>
+                    Portal Terpadu Operasional
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#1E3D34]">An Nahl Ops</h1>
+                <p class="text-xs sm:text-sm text-slate-600 font-medium">Command Center IT, Sarpras & General Affairs</p>
+            </div>
         </div>
 
-        <div class="bg-slate-900/80 backdrop-blur-md py-8 px-6 sm:px-10 shadow-2xl rounded-2xl border border-slate-800">
+        <!-- Login Card -->
+        <div class="login-card py-7 px-6 sm:px-9 rounded-2xl">
             
             {% if error %}
-            <div class="mb-5 p-3.5 rounded-xl bg-rose-950/80 border border-rose-800/80 text-rose-200 text-xs flex items-center space-x-3">
-                <i class="fa-solid fa-circle-exclamation text-base text-rose-400 shrink-0"></i>
-                <span>{{ error }}</span>
+            <div class="mb-5 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center space-x-3 animate-in fade-in duration-200">
+                <i class="fa-solid fa-circle-exclamation text-base text-rose-500 shrink-0"></i>
+                <span class="font-medium">{{ error }}</span>
             </div>
             {% endif %}
 
-            <form class="space-y-5" action="/login" method="POST">
+            <form class="space-y-4 sm:space-y-5" action="/login" method="POST">
                 <input type="hidden" name="next" value="{{ next_url }}">
                 
                 <div>
-                    <label for="username" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Username</label>
-                    <div class="relative rounded-xl shadow-sm">
+                    <label for="username" class="block text-xs font-bold text-slate-700 tracking-wide mb-1.5">Nama Pengguna (Username)</label>
+                    <div class="relative rounded-xl">
                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                            <i class="fa-solid fa-user"></i>
+                            <i class="fa-solid fa-user-shield text-xs"></i>
                         </div>
                         <input type="text" id="username" name="username" required autofocus autocomplete="username"
                                placeholder="Contoh: admin atau koord_ob"
-                               class="w-full pl-10 pr-4 py-2.5 bg-slate-800/90 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
+                               class="w-full pl-9 pr-4 py-2.5 bg-[#FAF9F6] border border-[#DDD8CF] rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#4F786C]/25 focus:border-[#4F786C] transition">
                     </div>
                 </div>
 
                 <div>
-                    <div class="flex items-center justify-between mb-2">
-                        <label for="password" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">Password</label>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label for="password" class="block text-xs font-bold text-slate-700 tracking-wide">Kata Sandi (Password)</label>
                     </div>
-                    <div class="relative rounded-xl shadow-sm">
+                    <div class="relative rounded-xl">
                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                            <i class="fa-solid fa-lock"></i>
+                            <i class="fa-solid fa-lock text-xs"></i>
                         </div>
                         <input type="password" id="password" name="password" required autocomplete="current-password"
-                               placeholder="••••••••"
-                               class="w-full pl-10 pr-10 py-2.5 bg-slate-800/90 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
-                        <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-200">
-                            <i class="fa-solid fa-eye" id="toggle-pwd-icon"></i>
+                               placeholder="Masukkan kata sandi"
+                               class="w-full pl-9 pr-10 py-2.5 bg-[#FAF9F6] border border-[#DDD8CF] rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#4F786C]/25 focus:border-[#4F786C] transition">
+                        <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none" title="Lihat/Sembunyikan password">
+                            <i class="fa-solid fa-eye text-xs" id="toggle-pwd-icon"></i>
                         </button>
                     </div>
                 </div>
 
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
+                <div class="flex items-center justify-between pt-1 text-xs">
+                    <label class="flex items-center cursor-pointer select-none text-slate-600 hover:text-slate-900">
                         <input id="remember_me" name="remember_me" type="checkbox" checked
-                               class="h-4 w-4 rounded bg-slate-800 border-slate-700 text-emerald-600 focus:ring-emerald-500">
-                        <label for="remember_me" class="ml-2 block text-xs text-slate-400">Ingat sesi saya</label>
-                    </div>
-                    <span class="text-xs text-emerald-400 font-medium">An Nahl Islamic School</span>
+                               class="h-4 w-4 rounded border-[#D5CFC5] text-[#4F786C] focus:ring-[#4F786C]/30 accent-[#4F786C]">
+                        <span class="ml-2 font-medium">Ingat sesi saya</span>
+                    </label>
+                    <span class="text-[11px] font-semibold text-[#4F786C]">Sekolah Islam An Nahl</span>
                 </div>
 
-                <div>
+                <div class="pt-2">
                     <button type="submit"
-                            class="w-full flex justify-center items-center space-x-2 py-3 px-4 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-emerald-500 transition active:scale-95">
-                        <i class="fa-solid fa-right-to-bracket"></i>
-                        <span>Masuk ke Dashboard</span>
+                            class="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-xs text-sm font-bold text-white bg-[#4F786C] hover:bg-[#3F6359] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4F786C] transition active:scale-[0.98]">
+                        <i class="fa-solid fa-right-to-bracket text-xs"></i>
+                        <span>Masuk ke Command Center</span>
                     </button>
                 </div>
             </form>
 
-            <div class="mt-6 pt-5 border-t border-slate-800/80">
-                <div class="text-[11px] text-slate-400 text-center space-y-1.5">
-                    <p class="font-semibold text-slate-300">Struktur Unit Koordinator Terdaftar:</p>
+            <div class="mt-6 pt-5 border-t border-[#EFECE6]">
+                <div class="text-[11px] text-slate-500 text-center space-y-1.5">
+                    <p class="font-bold text-slate-700">Akses Unit Koordinator & Operasional:</p>
                     <div class="flex flex-wrap justify-center gap-1.5 pt-1 text-[10px]">
-                        <span class="px-2 py-0.5 rounded-full bg-slate-800 text-emerald-300 border border-slate-700">IT</span>
-                        <span class="px-2 py-0.5 rounded-full bg-slate-800 text-teal-300 border border-slate-700">Office Boy</span>
-                        <span class="px-2 py-0.5 rounded-full bg-slate-800 text-amber-300 border border-slate-700">Gardener</span>
-                        <span class="px-2 py-0.5 rounded-full bg-slate-800 text-blue-300 border border-slate-700">Security</span>
+                        <span class="px-2 py-0.5 rounded-lg bg-[#EAF1EE] text-[#2E584C] font-semibold border border-[#D5E3DD]">IT</span>
+                        <span class="px-2 py-0.5 rounded-lg bg-[#E6ECE8] text-[#3B5F54] font-semibold border border-[#CCD8D2]">Office Boy</span>
+                        <span class="px-2 py-0.5 rounded-lg bg-[#F7F2E6] text-[#635129] font-semibold border border-[#EADBBD]">Gardener</span>
+                        <span class="px-2 py-0.5 rounded-lg bg-[#E5EEF3] text-[#2A5266] font-semibold border border-[#CCDCE4]">Security</span>
+                        <span class="px-2 py-0.5 rounded-lg bg-[#EAE8F2] text-[#443864] font-semibold border border-[#D3CDE2]">Sarpras</span>
+                        <span class="px-2 py-0.5 rounded-lg bg-[#F5EAE8] text-[#683935] font-semibold border border-[#E5CEC9]">Pengadaan</span>
                     </div>
                 </div>
             </div>
 
         </div>
 
-        <p class="mt-6 text-center text-xs text-slate-500">
+        <p class="text-center text-[11px] text-slate-400 font-medium">
             &copy; 2026 An Nahl Islamic School &bull; IT & General Affairs Department
         </p>
     </div>
