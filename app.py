@@ -2159,11 +2159,12 @@ HTML_TEMPLATE = """
                         </div>
                         <div>
                             <label class="block font-semibold text-slate-600 mb-1">Filter Unit</label>
-                            <select id="kebersihan-filter-unit" onchange="filterKebersihanTable()" class="w-full p-2 bg-white border border-slate-200 rounded-lg">
+                            <select id="kebersihan-filter-unit" onchange="filterKebersihanTable()" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs font-medium">
                                 <option value="">Semua Unit</option>
-                                <option value="OB">OB</option>
-                                <option value="General Affairs">General Affairs</option>
+                                <option value="OB">Office Boy (OB)</option>
+                                <option value="Gardener">Gardener (Taman & Ecopark)</option>
                                 <option value="Security">Security</option>
+                                <option value="General Affairs">General Affairs</option>
                             </select>
                         </div>
                         <div>
@@ -2204,7 +2205,25 @@ HTML_TEMPLATE = """
                                     data-hasphoto="{% if has_any_photo %}true{% else %}false{% endif %}">
                                     <td class="p-3 text-xs font-mono text-slate-500 whitespace-nowrap">{{ log.wibDate or log.timestamp[:10] }}</td>
                                     <td class="p-3 font-semibold text-slate-800">{{ log.nama }}</td>
-                                    <td class="p-3 text-xs font-medium text-slate-600">{{ log.unit }}</td>
+                                    <td class="p-3 text-xs whitespace-nowrap">
+                                        {% set u_clean = (log.unit or 'OB')|trim %}
+                                        {% if 'garden' in u_clean|lower %}
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                            <i class="fa-solid fa-leaf text-amber-600 text-[10px]"></i>
+                                            <span>Gardener</span>
+                                        </span>
+                                        {% elif 'secur' in u_clean|lower %}
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-sky-50 text-sky-800 border border-sky-200">
+                                            <i class="fa-solid fa-shield-halved text-sky-600 text-[10px]"></i>
+                                            <span>Security</span>
+                                        </span>
+                                        {% else %}
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                            <i class="fa-solid fa-broom text-emerald-600 text-[10px]"></i>
+                                            <span>{{ u_clean }}</span>
+                                        </span>
+                                        {% endif %}
+                                    </td>
                                     <td class="p-3 text-xs font-bold text-slate-700">{{ log.area }}</td>
                                     <td class="p-3 text-xs text-slate-700 leading-relaxed">{{ log.keterangan }}</td>
                                     <td class="p-3 text-xs whitespace-nowrap">
