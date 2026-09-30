@@ -255,6 +255,22 @@ LOGIN_HTML = """
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif; }
+        .brand-logo-login {
+            height: 76px !important;
+            max-height: 80px !important;
+            width: auto !important;
+            max-width: 140px !important;
+            object-fit: contain !important;
+            display: block !important;
+        }
+        .brand-logo-mobile {
+            height: 52px !important;
+            max-height: 56px !important;
+            width: auto !important;
+            max-width: 100px !important;
+            object-fit: contain !important;
+            display: block !important;
+        }
     </style>
 </head>
 <body class="bg-slate-50 antialiased selection:bg-emerald-600/10 selection:text-emerald-900">
@@ -266,8 +282,10 @@ LOGIN_HTML = """
     <div class="absolute -top-24 -left-24 w-96 h-96 bg-emerald-800/40 rounded-full blur-3xl"></div>
     <div class="absolute bottom-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl"></div>
     
-    <div class="relative z-10 px-14 text-center">
-      <img src="/static/logo.png" alt="An Nahl" class="h-28 mx-auto mb-7 drop-shadow-2xl rounded-2xl bg-white p-3 object-contain">
+    <div class="relative z-10 px-12 text-center max-w-lg">
+      <div class="inline-flex items-center justify-center p-3 rounded-2xl bg-white shadow-xl mb-6 border border-white/20">
+        <img src="/static/logo.png?v=20260930_opt" alt="An Nahl" class="brand-logo-login" style="height:76px;width:auto;max-width:140px;max-height:80px;object-fit:contain;display:block;">
+      </div>
       <h1 class="text-white font-bold text-3xl leading-snug">An Nahl Ops<br><span class="text-emerald-300 font-semibold text-2xl">Command Center</span></h1>
       <p class="text-emerald-200/90 mt-4 text-sm leading-relaxed max-w-md mx-auto">Portal komando terpadu IT, Sarpras, dan General Affairs — koordinasi 4 unit lapangan (OB, Gardener, Security, IT), pemantauan server, dan mutabaah ibadah.</p>
       
@@ -285,8 +303,10 @@ LOGIN_HTML = """
     <div class="w-full max-w-md">
       
       <!-- Mobile Logo Header -->
-      <div class="lg:hidden flex flex-col items-center mb-8">
-        <img src="/static/logo.png" alt="An Nahl" class="h-20 rounded-2xl shadow-lg bg-white p-2.5 mb-3 object-contain border border-slate-200/60">
+      <div class="lg:hidden flex flex-col items-center mb-6">
+        <div class="inline-flex items-center justify-center p-2 rounded-2xl bg-white shadow-md mb-2.5 border border-slate-200/60">
+          <img src="/static/logo.png?v=20260930_opt" alt="An Nahl" class="brand-logo-mobile" style="height:52px;width:auto;max-width:100px;max-height:56px;object-fit:contain;display:block;">
+        </div>
         <h1 class="font-bold text-xl text-slate-800">An Nahl Ops</h1>
         <p class="text-xs text-emerald-700 font-semibold">Command Center IT & General Affairs</p>
       </div>

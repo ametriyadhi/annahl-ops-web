@@ -278,6 +278,30 @@ HTML_TEMPLATE = """
             border: 1px solid #E8E4DD;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
         }
+        .brand-logo-hero {
+            height: 48px !important;
+            max-height: 52px !important;
+            width: auto !important;
+            max-width: 60px !important;
+            object-fit: contain !important;
+            display: block !important;
+        }
+        .brand-icon-sidebar {
+            height: 26px !important;
+            width: 26px !important;
+            max-width: 28px !important;
+            max-height: 28px !important;
+            object-fit: contain !important;
+            display: block !important;
+        }
+        .brand-icon-nav {
+            height: 22px !important;
+            width: 22px !important;
+            max-width: 24px !important;
+            max-height: 24px !important;
+            object-fit: contain !important;
+            display: block !important;
+        }
         @media print {
             #sidebar, #sidebar-backdrop, header, .no-print {
                 display: none !important;
@@ -308,8 +332,8 @@ HTML_TEMPLATE = """
         <!-- Brand / Header -->
         <div class="p-4 sm:p-4.5 border-b border-slate-800/80 flex items-center justify-between bg-gradient-to-r from-slate-900 via-[#132721] to-slate-900 text-white">
             <div class="flex items-center space-x-3 min-w-0">
-                <div class="w-10 h-10 rounded-xl bg-white p-1 shrink-0 flex items-center justify-center shadow-xs border border-white/20">
-                    <img src="/static/logo-icon.png" alt="Logo An Nahl" class="w-full h-full object-contain">
+                <div class="w-9 h-9 rounded-xl bg-white p-1 shrink-0 flex items-center justify-center shadow-xs border border-white/20">
+                    <img src="/static/logo-icon.png?v=20260930_opt" alt="Logo An Nahl" class="brand-icon-sidebar" style="height:26px;width:26px;max-width:28px;max-height:28px;object-fit:contain;display:block;">
                 </div>
                 <div class="min-w-0">
                     <div class="flex items-center gap-1.5">
@@ -475,7 +499,9 @@ HTML_TEMPLATE = """
                     <i class="fa-solid fa-bars text-base sm:text-lg"></i>
                 </button>
                 <div class="flex items-center gap-2.5">
-                    <img src="/static/logo-icon.png" alt="An Nahl" class="w-7 h-7 sm:w-8 sm:h-8 object-contain rounded-xl p-1 bg-[#FAF8F5] border border-[#E8E4DD] shadow-2xs">
+                    <div class="w-8 h-8 rounded-xl bg-white p-1 border border-[#E8E4DD] shadow-2xs flex items-center justify-center shrink-0">
+                        <img src="/static/logo-icon.png?v=20260930_opt" alt="An Nahl" class="brand-icon-nav" style="height:22px;width:22px;max-width:24px;max-height:24px;object-fit:contain;display:block;">
+                    </div>
                     <div>
                         <h2 id="page-title" class="text-xs sm:text-sm font-bold text-[#1E3D34] leading-tight">Dashboard Utama</h2>
                         <p class="text-[10px] text-slate-600 font-medium hidden sm:block leading-tight">Sekolah Islam An Nahl &bull; Command Center</p>
@@ -522,8 +548,8 @@ HTML_TEMPLATE = """
                 <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-[#FAF9F6] to-[#F1F6F3] border border-[#E4DFD7] p-5 sm:p-7 shadow-xs">
                     <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
                         <div class="flex items-start sm:items-center gap-4">
-                            <div class="p-2 sm:p-2.5 bg-white rounded-2xl border border-[#E8E4DD] shadow-xs shrink-0">
-                                <img src="/static/logo.png" alt="Sekolah Islam An Nahl" class="h-12 sm:h-14 w-auto object-contain">
+                            <div class="p-2 sm:p-2.5 bg-white rounded-2xl border border-slate-200 shadow-2xs shrink-0 flex items-center justify-center">
+                                <img src="/static/logo.png?v=20260930_opt" alt="Sekolah Islam An Nahl" class="brand-logo-hero" style="height:48px;width:auto;max-width:56px;max-height:50px;object-fit:contain;display:block;">
                             </div>
                             <div class="space-y-1">
                                 <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#EAF1EE] text-[#2E584C] text-[10.5px] font-bold border border-[#D5E3DD]">
