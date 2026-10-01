@@ -544,97 +544,142 @@ HTML_TEMPLATE = """
             <!-- TAB 0: DASHBOARD UTAMA (OVERVIEW) -->
             <div id="tab-dashboard" class="tab-content space-y-6">
 
-                <!-- Taste Skill: Executive Cockpit Hero Banner with Official Branding -->
+                <!-- Taste Skill: Executive Cockpit Hero Banner with Official Branding & OHS Index -->
                 <div class="relative overflow-hidden rounded-3xl bg-white border border-slate-200/90 shadow-sm p-6 sm:p-7">
                     <!-- Subtle ambient background -->
                     <div class="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-emerald-50/70 pointer-events-none blur-3xl"></div>
                     <div class="absolute -left-20 -bottom-20 w-80 h-80 rounded-full bg-slate-50/80 pointer-events-none blur-3xl"></div>
 
                     <div class="relative z-10 space-y-5">
-                        <!-- Top Row: Logo + Headings Full Width -->
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
-                            <div class="p-2.5 sm:p-3 bg-slate-50 rounded-2xl border border-slate-200 shadow-2xs shrink-0 flex items-center justify-center">
-                                <img src="/static/logo.png?v=20260930_opt" alt="Sekolah Islam An Nahl" class="brand-logo-hero" style="height:52px;width:auto;max-width:60px;max-height:56px;object-fit:contain;display:block;">
-                            </div>
-                            <div class="space-y-1.5 flex-1 min-w-0">
-                                <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-bold border border-emerald-200">
-                                    <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
-                                    <span>Command Center &bull; IT & General Affairs</span>
+                        <!-- Top Row: Logo + Headings + OHS Score Card -->
+                        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5">
+                            <div class="flex items-start gap-4 sm:gap-5 flex-1 min-w-0">
+                                <div class="p-2.5 sm:p-3 bg-slate-50 rounded-2xl border border-slate-200 shadow-2xs shrink-0 flex items-center justify-center">
+                                    <img src="/static/logo.png?v=20260930_opt" alt="Sekolah Islam An Nahl" class="brand-logo-hero" style="height:52px;width:auto;max-width:60px;max-height:56px;object-fit:contain;display:block;">
                                 </div>
-                                <h1 class="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight leading-snug">
-                                    Bismillah, Selamat Datang di Command Center An Nahl Ops
-                                </h1>
-                                <p class="text-xs sm:text-sm text-slate-500 font-medium max-w-3xl leading-relaxed">
-                                    Pusat monitoring infrastruktur server, koordinasi 4 unit kerja koordinator lapangan (IT, OB, Gardener, Security), tata kelola Sarpras, dan habit tracker ibadah civitas.
+                                <div class="space-y-1.5 flex-1 min-w-0">
+                                    <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-bold border border-emerald-200">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                                        <span>Executive Command Center &bull; IT & General Affairs</span>
+                                    </div>
+                                    <h1 class="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight leading-snug">
+                                        Bismillah, Selamat Datang di Command Center An Nahl Ops
+                                    </h1>
+                                    <p class="text-xs sm:text-sm text-slate-500 font-medium max-w-2xl leading-relaxed">
+                                        Pusat kendali 4 unit kerja koordinator lapangan (IT, OB, Gardener, Security), tata kelola Sarpras closed-loop, pemeliharaan Green Ops, dan habit tracker ibadah civitas.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Operational Health Score (OHS) Card -->
+                            <div class="w-full lg:w-72 p-4 bg-gradient-to-br from-slate-50 to-emerald-50/50 rounded-2xl border border-emerald-200/80 shadow-2xs space-y-2.5 shrink-0">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                                        <i class="fa-solid fa-heart-pulse text-emerald-600"></i> OHS Indeks
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ analytics.ohs.badge_class }}">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ analytics.ohs.dot_class }} animate-ping"></span>
+                                        {{ analytics.ohs.category }}
+                                    </span>
+                                </div>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-3xl font-extrabold text-slate-800 tracking-tight">{{ analytics.ohs.score }}%</span>
+                                    <span class="text-xs text-slate-500 font-medium">Skor Kesehatan Kampus</span>
+                                </div>
+                                <!-- 5 Mini Sub-Scores -->
+                                <div class="space-y-1.5 pt-2 border-t border-slate-200/60 text-[10.5px]">
+                                    <div class="flex justify-between items-center text-slate-600">
+                                        <span class="truncate">Server & IT (20%)</span>
+                                        <span class="font-bold text-slate-700">{{ analytics.ohs.scores.server }}%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                                        <div class="bg-emerald-600 h-1.5 rounded-full" style="width: {{ analytics.ohs.scores.server }}%;"></div>
+                                    </div>
+
+                                    <div class="flex justify-between items-center text-slate-600">
+                                        <span class="truncate">Pos Standby (20%)</span>
+                                        <span class="font-bold text-slate-700">{{ analytics.ohs.scores.pos }}%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                                        <div class="bg-sky-600 h-1.5 rounded-full" style="width: {{ analytics.ohs.scores.pos }}%;"></div>
+                                    </div>
+
+                                    <div class="flex justify-between items-center text-slate-600">
+                                        <span class="truncate">Sanitasi & Checklist (20%)</span>
+                                        <span class="font-bold text-slate-700">{{ analytics.ohs.scores.checklist }}%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                                        <div class="bg-purple-600 h-1.5 rounded-full" style="width: {{ analytics.ohs.scores.checklist }}%;"></div>
+                                    </div>
+
+                                    <div class="flex justify-between items-center text-slate-600">
+                                        <span class="truncate">SLA Sarpras (20%)</span>
+                                        <span class="font-bold text-slate-700">{{ analytics.ohs.scores.sarpras }}%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                                        <div class="bg-amber-600 h-1.5 rounded-full" style="width: {{ analytics.ohs.scores.sarpras }}%;"></div>
+                                    </div>
+
+                                    <div class="flex justify-between items-center text-slate-600">
+                                        <span class="truncate">Mutabaah Civitas (20%)</span>
+                                        <span class="font-bold text-slate-700">{{ analytics.ohs.scores.mutabaah }}%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                                        <div class="bg-teal-600 h-1.5 rounded-full" style="width: {{ analytics.ohs.scores.mutabaah }}%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Middle Row: Executive One-Liner Briefing (Human-Friendly Narration) -->
+                        <div class="p-3.5 bg-slate-50/90 rounded-2xl border border-slate-200/90 flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 text-sm mt-0.5 shadow-2xs">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700">Ringkasan Eksekutif Operasional Kampus Hari Ini</span>
+                                    <span class="text-[10px] text-slate-400">&bull; {{ current_time }} WIB</span>
+                                </div>
+                                <p class="text-xs sm:text-[13px] text-slate-700 font-medium leading-relaxed">
+                                    {{ analytics.executive_briefing }}
                                 </p>
                             </div>
                         </div>
 
-                        <!-- Bottom Row: 4 Unit Coordinator Status Cards (Grid 4 Kolom) -->
-                        <div class="pt-4 border-t border-slate-100 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-200/80 hover:bg-white hover:shadow-xs transition">
-                                <div class="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center text-sm shrink-0 shadow-xs">
-                                    <i class="fa-solid fa-laptop-code text-emerald-400"></i>
+                        <!-- Bottom Row: 4 Live Dynamic Unit Coordinator Status Cards -->
+                        <div class="pt-3 border-t border-slate-100 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                            {% for ucard in analytics.unit_cards %}
+                            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-200/80 hover:bg-white hover:border-emerald-300 hover:shadow-xs transition cursor-pointer group"
+                                 onclick="{% if ucard.title == 'Unit IT' %}showTab('tab-kuma'){% elif ucard.title == 'Unit Office Boy' %}showTab('tab-kebersihan'){% elif ucard.title == 'Unit Gardener' %}showTab('tab-standby'){% else %}showTab('tab-standby'){% endif %}">
+                                <div class="w-10 h-10 rounded-xl {{ ucard.bg_color }} text-white flex items-center justify-center text-sm shrink-0 shadow-xs group-hover:scale-105 transition">
+                                    <i class="fa-solid {{ ucard.icon }} {{ ucard.text_accent }}"></i>
                                 </div>
                                 <div class="min-w-0 flex-1">
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="text-xs font-bold text-slate-800 truncate">Unit IT</span>
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs font-bold text-slate-800 truncate group-hover:text-emerald-700 transition">{{ ucard.title }}</span>
+                                        <span class="text-[10px] font-bold text-slate-600">{{ ucard.metric_value }}</span>
                                     </div>
-                                    <p class="text-[10.5px] text-slate-500 font-medium truncate">Terhubung & Monitoring</p>
+                                    <p class="text-[10.5px] text-slate-500 font-medium truncate mt-0.5">{{ ucard.metric_label }}</p>
+                                    <div class="flex items-center gap-1.5 mt-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                        <span class="text-[10px] font-semibold {{ ucard.status_color }} truncate">{{ ucard.status_tag }}</span>
+                                    </div>
                                 </div>
                             </div>
-
-                            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-200/80 hover:bg-white hover:shadow-xs transition">
-                                <div class="w-9 h-9 rounded-xl bg-emerald-950 text-white flex items-center justify-center text-sm shrink-0 shadow-xs">
-                                    <i class="fa-solid fa-broom text-emerald-400"></i>
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="text-xs font-bold text-slate-800 truncate">Unit Office Boy</span>
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
-                                    </div>
-                                    <p class="text-[10.5px] text-slate-500 font-medium truncate">Siaga Kebersihan & PWA</p>
-                                </div>
-                            </div>
-
-                            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-200/80 hover:bg-white hover:shadow-xs transition">
-                                <div class="w-9 h-9 rounded-xl bg-amber-950 text-white flex items-center justify-center text-sm shrink-0 shadow-xs">
-                                    <i class="fa-solid fa-leaf text-amber-400"></i>
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="text-xs font-bold text-slate-800 truncate">Unit Gardener</span>
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
-                                    </div>
-                                    <p class="text-[10.5px] text-slate-500 font-medium truncate">Taman & Budidaya Siap</p>
-                                </div>
-                            </div>
-
-                            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-200/80 hover:bg-white hover:shadow-xs transition">
-                                <div class="w-9 h-9 rounded-xl bg-sky-950 text-white flex items-center justify-center text-sm shrink-0 shadow-xs">
-                                    <i class="fa-solid fa-shield-halved text-sky-400"></i>
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="text-xs font-bold text-slate-800 truncate">Unit Security</span>
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
-                                    </div>
-                                    <p class="text-[10.5px] text-slate-500 font-medium truncate">Patroli & Pos Aktif</p>
-                                </div>
-                            </div>
+                            {% endfor %}
                         </div>
 
                     </div>
                 </div>
 
-                <!-- Top Summary Metric Cards -->
+                <!-- Row 2: 5 Top Summary Metric Cards -->
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
                     <div class="bg-white rounded-xl shadow-xs p-4 sm:p-5 border border-slate-200 flex items-center justify-between">
                         <div>
                             <p class="text-[11px] sm:text-xs text-slate-500 font-medium">Memory Server</p>
                             <h3 class="text-base sm:text-xl font-bold text-slate-800 mt-1">{{ stats.mem_str.split('/')[0] }}</h3>
-                            <p class="text-[10px] sm:text-xs text-slate-400 mt-1">Usage: {{ stats.mem_pct }}%</p>
+                            <p class="text-[10px] sm:text-xs text-slate-400 mt-1">Penggunaan: {{ stats.mem_pct }}%</p>
                         </div>
                         <div class="p-2.5 sm:p-3 bg-emerald-50 text-emerald-600 rounded-xl">
                             <i class="fa-solid fa-microchip text-lg sm:text-2xl"></i>
@@ -643,77 +688,227 @@ HTML_TEMPLATE = """
 
                     <div class="bg-white rounded-xl shadow-xs p-4 sm:p-5 border border-slate-200 flex items-center justify-between">
                         <div>
-                            <p class="text-[11px] sm:text-xs text-slate-500 font-medium">Disk (`/`)</p>
+                            <p class="text-[11px] sm:text-xs text-slate-500 font-medium">Kapasitas Disk (`/`)</p>
                             <h3 class="text-base sm:text-xl font-bold text-slate-800 mt-1">{{ stats.disk_str.split('/')[0] }}</h3>
-                            <p class="text-[10px] sm:text-xs text-slate-400 mt-1">Storage: {{ stats.disk_pct }}%</p>
+                            <p class="text-[10px] sm:text-xs text-slate-400 mt-1">Terpakai: {{ stats.disk_pct }}%</p>
                         </div>
                         <div class="p-2.5 sm:p-3 bg-blue-50 text-blue-600 rounded-xl">
                             <i class="fa-solid fa-hard-drive text-lg sm:text-2xl"></i>
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-xl shadow-xs p-4 sm:p-5 border border-slate-200 flex items-center justify-between col-span-2 sm:col-span-1">
+                    <div class="bg-white rounded-xl shadow-xs p-4 sm:p-5 border border-slate-200 flex items-center justify-between cursor-pointer hover:border-emerald-300 transition" onclick="showTab('tab-kuma')">
                         <div>
-                            <p class="text-[11px] sm:text-xs text-slate-500 font-medium">Uptime Monitor</p>
-                            <h3 class="text-base sm:text-xl font-bold text-rose-600 mt-1">{{ monitored_hosts|length }} Target</h3>
-                            <p class="text-[10px] sm:text-xs text-emerald-600 mt-1"><i class="fa-solid fa-bell mr-1"></i>WA Alert Active</p>
+                            <p class="text-[11px] sm:text-xs text-slate-500 font-medium">Infrastruktur Server</p>
+                            <h3 class="text-base sm:text-xl font-bold text-slate-800 mt-1">{{ analytics.stats_overview.server_online }}/{{ analytics.stats_overview.server_total }} Host</h3>
+                            <p class="text-[10px] sm:text-xs text-emerald-600 mt-1"><i class="fa-solid fa-circle-check mr-1"></i>Ping Avg {{ analytics.stats_overview.server_avg_latency }}ms</p>
                         </div>
                         <div class="p-2.5 sm:p-3 bg-rose-50 text-rose-600 rounded-xl">
                             <i class="fa-solid fa-tower-broadcast text-lg sm:text-2xl"></i>
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-xl shadow-xs p-4 sm:p-5 border border-slate-200 flex items-center justify-between">
+                    <div class="bg-white rounded-xl shadow-xs p-4 sm:p-5 border border-slate-200 flex items-center justify-between cursor-pointer hover:border-emerald-300 transition" onclick="showTab('tab-standby')">
                         <div>
-                            <p class="text-[11px] sm:text-xs text-slate-500 font-medium">Mutabaah</p>
-                            <h3 class="text-base sm:text-xl font-bold text-slate-800 mt-1">{{ mutabaah_count }} Petugas</h3>
-                            <p class="text-[10px] sm:text-xs text-emerald-600 mt-1"><i class="fa-solid fa-check mr-1"></i>Bot Active</p>
+                            <p class="text-[11px] sm:text-xs text-slate-500 font-medium">Kesiagaan Pos</p>
+                            <h3 class="text-base sm:text-xl font-bold text-slate-800 mt-1">{{ analytics.stats_overview.standby_on_time }}/{{ analytics.stats_overview.standby_points_total }} Pos</h3>
+                            <p class="text-[10px] sm:text-xs text-sky-600 mt-1"><i class="fa-solid fa-location-dot mr-1"></i>{{ analytics.stats_overview.standby_total_today }} Log Hari Ini</p>
                         </div>
-                        <div class="p-2.5 sm:p-3 bg-teal-50 text-teal-600 rounded-xl">
-                            <i class="fa-solid fa-kaaba text-lg sm:text-2xl"></i>
+                        <div class="p-2.5 sm:p-3 bg-sky-50 text-sky-600 rounded-xl">
+                            <i class="fa-solid fa-street-view text-lg sm:text-2xl"></i>
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-xl shadow-xs p-4 sm:p-5 border border-slate-200 flex items-center justify-between">
+                    <div class="bg-white rounded-xl shadow-xs p-4 sm:p-5 border border-slate-200 flex items-center justify-between cursor-pointer hover:border-emerald-300 transition col-span-2 sm:col-span-1" onclick="showTab('tab-tasks')">
                         <div>
-                            <p class="text-[11px] sm:text-xs text-slate-500 font-medium">Kebersihan OB</p>
-                            <h3 class="text-base sm:text-xl font-bold text-slate-800 mt-1">{{ kebersihan_count }} Laporan</h3>
-                            <p class="text-[10px] sm:text-xs text-purple-600 mt-1"><i class="fa-solid fa-image mr-1"></i>Drive Sync</p>
+                            <p class="text-[11px] sm:text-xs text-slate-500 font-medium">Tiket & Sarpras</p>
+                            <h3 class="text-base sm:text-xl font-bold text-slate-800 mt-1">{{ analytics.stats_overview.tasks_pending }} Pending</h3>
+                            <p class="text-[10px] sm:text-xs text-emerald-600 mt-1"><i class="fa-solid fa-check-double mr-1"></i>{{ analytics.stats_overview.tasks_done }} Selesai</p>
                         </div>
                         <div class="p-2.5 sm:p-3 bg-purple-50 text-purple-600 rounded-xl">
-                            <i class="fa-solid fa-broom text-lg sm:text-2xl"></i>
+                            <i class="fa-solid fa-toolbox text-lg sm:text-2xl"></i>
                         </div>
                     </div>
                 </div>
 
-                <!-- Preview Charts on Main Dashboard -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-6 space-y-4">
+                <!-- Row 3: Urgent Action Center & Green Ops Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Left: Urgent Action Center (2/3 width) -->
+                    <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-xs p-5 sm:p-6 space-y-4">
                         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                            <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
-                                <i class="fa-solid fa-chart-line text-teal-600"></i>
-                                Tren Keaktifan Mutabaah 7 Hari Terakhir
-                            </h3>
+                            <div>
+                                <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
+                                    Pusat Aksi Cepat & Eskalasi Masalah
+                                </h3>
+                                <p class="text-xs text-slate-500 mt-0.5">Daftar isu operasional mendesak yang membutuhkan perhatian pimpinan atau koordinator lapangan</p>
+                            </div>
+                            <span class="text-xs font-semibold px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg">
+                                {{ analytics.urgent_items|length }} Perlu Perhatian
+                            </span>
+                        </div>
+
+                        {% if analytics.urgent_items %}
+                        <div class="space-y-3">
+                            {% for item in analytics.urgent_items %}
+                            <div class="p-3.5 bg-slate-50 hover:bg-slate-100/80 rounded-xl border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition">
+                                <div class="space-y-1 flex-1 min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2 py-0.5 text-[10px] font-extrabold uppercase rounded-md border {{ item.badge_color }}">
+                                            {{ item.badge }}
+                                        </span>
+                                        <h4 class="text-xs sm:text-sm font-bold text-slate-800 truncate">{{ item.title }}</h4>
+                                    </div>
+                                    <p class="text-xs text-slate-600 line-clamp-1">{{ item.desc }}</p>
+                                </div>
+                                <button onclick="showTab('{{ item.link_tab }}')" class="px-3 py-1.5 text-xs font-bold text-emerald-700 bg-white border border-emerald-200 hover:bg-emerald-50 rounded-lg shrink-0 shadow-2xs flex items-center gap-1.5 transition">
+                                    <span>{{ item.action_text }}</span>
+                                    <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                                </button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="p-6 bg-emerald-50/50 rounded-xl border border-emerald-200 text-center space-y-2">
+                            <i class="fa-solid fa-circle-check text-emerald-600 text-3xl"></i>
+                            <h4 class="text-sm font-bold text-emerald-800">Alhamdulillah, Seluruh Layanan & Pos Normal</h4>
+                            <p class="text-xs text-emerald-600">Tidak ada alert kritis atau tiket sarpras darurat yang tertunda hari ini.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Right: Green Ops & Dampak Efisiensi Kampus (1/3 width) -->
+                    <div class="bg-gradient-to-br from-emerald-900 to-slate-900 text-white rounded-2xl shadow-xs p-5 sm:p-6 space-y-4 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between border-b border-emerald-800/80 pb-3 mb-4">
+                                <h3 class="font-bold text-sm text-emerald-300 flex items-center gap-2">
+                                    <i class="fa-solid fa-seedling text-emerald-400"></i>
+                                    Green Ops & Efisiensi
+                                </h3>
+                                <span class="text-[10px] font-bold px-2 py-0.5 bg-emerald-800/80 text-emerald-200 rounded-md">Bulan Ini</span>
+                            </div>
+                            <p class="text-xs text-slate-300 leading-relaxed mb-4">
+                                Kontribusi nyata digitalisasi inspeksi PWA, deteksi kran bocor, dan checklist paperless bagi kelestarian lingkungan sekolah.
+                            </p>
+
+                            <div class="space-y-3">
+                                <div class="p-3 bg-white/10 rounded-xl border border-white/10 flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm">
+                                            <i class="fa-solid fa-droplet"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-[11px] text-slate-300">Air Bersih Diselamatkan</p>
+                                            <h4 class="text-base font-extrabold text-white mt-0.5">{{ analytics.eco_metrics.water_saved_liters }} Liter</h4>
+                                        </div>
+                                    </div>
+                                    <span class="text-[10px] text-cyan-300 font-semibold">Toren & Kran</span>
+                                </div>
+
+                                <div class="p-3 bg-white/10 rounded-xl border border-white/10 flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm">
+                                            <i class="fa-solid fa-file-circle-check"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-[11px] text-slate-300">Kertas Formulir Dihemat</p>
+                                            <h4 class="text-base font-extrabold text-white mt-0.5">{{ analytics.eco_metrics.paper_saved_sheets }} Lembar</h4>
+                                        </div>
+                                    </div>
+                                    <span class="text-[10px] text-emerald-300 font-semibold">100% QR PWA</span>
+                                </div>
+
+                                <div class="p-3 bg-white/10 rounded-xl border border-white/10 flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-sm">
+                                            <i class="fa-solid fa-cloud"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-[11px] text-slate-300">Jejak Karbon Terpangkas</p>
+                                            <h4 class="text-base font-extrabold text-white mt-0.5">{{ analytics.eco_metrics.co2_saved_kg }} kg CO₂e</h4>
+                                        </div>
+                                    </div>
+                                    <span class="text-[10px] text-amber-300 font-semibold">Eco-Friendly</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-t border-emerald-800/60 flex items-center justify-between text-[11px] text-emerald-300">
+                            <span>Target ISO 21001 & 14001</span>
+                            <button onclick="showTab('tab-checklist')" class="hover:underline font-semibold text-white">Lihat Detail Checklist →</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 4: Interactive Charts on Main Dashboard -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Chart 1: Kecepatan Closed-Loop Sarpras -->
+                    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-6 space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                            <div>
+                                <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-chart-column text-emerald-600"></i>
+                                    Kecepatan Closed-Loop Tiket Sarpras (7 Hari)
+                                </h3>
+                                <p class="text-xs text-slate-500 mt-0.5">Perbandingan tiket masuk vs tiket terselesaikan tepat waktu</p>
+                            </div>
+                            <button onclick="showTab('tab-tasks')" class="text-xs text-emerald-600 hover:underline font-semibold">Kelola Tiket →</button>
+                        </div>
+                        <div class="h-64">
+                            <canvas id="dashVelocityChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Chart 2: Kesiagaan Pos & Partisipasi Mutabaah -->
+                    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-6 space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                            <div>
+                                <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-chart-line text-sky-600"></i>
+                                    Tren Kesiagaan Pos & Ibadah Petugas (7 Hari)
+                                </h3>
+                                <p class="text-xs text-slate-500 mt-0.5">Kedisiplinan check-in pos siaga & pelaporan mutabaah yaumiyah</p>
+                            </div>
                             <button onclick="showTab('tab-analytics')" class="text-xs text-emerald-600 hover:underline font-semibold">Lihat Analitik Full →</button>
                         </div>
                         <div class="h-64">
                             <canvas id="dashMutabaahChart"></canvas>
                         </div>
                     </div>
+                </div>
 
-                    <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-6 space-y-4">
-                        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <!-- Row 5: Live Activity Timeline & Feed Operasional Terkini -->
+                <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-6 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <div>
                             <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
-                                <i class="fa-solid fa-chart-pie text-purple-600"></i>
-                                Distribusi Laporan Kebersihan per Unit
+                                <i class="fa-solid fa-clock-rotate-left text-slate-600"></i>
+                                Feed Aktivitas Operasional Terkini
                             </h3>
-                            <button onclick="showTab('tab-analytics')" class="text-xs text-emerald-600 hover:underline font-semibold">Lihat Analitik Full →</button>
+                            <p class="text-xs text-slate-500 mt-0.5">Aliran pembaruan real-time dari pos siaga, laporan kebersihan, dan mutabaah ibadah</p>
                         </div>
-                        <div class="h-64 flex justify-center">
-                            <canvas id="dashKebersihanChart"></canvas>
+                        <span class="text-xs text-slate-400"><i class="fa-solid fa-rss text-emerald-600 mr-1"></i>Real-time Feed</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {% for event in analytics.timeline_events %}
+                        <div class="p-3.5 rounded-xl border border-slate-200/80 bg-slate-50/70 hover:bg-white hover:shadow-xs transition flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border text-xs {{ event.color }}">
+                                <i class="fa-solid {{ event.icon }}"></i>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-between gap-1">
+                                    <span class="text-[10px] font-extrabold uppercase px-1.5 py-0.5 bg-white border border-slate-200 rounded text-slate-600">{{ event.unit }}</span>
+                                    <span class="text-[10px] text-slate-400 font-mono">{{ event.time[11:16] }}</span>
+                                </div>
+                                <h4 class="text-xs font-bold text-slate-800 truncate mt-1">{{ event.title }}</h4>
+                                <p class="text-[11px] text-slate-500 truncate mt-0.5">{{ event.desc }}</p>
+                            </div>
                         </div>
+                        {% endfor %}
                     </div>
                 </div>
+
             </div>
 
             <!-- TAB 0.1: UPTIME KUMA STYLE MONITORING & ALERTS -->
@@ -5848,27 +6043,86 @@ HTML_TEMPLATE = """
                     const journalCategories = {{ chart_data.journal_categories | tojson }};
                     const journalCounts = {{ chart_data.journal_counts | tojson }};
                     const taskStats = {{ chart_data.task_stats | tojson }};
+                    const trendDates = {{ chart_data.trend_dates | tojson }};
+                    const tasksCreated = {{ chart_data.tasks_created | tojson }};
+                    const tasksResolved = {{ chart_data.tasks_resolved | tojson }};
+                    const standbyCompliance = {{ chart_data.standby_compliance | tojson }};
 
                     const colors = ['#0d9488', '#8b5cf6', '#3b82f6', '#f59e0b', '#ef4444', '#10b981', '#6366f1'];
 
-                    // Dashboard Preview Mutabaah
+                    // Dashboard Velocity Closed-Loop Chart
+                    const elDashVelocity = document.getElementById('dashVelocityChart');
+                    if (elDashVelocity) {
+                        new Chart(elDashVelocity, {
+                            type: 'bar',
+                            data: {
+                                labels: trendDates.length ? trendDates : mutabaahDates,
+                                datasets: [
+                                    {
+                                        label: 'Tiket Masuk',
+                                        data: tasksCreated.length ? tasksCreated : [0,0,0,0,0,0,1],
+                                        backgroundColor: '#f59e0b',
+                                        borderRadius: 6
+                                    },
+                                    {
+                                        label: 'Tiket Selesai',
+                                        data: tasksResolved.length ? tasksResolved : [0,0,0,0,0,0,0],
+                                        backgroundColor: '#10b981',
+                                        borderRadius: 6
+                                    }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        ticks: { precision: 0 }
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+                    // Dashboard Preview Mutabaah & Pos Standby
                     const elDashMut = document.getElementById('dashMutabaahChart');
                     if (elDashMut) {
                         new Chart(elDashMut, {
                             type: 'line',
                             data: {
-                                labels: mutabaahDates,
-                                datasets: [{
-                                    label: 'Laporan Mutabaah',
-                                    data: mutabaahCounts,
-                                    borderColor: '#0d9488',
-                                    backgroundColor: 'rgba(13, 148, 136, 0.15)',
-                                    fill: true,
-                                    tension: 0.3,
-                                    borderWidth: 3
-                                }]
+                                labels: trendDates.length ? trendDates : mutabaahDates,
+                                datasets: [
+                                    {
+                                        label: 'Pos Standby On-Time',
+                                        data: standbyCompliance.length ? standbyCompliance : [0,0,0,0,0,0,7],
+                                        borderColor: '#0284c7',
+                                        backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                                        fill: true,
+                                        tension: 0.3,
+                                        borderWidth: 2.5
+                                    },
+                                    {
+                                        label: 'Laporan Mutabaah',
+                                        data: mutabaahCounts,
+                                        borderColor: '#0d9488',
+                                        backgroundColor: 'rgba(13, 148, 136, 0.1)',
+                                        fill: true,
+                                        tension: 0.3,
+                                        borderWidth: 2.5
+                                    }
+                                ]
                             },
-                            options: { responsive: true, maintainAspectRatio: false }
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        ticks: { precision: 0 }
+                                    }
+                                }
+                            }
                         });
                     }
 
@@ -7839,6 +8093,17 @@ def index():
         "selesai": len([t for t in tasks if t.get("status") == "Selesai"])
     }
 
+    # Load Analytics Summary Engine
+    import ops_analytics
+    analytics = ops_analytics.get_dashboard_analytics_summary(
+        monitored_hosts=monitored_hosts,
+        mutabaah_logs=mutabaah_logs,
+        kebersihan_logs=kebersihan_logs,
+        tasks=tasks,
+        procurements=procurements,
+        today_str=today_str
+    )
+
     chart_data = {
         "mutabaah_dates": chart_dates,
         "mutabaah_counts": chart_m_counts,
@@ -7846,7 +8111,12 @@ def index():
         "kebersihan_counts": list(kebersihan_unit_counts.values()),
         "journal_categories": list(journal_cat_counts.keys()),
         "journal_counts": list(journal_cat_counts.values()),
-        "task_stats": task_stats
+        "task_stats": task_stats,
+        "trend_dates": analytics.get("trend_data", {}).get("dates", []),
+        "tasks_created": analytics.get("trend_data", {}).get("tasks_created", []),
+        "tasks_resolved": analytics.get("trend_data", {}).get("tasks_resolved", []),
+        "standby_compliance": analytics.get("trend_data", {}).get("standby_compliance", []),
+        "ohs_scores": analytics.get("ohs", {}).get("scores", {})
     }
 
     report_lines = [
@@ -7897,7 +8167,8 @@ def index():
         user_sub_scope=user_sub_scope,
         user_permissions=user_permissions,
         procurements=procurements,
-        proc_stats=proc_stats
+        proc_stats=proc_stats,
+        analytics=analytics
     )
 
 @app.route("/add_host", methods=["POST"])

@@ -41,6 +41,8 @@ gunicorn.log
 # Local backup files
 *.backup*
 *.bak
+*.bak_*
+app.py.bak*
 *.swp
 *~
 
