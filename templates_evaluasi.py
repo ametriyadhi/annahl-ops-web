@@ -1,7 +1,7 @@
 """
 Templates & Komponen Tampilan HTML/JS untuk Modul Evaluasi & Rapor Personil (OB & Gardener)
 An Nahl Ops Web Dashboard - note-umum.ametriyadhi.com
-Standardisasi Target Sesi Pos yang Adil, Filter Rentang Waktu Masa Berlaku Unit, Analisis Mangkir Pos & Rekap Disiplin
+Standardisasi Target Sesi Pos yang Adil, Filter Per Tanggal Fleksibel, Analisis Mangkir Pos & Rekap Disiplin
 """
 
 TAB_EVALUASI_HTML = """
@@ -32,47 +32,42 @@ TAB_EVALUASI_HTML = """
             </div>
         </div>
 
-        <!-- PANEL FILTER RENTANG WAKTU & PRESETS (MASA BERLAKU UNIT) -->
+        <!-- PANEL FILTER RENTANG WAKTU (MURNI PER TANGGAL) -->
         <div class="bg-slate-50/90 border border-slate-200/90 rounded-xl p-3.5 space-y-3">
-            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
                 
-                <!-- Quick Preset Buttons -->
-                <div class="flex items-center gap-1.5 flex-wrap">
-                    <span class="text-xs font-bold text-slate-700 mr-1 flex items-center gap-1">
-                        <i class="fa-regular fa-calendar-days text-indigo-600"></i> Periode:
+                <!-- Date Inputs & Action Buttons -->
+                <div class="flex items-center gap-2.5 flex-wrap">
+                    <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5 mr-1">
+                        <i class="fa-regular fa-calendar-days text-indigo-600 text-sm"></i> Filter Tanggal Evaluasi:
                     </span>
-                    <button type="button" onclick="setEvaluasiPreset('ALL')" id="eval-preset-all" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-300 text-slate-700 shadow-2xs hover:bg-slate-100 transition cursor-pointer">Semua (Sep-Okt)</button>
-                    <button type="button" onclick="setEvaluasiPreset('SEPTEMBER')" id="eval-preset-sep" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-300 text-slate-700 shadow-2xs hover:bg-slate-100 transition cursor-pointer">Bulan September</button>
-                    <button type="button" onclick="setEvaluasiPreset('OKTOBER')" id="eval-preset-oct" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-300 text-slate-700 shadow-2xs hover:bg-slate-100 transition cursor-pointer">Bulan Oktober</button>
-                    <button type="button" onclick="setEvaluasiPreset('14DAYS')" id="eval-preset-14d" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-300 text-slate-700 shadow-2xs hover:bg-slate-100 transition cursor-pointer">14 Hari Terakhir</button>
-                    <button type="button" onclick="setEvaluasiPreset('7DAYS')" id="eval-preset-7d" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-300 text-slate-700 shadow-2xs hover:bg-slate-100 transition cursor-pointer">7 Hari Terakhir</button>
-                </div>
-
-                <!-- Custom Date Inputs -->
-                <div class="flex items-center gap-2 flex-wrap">
-                    <div class="flex items-center gap-1 text-xs">
+                    <div class="flex items-center gap-1.5 text-xs">
                         <label for="eval-start-date" class="text-slate-500 font-medium">Dari:</label>
-                        <input type="date" id="eval-start-date" class="bg-white border border-slate-200 rounded-lg px-2.5 py-1 font-semibold text-slate-700 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+                        <input type="date" id="eval-start-date" onchange="applyCustomDateRange()" class="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 font-semibold text-slate-700 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none shadow-2xs">
                     </div>
-                    <div class="flex items-center gap-1 text-xs">
-                        <label for="eval-end-date" class="text-slate-500 font-medium">S.d:</label>
-                        <input type="date" id="eval-end-date" class="bg-white border border-slate-200 rounded-lg px-2.5 py-1 font-semibold text-slate-700 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+                    <div class="flex items-center gap-1.5 text-xs">
+                        <label for="eval-end-date" class="text-slate-500 font-medium">Sampai:</label>
+                        <input type="date" id="eval-end-date" onchange="applyCustomDateRange()" class="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 font-semibold text-slate-700 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none shadow-2xs">
                     </div>
-                    <button type="button" onclick="applyCustomDateRange()" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-lg transition shadow-2xs cursor-pointer flex items-center gap-1">
+                    <button type="button" onclick="applyCustomDateRange()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-lg transition shadow-xs cursor-pointer flex items-center gap-1.5">
                         <i class="fa-solid fa-filter"></i> Terapkan
                     </button>
+                    <button type="button" onclick="resetEvaluasiDateRange()" class="px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-xs rounded-lg transition cursor-pointer flex items-center gap-1" title="Tampilkan Seluruh Periode">
+                        <i class="fa-solid fa-rotate-left"></i> Reset
+                    </button>
                 </div>
-            </div>
 
-            <!-- Dynamic Session Targets per Unit Info Banner -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-600 border-t border-slate-200/60 pt-2 gap-2">
-                <div class="flex items-center gap-2 flex-wrap">
-                    <span class="font-bold text-slate-700">🎯 Kewajiban Sesi Periode Ini:</span>
-                    <span class="bg-sky-100 text-sky-800 px-2 py-0.5 rounded font-semibold text-[11px]">🧹 Unit OB: <strong id="eval-target-ob-badge">36</strong> Sesi</span>
-                    <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-semibold text-[11px]">🌿 Unit Gardener: <strong id="eval-target-gardener-badge">24</strong> Sesi</span>
+                <!-- Info Kewajiban Sesi Unit -->
+                <div class="flex items-center gap-2 flex-wrap text-xs">
+                    <span class="font-bold text-slate-700">🎯 Kewajiban Sesi:</span>
+                    <span class="bg-sky-100 text-sky-800 px-2.5 py-1 rounded-lg font-semibold text-xs border border-sky-200/60">🧹 Unit OB: <strong id="eval-target-ob-badge">0</strong> Sesi</span>
+                    <span class="bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-lg font-semibold text-xs border border-emerald-200/60">🌿 Unit Gardener: <strong id="eval-target-gardener-badge">0</strong> Sesi</span>
                 </div>
-                <span class="text-[11px] text-slate-400 italic">*Masa berlaku & jumlah sesi dihitung otomatis sesuai jadwal operasional masing-masing unit.</span>
             </div>
+            
+            <p class="text-[11px] text-slate-400 border-t border-slate-200/60 pt-2 italic">
+                *Target kewajiban sesi dan rekap kehadiran dihitung dinamis sesuai masa berlaku jadwal masing-masing unit pada rentang tanggal yang dipilih.
+            </p>
         </div>
 
         <!-- 4 Top KPI Metric Cards -->
@@ -214,7 +209,7 @@ TAB_EVALUASI_HTML = """
                     <i class="fa-solid fa-award text-amber-500"></i>
                     Matriks Rapor & Peringkat Kedisiplinan Personil
                 </h3>
-                <p class="text-xs text-slate-500">Target kewajiban sesi disesuaikan dengan masa berlaku jadwal masing-masing unit kerja.</p>
+                <p class="text-xs text-slate-500">Target kewajiban sesi disesuaikan dengan masa berlaku jadwal masing-masing unit kerja pada rentang tanggal yang dipilih.</p>
             </div>
             <span id="eval-table-count" class="text-xs font-semibold text-slate-500">Menampilkan 0 personil</span>
         </div>
@@ -343,102 +338,51 @@ let currentEvaluasiUnit = 'ALL';
 let currentStartDate = '';
 let currentEndDate = '';
 
-// Inisialisasi awal saat load
-function initEvaluasiDateFilters() {
-    if (!currentStartDate || !currentEndDate) {
-        // Default ke 'ALL' (rentang lengkap September - Oktober)
-        setEvaluasiPreset('ALL', false);
-    }
-}
-
-function setEvaluasiPreset(preset, doLoad = true) {
-    const today = new Date();
-    const fmt = d => d.toISOString().split('T')[0];
-
-    const btnPresets = ['all', 'sep', 'oct', '14d', '7d'];
-    btnPresets.forEach(p => {
-        const el = document.getElementById(`eval-preset-${p}`);
-        if (el) {
-            el.className = "px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-300 text-slate-700 shadow-2xs hover:bg-slate-100 transition cursor-pointer";
-        }
-    });
-
-    if (preset === 'ALL') {
-        currentStartDate = '2026-09-01';
-        currentEndDate = '2026-10-31';
-        const el = document.getElementById('eval-preset-all');
-        if (el) el.className = "px-2.5 py-1 text-xs font-bold rounded-lg bg-indigo-600 border border-indigo-600 text-white shadow-xs transition cursor-pointer";
-    } else if (preset === 'SEPTEMBER') {
-        currentStartDate = '2026-09-01';
-        currentEndDate = '2026-09-30';
-        const el = document.getElementById('eval-preset-sep');
-        if (el) el.className = "px-2.5 py-1 text-xs font-bold rounded-lg bg-indigo-600 border border-indigo-600 text-white shadow-xs transition cursor-pointer";
-    } else if (preset === 'OKTOBER') {
-        currentStartDate = '2026-10-01';
-        currentEndDate = '2026-10-31';
-        const el = document.getElementById('eval-preset-oct');
-        if (el) el.className = "px-2.5 py-1 text-xs font-bold rounded-lg bg-indigo-600 border border-indigo-600 text-white shadow-xs transition cursor-pointer";
-    } else if (preset === '14DAYS') {
-        const d14 = new Date(today.getTime() - 14 * 24 * 60 * 60 * 1000);
-        currentStartDate = fmt(d14);
-        currentEndDate = fmt(today);
-        const el = document.getElementById('eval-preset-14d');
-        if (el) el.className = "px-2.5 py-1 text-xs font-bold rounded-lg bg-indigo-600 border border-indigo-600 text-white shadow-xs transition cursor-pointer";
-    } else if (preset === '7DAYS') {
-        const d7 = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-        currentStartDate = fmt(d7);
-        currentEndDate = fmt(today);
-        const el = document.getElementById('eval-preset-7d');
-        if (el) el.className = "px-2.5 py-1 text-xs font-bold rounded-lg bg-indigo-600 border border-indigo-600 text-white shadow-xs transition cursor-pointer";
-    }
-
-    const inpStart = document.getElementById('eval-start-date');
-    const inpEnd = document.getElementById('eval-end-date');
-    if (inpStart) inpStart.value = currentStartDate;
-    if (inpEnd) inpEnd.value = currentEndDate;
-
-    if (doLoad) {
-        loadEvaluasiData();
-    }
-}
-
 function applyCustomDateRange() {
     const s = document.getElementById('eval-start-date').value;
     const e = document.getElementById('eval-end-date').value;
 
-    if (!s || !e) {
-        alert('Harap pilih Tanggal Mulai dan Tanggal Selesai terlebih dahulu.');
-        return;
-    }
-
-    if (s > e) {
+    if (s && e && s > e) {
         alert('Tanggal Mulai tidak boleh lebih besar dari Tanggal Selesai.');
         return;
     }
 
     currentStartDate = s;
     currentEndDate = e;
+    loadEvaluasiData();
+}
 
-    // Reset preset buttons styling
-    const btnPresets = ['all', 'sep', 'oct', '14d', '7d'];
-    btnPresets.forEach(p => {
-        const el = document.getElementById(`eval-preset-${p}`);
-        if (el) {
-            el.className = "px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-300 text-slate-700 shadow-2xs hover:bg-slate-100 transition cursor-pointer";
-        }
-    });
-
+function resetEvaluasiDateRange() {
+    currentStartDate = '';
+    currentEndDate = '';
+    const inpStart = document.getElementById('eval-start-date');
+    const inpEnd = document.getElementById('eval-end-date');
+    if (inpStart) inpStart.value = '';
+    if (inpEnd) inpEnd.value = '';
     loadEvaluasiData();
 }
 
 async function loadEvaluasiData() {
-    initEvaluasiDateFilters();
-
     try {
-        const url = `/api/ops/evaluasi/summary?unit=${currentEvaluasiUnit}&start_date=${currentStartDate}&end_date=${currentEndDate}`;
+        let url = `/api/ops/evaluasi/summary?unit=${currentEvaluasiUnit}`;
+        if (currentStartDate) url += `&start_date=${currentStartDate}`;
+        if (currentEndDate) url += `&end_date=${currentEndDate}`;
+
         const res = await fetch(url);
         const data = await res.json();
         evaluasiDataCache = data;
+
+        // Sinkronisasi value input date jika masih kosong
+        const inpStart = document.getElementById('eval-start-date');
+        const inpEnd = document.getElementById('eval-end-date');
+        if (inpStart && !inpStart.value && data.start_date) {
+            inpStart.value = data.start_date;
+            currentStartDate = data.start_date;
+        }
+        if (inpEnd && !inpEnd.value && data.end_date) {
+            inpEnd.value = data.end_date;
+            currentEndDate = data.end_date;
+        }
 
         // 1. Header Period Badge & Targets
         const periodBadge = document.getElementById('eval-header-period-badge');
