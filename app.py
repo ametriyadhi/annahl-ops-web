@@ -306,6 +306,13 @@ HTML_TEMPLATE = """
             object-fit: contain !important;
             display: block !important;
         }
+        .tab-btn {
+            text-align: left !important;
+            justify-content: flex-start !important;
+        }
+        .tab-btn span {
+            text-align: left !important;
+        }
         @media print {
             #sidebar, #sidebar-backdrop, header, .no-print {
                 display: none !important;
@@ -356,114 +363,114 @@ HTML_TEMPLATE = """
         <div class="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
             <div class="px-3 text-[10px] font-bold tracking-wider text-slate-500 uppercase mb-2">Operasional & Koordinator</div>
 
-            <button onclick="showTab('tab-dashboard')" id="btn-tab-dashboard" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-white bg-emerald-600 transition">
-                <i class="fa-solid fa-gauge text-base w-5"></i>
-                <span>Dashboard Utama</span>
+            <button onclick="showTab('tab-dashboard')" id="btn-tab-dashboard" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-white bg-emerald-600 transition">
+                <i class="fa-solid fa-gauge text-base w-5 shrink-0 text-center"></i>
+                <span class="text-left flex-1">Dashboard Utama</span>
             </button>
 
-            <button onclick="showTab('tab-tasks')" id="btn-tab-tasks" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fa-solid fa-clipboard-list text-base w-5"></i>
-                <span>Tiket & Pendelegasian</span>
+            <button onclick="showTab('tab-tasks')" id="btn-tab-tasks" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-clipboard-list text-base w-5 shrink-0 text-center"></i>
+                <span class="text-left flex-1">Tiket & Pendelegasian</span>
             </button>
 
-            <button onclick="showTab('tab-todo')" id="btn-tab-todo" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fa-solid fa-square-check text-base w-5"></i>
-                <span>To-Do List Unit</span>
+            <button onclick="showTab('tab-todo')" id="btn-tab-todo" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-square-check text-base w-5 shrink-0 text-center"></i>
+                <span class="text-left flex-1">To-Do List Unit</span>
             </button>
 
-            <button onclick="showTab('tab-journal')" id="btn-tab-journal" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fa-solid fa-book text-base w-5"></i>
-                <span>Jurnal Kegiatan Harian</span>
+            <button onclick="showTab('tab-journal')" id="btn-tab-journal" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-book text-base w-5 shrink-0 text-center"></i>
+                <span class="text-left flex-1">Jurnal Kegiatan Harian</span>
             </button>
 
             <div class="px-3 text-[10px] font-bold tracking-wider text-slate-500 uppercase mt-4 mb-2">Log Lapangan & Sarpras</div>
 
             {% if user_role in ['manager', 'koordinator_ob', 'koordinator_gardener', 'koordinator_security'] %}
-            <button onclick="showTab('tab-standby')" id="btn-tab-standby" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fa-solid fa-satellite-dish text-base w-5 text-sky-400"></i>
-                <span>Kesiagaan Pos (Standby)</span>
+            <button onclick="showTab('tab-standby')" id="btn-tab-standby" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-satellite-dish text-base w-5 shrink-0 text-center text-sky-400"></i>
+                <span class="text-left flex-1">Kesiagaan Pos (Standby)</span>
             </button>
             {% endif %}
 
             {% if user_role in ['manager', 'koordinator_ob', 'koordinator_gardener', 'pic_sarpras'] %}
-            <button onclick="showTab('tab-checklist')" id="btn-tab-checklist" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fa-solid fa-clipboard-check text-base w-5 text-emerald-400"></i>
-                <span>Checklist OB & Green Ops</span>
+            <button onclick="showTab('tab-checklist')" id="btn-tab-checklist" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-clipboard-check text-base w-5 shrink-0 text-center text-emerald-400"></i>
+                <span class="text-left flex-1">Checklist OB & Green Ops</span>
             </button>
             {% endif %}
 
             {% if user_role in ['manager', 'koordinator_ob', 'koordinator_security'] %}
-            <button onclick="showTab('tab-mutabaah')" id="btn-tab-mutabaah" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fa-solid fa-hands-praying text-base w-5"></i>
-                <span>Log Mutabaah WA</span>
+            <button onclick="showTab('tab-mutabaah')" id="btn-tab-mutabaah" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-hands-praying text-base w-5 shrink-0 text-center"></i>
+                <span class="text-left flex-1">Log Mutabaah WA</span>
             </button>
             {% endif %}
 
             {% if user_role in ['manager', 'koordinator_ob', 'koordinator_gardener', 'pic_sarpras'] %}
-            <button onclick="showTab('tab-kebersihan')" id="btn-tab-kebersihan" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fa-solid fa-broom text-base w-5"></i>
-                <span>Log Kebersihan & Foto</span>
+            <button onclick="showTab('tab-kebersihan')" id="btn-tab-kebersihan" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-broom text-base w-5 shrink-0 text-center"></i>
+                <span class="text-left flex-1">Log Kebersihan & Foto</span>
             </button>
             {% endif %}
 
             {% if user_role in ['manager', 'pic_pengadaan', 'pic_sarpras'] %}
-            <button onclick="showTab('tab-pengadaan')" id="btn-tab-pengadaan" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fa-solid fa-cart-shopping text-base w-5 text-amber-400"></i>
-                <span>Pengadaan Barang & Sarpras</span>
+            <button onclick="showTab('tab-pengadaan')" id="btn-tab-pengadaan" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-cart-shopping text-base w-5 shrink-0 text-center text-amber-400"></i>
+                <span class="text-left flex-1">Pengadaan Barang & Sarpras</span>
             </button>
             {% endif %}
 
             {% if user_role in ['manager', 'koordinator_ob', 'koordinator_gardener', 'pic_sarpras'] %}
-            <button onclick="showTab('tab-pemeliharaan')" id="btn-tab-pemeliharaan" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fa-solid fa-screwdriver-wrench text-base w-5 text-teal-400"></i>
-                <span>Pemeliharaan Sarpras (PM)</span>
+            <button onclick="showTab('tab-pemeliharaan')" id="btn-tab-pemeliharaan" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-screwdriver-wrench text-base w-5 shrink-0 text-center text-teal-400"></i>
+                <span class="text-left flex-1">Pemeliharaan Sarpras (PM)</span>
             </button>
             {% endif %}
 
             {% if user_role in ['manager', 'koordinator_ob', 'koordinator_gardener', 'pic_sarpras'] %}
-            <button onclick="showTab('tab-evaluasi')" id="btn-tab-evaluasi" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fa-solid fa-chart-user text-base w-5 text-indigo-400"></i>
-                <span>Rapor & Evaluasi Personil</span>
+            <button onclick="showTab('tab-evaluasi')" id="btn-tab-evaluasi" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-chart-user text-base w-5 shrink-0 text-center text-indigo-400"></i>
+                <span class="text-left flex-1">Rapor & Evaluasi Personil</span>
             </button>
             {% endif %}
 
             {% if user_role in ['manager', 'koordinator_it', 'pic_sarpras', 'koordinator_ob'] %}
-            <button onclick="showTab('tab-sapaais')" id="btn-tab-sapaais" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fa-solid fa-bullhorn text-base w-5 text-emerald-400"></i>
-                <span>Sapa Ais / LaporPak</span>
+            <button onclick="showTab('tab-sapaais')" id="btn-tab-sapaais" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-bullhorn text-base w-5 shrink-0 text-center text-emerald-400"></i>
+                <span class="text-left flex-1">Sapa Ais / LaporPak</span>
             </button>
             {% endif %}
 
             {% if user_role in ['manager', 'koordinator_it', 'pic_sarpras', 'koordinator_ob', 'koordinator_gardener', 'koordinator_security', 'pic_pengadaan'] %}
-            <button onclick="showTab('tab-mutubaah')" id="btn-tab-mutubaah" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fa-solid fa-book-open text-base w-5 text-teal-400"></i>
-                <span>Mutabaah Diri Civitas</span>
+            <button onclick="showTab('tab-mutubaah')" id="btn-tab-mutubaah" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-book-open text-base w-5 shrink-0 text-center text-teal-400"></i>
+                <span class="text-left flex-1">Mutabaah Diri Civitas</span>
             </button>
             {% endif %}
 
             {% if user_role in ['manager', 'koordinator_it'] %}
             <div class="px-3 text-[10px] font-bold tracking-wider text-slate-500 uppercase mt-4 mb-2">Monitor Server</div>
 
-            <button onclick="showTab('tab-server')" id="btn-tab-server" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fa-solid fa-server text-base w-5 text-blue-400"></i>
-                <span>Server</span>
+            <button onclick="showTab('tab-server')" id="btn-tab-server" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-server text-base w-5 shrink-0 text-center text-blue-400"></i>
+                <span class="text-left flex-1">Server</span>
             </button>
 
-            <button onclick="showTab('tab-kuma')" id="btn-tab-kuma" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fa-solid fa-tower-broadcast text-base w-5 text-rose-400"></i>
-                <span>Uptime Kuma Monitor</span>
+            <button onclick="showTab('tab-kuma')" id="btn-tab-kuma" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-tower-broadcast text-base w-5 shrink-0 text-center text-rose-400"></i>
+                <span class="text-left flex-1">Uptime Kuma Monitor</span>
             </button>
             {% endif %}
 
             {% if user_role == 'manager' %}
-            <button onclick="showTab('tab-analytics')" id="btn-tab-analytics" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fa-solid fa-chart-pie text-base w-5"></i>
-                <span>Grafik & Analitik Tren</span>
+            <button onclick="showTab('tab-analytics')" id="btn-tab-analytics" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-chart-pie text-base w-5 shrink-0 text-center"></i>
+                <span class="text-left flex-1">Grafik & Analitik Tren</span>
             </button>
 
-            <button onclick="showTab('tab-report')" id="btn-tab-report" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fa-solid fa-print text-base w-5"></i>
-                <span>Cetak Laporan</span>
+            <button onclick="showTab('tab-report')" id="btn-tab-report" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-print text-base w-5 shrink-0 text-center"></i>
+                <span class="text-left flex-1">Cetak Laporan</span>
             </button>
 
             <div class="px-3 text-[10px] font-bold tracking-wider text-emerald-400 uppercase mt-4 mb-2 flex items-center justify-between">
@@ -471,19 +478,19 @@ HTML_TEMPLATE = """
                 <span class="text-[9px] px-1.5 py-0.2 bg-emerald-950 border border-emerald-700 text-emerald-300 rounded">Admin</span>
             </div>
 
-            <button onclick="showTab('tab-users')" id="btn-tab-users" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fa-solid fa-users-gear text-base w-5 text-emerald-400"></i>
-                <span>Manajemen User</span>
+            <button onclick="showTab('tab-users')" id="btn-tab-users" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-users-gear text-base w-5 shrink-0 text-center text-emerald-400"></i>
+                <span class="text-left flex-1">Manajemen User</span>
             </button>
 
-            <button onclick="showTab('tab-roles')" id="btn-tab-roles" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fa-solid fa-shield-halved text-base w-5 text-teal-400"></i>
-                <span>Manajemen Role Akses</span>
+            <button onclick="showTab('tab-roles')" id="btn-tab-roles" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-shield-halved text-base w-5 shrink-0 text-center text-teal-400"></i>
+                <span class="text-left flex-1">Manajemen Role Akses</span>
             </button>
 
-            <a href="/bot-qr" target="_blank" class="w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition group">
-                <i class="fa-brands fa-whatsapp text-base w-5 text-emerald-400 group-hover:scale-110 transition"></i>
-                <span>Koneksi WhatsApp Bot</span>
+            <a href="/bot-qr" target="_blank" class="w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition group">
+                <i class="fa-brands fa-whatsapp text-base w-5 shrink-0 text-center text-emerald-400 group-hover:scale-110 transition"></i>
+                <span class="text-left flex-1">Koneksi WhatsApp Bot</span>
                 <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-auto opacity-60"></i>
             </a>
             {% endif %}
