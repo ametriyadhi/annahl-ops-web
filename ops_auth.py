@@ -65,7 +65,7 @@ def init_ops_auth_db():
                 "tab-dashboard", "tab-journal", "tab-todo", "tab-tasks",
                 "tab-mutabaah", "tab-kebersihan", "tab-sapaais", "tab-mutubaah",
                 "tab-server", "tab-kuma", "tab-analytics", "tab-report",
-                "tab-users", "tab-roles", "tab-pengadaan", "tab-evaluasi"
+                "tab-users", "tab-roles", "tab-pengadaan", "tab-evaluasi", "tab-pemeliharaan"
             ])
         ),
         (
@@ -83,7 +83,7 @@ def init_ops_auth_db():
             'Penanggung jawab kebersihan indoor, sanitasi toilet, kelas, kantor, dan logistik.',
             json.dumps([
                 "unit_ob", "tab-dashboard", "tab-tasks", "tab-todo",
-                "tab-journal", "tab-kebersihan", "tab-sapaais", "tab-mutabaah", "tab-evaluasi"
+                "tab-journal", "tab-kebersihan", "tab-sapaais", "tab-mutabaah", "tab-evaluasi", "tab-pemeliharaan"
             ])
         ),
         (
@@ -92,7 +92,7 @@ def init_ops_auth_db():
             'Penanggung jawab kebersihan taman/Ecopark, kebun buah, budidaya sayuran, dan ternak.',
             json.dumps([
                 "unit_gardener", "tab-dashboard", "tab-tasks", "tab-todo",
-                "tab-journal", "tab-kebersihan", "tab-evaluasi"
+                "tab-journal", "tab-kebersihan", "tab-evaluasi", "tab-pemeliharaan"
             ])
         ),
         (
@@ -110,7 +110,7 @@ def init_ops_auth_db():
             'Teknisi sarana & prasarana (sipil, listrik, plumbing, AC, mebeler, dan perbaikan fisik fasilitas).',
             json.dumps([
                 "unit_sarpras", "tab-dashboard", "tab-tasks", "tab-todo",
-                "tab-journal", "tab-kebersihan", "tab-sapaais", "tab-pengadaan", "tab-evaluasi"
+                "tab-journal", "tab-kebersihan", "tab-sapaais", "tab-pengadaan", "tab-evaluasi", "tab-pemeliharaan"
             ])
         ),
         (

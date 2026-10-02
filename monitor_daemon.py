@@ -152,11 +152,24 @@ def broadcast_alert(host_name, target, category, is_down, details="", latency_ms
 
 def main_loop():
     print("🚀 An Nahl Uptime Kuma Daemon Started (Alert ke WA Pribadi Mr Slam aktif)...")
+    last_pm_check_date = ""
+
     while True:
         try:
             data = load_data()
             hosts = data.get("monitored_hosts", [])
             data_changed = False
+
+            # Daily PM Reminder Check (Pagi hari mulai pukul 07:30 WIB)
+            today_str = datetime.now().strftime("%Y-%m-%d")
+            if today_str != last_pm_check_date and datetime.now().hour >= 7:
+                try:
+                    import ops_pm
+                    res_pm = ops_pm.check_and_send_pm_reminders()
+                    print(f"[PM REMINDER CHECK]: {res_pm}")
+                    last_pm_check_date = today_str
+                except Exception as e:
+                    print(f"[PM REMINDER ERROR]: {e}")
 
             for idx, item in enumerate(hosts):
                 old_status = item.get("last_status", "ONLINE")

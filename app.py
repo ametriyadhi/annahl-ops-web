@@ -13,7 +13,7 @@ from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
-from flask import Flask, render_template_string, request, jsonify, Response, session, redirect, url_for, send_from_directory
+from flask import Flask, render_template_string, request, jsonify, Response, session, redirect, url_for, send_from_directory, make_response
 
 WIB = ZoneInfo("Asia/Jakarta")
 
@@ -28,6 +28,8 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 from ops_core import ops_core_bp
 from checklist_core import checklist_bp
+import templates_pm
+import ops_pm
 app.register_blueprint(ops_auth_bp)
 app.register_blueprint(ops_core_bp)
 app.register_blueprint(checklist_bp)
@@ -406,6 +408,13 @@ HTML_TEMPLATE = """
             <button onclick="showTab('tab-pengadaan')" id="btn-tab-pengadaan" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-cart-shopping text-base w-5 text-amber-400"></i>
                 <span>Pengadaan Barang & Sarpras</span>
+            </button>
+            {% endif %}
+
+            {% if user_role in ['manager', 'koordinator_ob', 'koordinator_gardener', 'pic_sarpras'] %}
+            <button onclick="showTab('tab-pemeliharaan')" id="btn-tab-pemeliharaan" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-screwdriver-wrench text-base w-5 text-teal-400"></i>
+                <span>Pemeliharaan Sarpras (PM)</span>
             </button>
             {% endif %}
 
@@ -2324,6 +2333,9 @@ HTML_TEMPLATE = """
                     </div>
                 </div>
             </div>
+
+            <!-- TAB PEMELIHARAAN SARPRAS (PM ISO FM-UMUM-AIS-03-02) -->
+            {{ tab_pemeliharaan_html | safe }}
 
             <!-- TAB 4: KEBERSIHAN LOGS WITH FILTER -->
             <div id="tab-kebersihan" class="tab-content hidden space-y-6">
@@ -4682,6 +4694,7 @@ HTML_TEMPLATE = """
             'tab-users': 'Manajemen Pengguna & Koordinator Unit',
             'tab-roles': 'Manajemen Role & Hak Akses (RBAC Matrix)',
             'tab-pengadaan': 'Pengadaan Barang & Logistik Sarpras',
+            'tab-pemeliharaan': 'Pemeliharaan Sarpras & Fasilitas (ISO FM-UMUM-AIS-03-02)',
         };
 
         function toggleSidebar() {
@@ -4763,6 +4776,9 @@ HTML_TEMPLATE = """
             }
             if (tabId === 'tab-checklist') {
                 loadChecklistDashboard();
+            }
+            if (tabId === 'tab-pemeliharaan') {
+                loadPmData();
             }
 
             if (window.innerWidth < 768) {
@@ -7975,6 +7991,7 @@ HTML_TEMPLATE = """
         }
 
     </script>
+    {{ pm_client_script | safe }}
 </body>
 </html>
 """
@@ -8168,7 +8185,9 @@ def index():
         user_permissions=user_permissions,
         procurements=procurements,
         proc_stats=proc_stats,
-        analytics=analytics
+        analytics=analytics,
+        tab_pemeliharaan_html=templates_pm.TAB_PEMELIHARAAN_HTML,
+        pm_client_script=templates_pm.PM_CLIENT_SCRIPT
     )
 
 @app.route("/add_host", methods=["POST"])
@@ -9424,6 +9443,70 @@ def api_bot_status():
             return jsonify(json.loads(resp.read().decode("utf-8")))
     except Exception as e:
         return jsonify({"status": "Offline", "error": str(e), "hasQR": False}), 503
+
+# =========================================================================
+# MODUL PEMELIHARAAN SARPRAS (ISO FM-UMUM-AIS-03-02) API & EXPORT ROUTES
+# =========================================================================
+
+@app.route("/api/ops/pm/summary", methods=["GET"])
+@login_required
+def api_ops_pm_summary():
+    year = request.args.get("year", type=int)
+    month = request.args.get("month", type=int)
+    res = ops_pm.get_pm_dashboard_summary(year=year, month=month)
+    return jsonify(res)
+
+@app.route("/api/ops/pm/execute", methods=["POST"])
+@login_required
+def api_ops_pm_execute():
+    data = request.get_json() or {}
+    try:
+        master_id = int(data.get("master_id"))
+    except (ValueError, TypeError):
+        return jsonify({"success": False, "error": "master_id harus valid"}), 400
+
+    res = ops_pm.record_pm_execution(
+        schedule_id=data.get("schedule_id") or "",
+        master_id=master_id,
+        execution_date=data.get("execution_date") or datetime.now().strftime("%Y-%m-%d"),
+        executor_name=data.get("executor_name") or session.get("ops_nama", "Petugas"),
+        executor_type=data.get("executor_type") or "OB",
+        condition_rating=data.get("condition_rating") or "BAIK",
+        finding_notes=data.get("finding_notes") or "",
+        action_taken=data.get("action_taken") or "",
+        photo_before_url=data.get("photo_before_url") or "",
+        photo_after_url=data.get("photo_after_url") or "",
+        create_ticket=bool(data.get("create_ticket")),
+        verified_by=session.get("ops_nama", "Mr Slam")
+    )
+    return jsonify(res)
+
+@app.route("/export/pm")
+@login_required
+def export_pm():
+    import csv, io
+    conn = ops_pm.get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT m.id, m.scope, m.category, m.sub_category, m.item_name, m.indicator_standard,
+               m.frequency, m.executor_type, m.pj_role, s.status, s.due_date, s.completed_at, s.completed_by
+        FROM ops_pm_master m
+        LEFT JOIN ops_pm_schedules s ON m.id = s.master_id AND s.period_year = 2026 AND s.period_month = 10
+        ORDER BY m.scope DESC, m.category ASC
+    """)
+    rows = cur.fetchall()
+    conn.close()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["No", "Lingkup", "Kategori", "Sub-Kategori", "Butir Sarpras", "Standar Mutu", "Frekuensi", "Pelaksana", "Penanggung Jawab", "Status Bulan Ini", "Jatuh Tempo", "Tanggal Selesai", "Petugas"])
+    for idx, r in enumerate(rows, 1):
+        writer.writerow([idx, r["scope"], r["category"], r["sub_category"] or "-", r["item_name"], r["indicator_standard"], r["frequency"], r["executor_type"], r["pj_role"], r["status"] or "PENDING", r["due_date"] or "-", r["completed_at"] or "-", r["completed_by"] or "-"])
+
+    response = make_response(output.getvalue())
+    response.headers["Content-Disposition"] = "attachment; filename=rekap_pemeliharaan_iso_2026.csv"
+    response.headers["Content-Type"] = "text/csv; charset=utf-8"
+    return response
 
 app.register_blueprint(mutubaah_bp)
 if __name__ == "__main__":
