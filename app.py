@@ -9560,10 +9560,14 @@ def export_pm():
 @app.route("/api/ops/evaluasi/summary", methods=["GET"])
 @login_required
 def api_ops_evaluasi_summary():
-    year = request.args.get("year", type=int)
-    month = request.args.get("month", type=int)
+    start_date = request.args.get("start_date", "").strip() or None
+    end_date = request.args.get("end_date", "").strip() or None
     unit_filter = request.args.get("unit", "ALL").strip()
-    data = ops_evaluasi.get_evaluasi_analytics(period_year=year, period_month=month, unit_filter=unit_filter)
+    data = ops_evaluasi.get_evaluasi_analytics(
+        start_date=start_date,
+        end_date=end_date,
+        unit_filter=unit_filter
+    )
     return jsonify(data)
 
 @app.route("/api/ops/evaluasi/notes", methods=["POST"])
@@ -9592,7 +9596,15 @@ def api_ops_evaluasi_notes():
 @login_required
 def export_evaluasi():
     import csv, io
-    data = ops_evaluasi.get_evaluasi_analytics()
+    start_date = request.args.get("start_date", "").strip() or None
+    end_date = request.args.get("end_date", "").strip() or None
+    unit_filter = request.args.get("unit", "ALL").strip()
+
+    data = ops_evaluasi.get_evaluasi_analytics(
+        start_date=start_date,
+        end_date=end_date,
+        unit_filter=unit_filter
+    )
     leaderboard = data.get("leaderboard", [])
 
     output = io.StringIO()
@@ -9614,8 +9626,9 @@ def export_evaluasi():
             p["discipline_score"], p["eval_badge"], p["recommendation"], p["supervisor_notes"]
         ])
 
+    filename = f"rapor_evaluasi_{data.get('start_date')}_sd_{data.get('end_date')}.csv"
     response = make_response(output.getvalue())
-    response.headers["Content-Disposition"] = "attachment; filename=rapor_evaluasi_personil_2026.csv"
+    response.headers["Content-Disposition"] = f"attachment; filename={filename}"
     response.headers["Content-Type"] = "text/csv; charset=utf-8"
     return response
 

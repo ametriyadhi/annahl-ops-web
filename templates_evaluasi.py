@@ -1,7 +1,7 @@
 """
 Templates & Komponen Tampilan HTML/JS untuk Modul Evaluasi & Rapor Personil (OB & Gardener)
 An Nahl Ops Web Dashboard - note-umum.ametriyadhi.com
-Standardisasi Target Sesi Pos yang Sama, Analisis Mangkir Pos (Alpha), dan Rekap Kedisiplinan
+Standardisasi Target Sesi Pos yang Adil, Filter Rentang Waktu Masa Berlaku Unit, Analisis Mangkir Pos & Rekap Disiplin
 """
 
 TAB_EVALUASI_HTML = """
@@ -14,21 +14,64 @@ TAB_EVALUASI_HTML = """
             <div>
                 <div class="flex items-center gap-2">
                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 tracking-wider uppercase">Supervisi & Evaluasi SDM</span>
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800 uppercase tracking-wider">Standar Target: 34 Sesi Pos Sama</span>
+                    <span id="eval-header-period-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800 uppercase tracking-wider">Periode: Memuat...</span>
                 </div>
                 <h2 class="text-base sm:text-xl font-bold text-slate-800 flex items-center gap-2 mt-1">
                     <i class="fa-solid fa-chart-user text-indigo-600"></i>
                     Rapor & Evaluasi Kedisiplinan Personil (OB & Gardener)
                 </h2>
-                <p class="text-xs text-slate-500 mt-0.5">Penilaian kinerja adil berbasis kewajiban sesi standby yang sama. Deteksi mangkir pos (alpha/tidak checkin), keterlambatan jam tiba, dan radius geofence.</p>
+                <p class="text-xs text-slate-500 mt-0.5">Penilaian kinerja adil berbasis kewajiban sesi standby unit. Deteksi mangkir pos (alpha/tidak checkin), keterlambatan jam tiba, dan radius geofence.</p>
             </div>
             <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
                 <button type="button" onclick="loadEvaluasiData()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 cursor-pointer">
                     <i class="fa-solid fa-arrows-rotate"></i> Refresh
                 </button>
-                <a href="/export/evaluasi" target="_blank" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition shadow-xs flex items-center gap-1.5">
+                <a id="eval-btn-export-csv" href="/export/evaluasi" target="_blank" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition shadow-xs flex items-center gap-1.5">
                     <i class="fa-solid fa-file-csv"></i> Ekspor Rapor CSV
                 </a>
+            </div>
+        </div>
+
+        <!-- PANEL FILTER RENTANG WAKTU & PRESETS (MASA BERLAKU UNIT) -->
+        <div class="bg-slate-50/90 border border-slate-200/90 rounded-xl p-3.5 space-y-3">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                
+                <!-- Quick Preset Buttons -->
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="text-xs font-bold text-slate-700 mr-1 flex items-center gap-1">
+                        <i class="fa-regular fa-calendar-days text-indigo-600"></i> Periode:
+                    </span>
+                    <button type="button" onclick="setEvaluasiPreset('ALL')" id="eval-preset-all" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-300 text-slate-700 shadow-2xs hover:bg-slate-100 transition cursor-pointer">Semua (Sep-Okt)</button>
+                    <button type="button" onclick="setEvaluasiPreset('SEPTEMBER')" id="eval-preset-sep" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-300 text-slate-700 shadow-2xs hover:bg-slate-100 transition cursor-pointer">Bulan September</button>
+                    <button type="button" onclick="setEvaluasiPreset('OKTOBER')" id="eval-preset-oct" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-300 text-slate-700 shadow-2xs hover:bg-slate-100 transition cursor-pointer">Bulan Oktober</button>
+                    <button type="button" onclick="setEvaluasiPreset('14DAYS')" id="eval-preset-14d" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-300 text-slate-700 shadow-2xs hover:bg-slate-100 transition cursor-pointer">14 Hari Terakhir</button>
+                    <button type="button" onclick="setEvaluasiPreset('7DAYS')" id="eval-preset-7d" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-300 text-slate-700 shadow-2xs hover:bg-slate-100 transition cursor-pointer">7 Hari Terakhir</button>
+                </div>
+
+                <!-- Custom Date Inputs -->
+                <div class="flex items-center gap-2 flex-wrap">
+                    <div class="flex items-center gap-1 text-xs">
+                        <label for="eval-start-date" class="text-slate-500 font-medium">Dari:</label>
+                        <input type="date" id="eval-start-date" class="bg-white border border-slate-200 rounded-lg px-2.5 py-1 font-semibold text-slate-700 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                    <div class="flex items-center gap-1 text-xs">
+                        <label for="eval-end-date" class="text-slate-500 font-medium">S.d:</label>
+                        <input type="date" id="eval-end-date" class="bg-white border border-slate-200 rounded-lg px-2.5 py-1 font-semibold text-slate-700 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                    <button type="button" onclick="applyCustomDateRange()" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-lg transition shadow-2xs cursor-pointer flex items-center gap-1">
+                        <i class="fa-solid fa-filter"></i> Terapkan
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dynamic Session Targets per Unit Info Banner -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-600 border-t border-slate-200/60 pt-2 gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="font-bold text-slate-700">🎯 Kewajiban Sesi Periode Ini:</span>
+                    <span class="bg-sky-100 text-sky-800 px-2 py-0.5 rounded font-semibold text-[11px]">🧹 Unit OB: <strong id="eval-target-ob-badge">36</strong> Sesi</span>
+                    <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-semibold text-[11px]">🌿 Unit Gardener: <strong id="eval-target-gardener-badge">24</strong> Sesi</span>
+                </div>
+                <span class="text-[11px] text-slate-400 italic">*Masa berlaku & jumlah sesi dihitung otomatis sesuai jadwal operasional masing-masing unit.</span>
             </div>
         </div>
 
@@ -36,12 +79,12 @@ TAB_EVALUASI_HTML = """
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <!-- Card 1: Personil & Target Sesi -->
             <div class="bg-gradient-to-br from-indigo-50 to-blue-50/60 border border-indigo-200/80 rounded-xl p-3 sm:p-4">
-                <span class="text-[10px] sm:text-xs font-bold text-indigo-800 uppercase tracking-wider block">Kewajiban Sesi Pos</span>
+                <span class="text-[10px] sm:text-xs font-bold text-indigo-800 uppercase tracking-wider block">Total Personil Terdata</span>
                 <div class="mt-1 flex items-baseline gap-2">
-                    <span id="eval-stat-target-session" class="text-xl sm:text-2xl font-black text-indigo-900">34</span>
-                    <span class="text-[10px] text-indigo-600 font-semibold">sesi / staf</span>
+                    <span id="eval-stat-personnel" class="text-xl sm:text-2xl font-black text-indigo-900">0</span>
+                    <span class="text-[10px] text-indigo-600 font-semibold">personil</span>
                 </div>
-                <span id="eval-stat-personnel" class="text-[10px] text-slate-500 mt-1 block">Dari 20 total personil aktif</span>
+                <span id="eval-stat-sessions-info" class="text-[10px] text-slate-500 mt-1 block">Wajib: OB 0 • Gardener 0</span>
             </div>
 
             <!-- Card 2: Kehadiran Pos Global -->
@@ -61,7 +104,7 @@ TAB_EVALUASI_HTML = """
                 <span class="text-[10px] sm:text-xs font-bold text-rose-800 uppercase tracking-wider block">Mangkir Pos (Tidak Check-in)</span>
                 <div class="mt-1 flex items-baseline gap-2">
                     <span id="eval-stat-missed" class="text-xl sm:text-2xl font-black text-rose-700">0</span>
-                    <span class="text-[10px] text-rose-600 font-semibold">sesi bolos</span>
+                    <span class="text-[10px] text-rose-600 font-semibold">sesi kosong</span>
                 </div>
                 <span class="text-[10px] text-rose-600 mt-1 block">Posisi pos kosong tanpa laporan</span>
             </div>
@@ -73,11 +116,11 @@ TAB_EVALUASI_HTML = """
                     <span id="eval-stat-late" class="text-xl sm:text-2xl font-black text-amber-700">0</span>
                     <span class="text-[10px] text-amber-600 font-semibold">kali telat</span>
                 </div>
-                <span id="eval-stat-late-pct" class="text-[10px] text-amber-700 mt-1 block">0% dari sesi yang hadir</span>
+                <span id="eval-stat-late-pct" class="text-[10px] text-amber-700 mt-1 block">0% dari sesi hadir</span>
             </div>
         </div>
 
-        <!-- Filter Bar -->
+        <!-- Filter Bar Unit & Status -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-100 pt-3">
             <div class="flex items-center gap-2 flex-wrap">
                 <!-- Filter Unit -->
@@ -90,15 +133,15 @@ TAB_EVALUASI_HTML = """
                 <!-- Filter Kategori Kinerja -->
                 <select id="eval-filter-category" onchange="renderEvaluasiTable()" class="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                     <option value="ALL">Semua Kategori Rapor</option>
-                    <option value="TELADAN">🌟 Sangat Disiplin (Skor ≥ 80 & Rajin Hadir)</option>
+                    <option value="TELADAN">🌟 Sangat Disiplin (Skor ≥ 80)</option>
                     <option value="BAIK">🟢 Baik & Produktif (Skor 65-79)</option>
                     <option value="CUKUP">🟡 Cukup / Perlu Arahan (Skor 50-64)</option>
-                    <option value="PEMBINAAN">🔴 Butuh Pembinaan Khusus (Mangkir/Sering Telat)</option>
+                    <option value="PEMBINAAN">🔴 Butuh Pembinaan Khusus</option>
                 </select>
             </div>
 
             <div class="text-xs text-slate-500 font-medium">
-                💡 <span class="font-bold text-slate-700">Keadilan Penilaian:</span> Petugas yang sedikit check-in terhitung <strong class="text-rose-600">Mangkir Pos</strong> dan memotong skor secara langsung.
+                💡 <span class="font-bold text-slate-700">Keadilan Penilaian:</span> Target sesi disesuaikan otomatis dengan masa aktif kerja masing-masing unit.
             </div>
         </div>
     </div>
@@ -169,9 +212,9 @@ TAB_EVALUASI_HTML = """
             <div>
                 <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
                     <i class="fa-solid fa-award text-amber-500"></i>
-                    Matriks Rapor & Peringkat Kedisiplinan Personil (Standardisasi Kewajiban Sesi)
+                    Matriks Rapor & Peringkat Kedisiplinan Personil
                 </h3>
-                <p class="text-xs text-slate-500">Kewajiban target sesi sama untuk semua staf. Kolom Mangkir (Alpha) menandai sesi pos yang ditinggalkan tanpa check-in.</p>
+                <p class="text-xs text-slate-500">Target kewajiban sesi disesuaikan dengan masa berlaku jadwal masing-masing unit kerja.</p>
             </div>
             <span id="eval-table-count" class="text-xs font-semibold text-slate-500">Menampilkan 0 personil</span>
         </div>
@@ -183,10 +226,10 @@ TAB_EVALUASI_HTML = """
                         <th class="py-3 px-3 w-10 text-center">Rank</th>
                         <th class="py-3 px-3 min-w-[140px]">Nama Personil</th>
                         <th class="py-3 px-2 w-20 text-center">Unit</th>
-                        <th class="py-3 px-2 w-20 text-center bg-slate-200/60">Wajib Sesi</th>
-                        <th class="py-3 px-2 w-20 text-center text-teal-800">Hadir</th>
-                        <th class="py-3 px-2 w-24 text-center bg-rose-50 text-rose-800">Mangkir (Alpha)</th>
-                        <th class="py-3 px-3 text-center">Kehadiran (%)</th>
+                        <th class="py-3 px-2 w-20 text-center bg-slate-200/60" title="Target kewajiban sesi operasional unit pada rentang tanggal yang dipilih">Wajib Sesi</th>
+                        <th class="py-3 px-2 w-20 text-center text-teal-800" title="Jumlah checkin riil yang terlaksana">Hadir</th>
+                        <th class="py-3 px-2 w-24 text-center bg-rose-50 text-rose-800" title="Jumlah sesi pos yang ditinggalkan tanpa checkin">Mangkir (Alpha)</th>
+                        <th class="py-3 px-3 text-center" title="Persentase kehadiran terhadap kewajiban sesi unit">Kehadiran (%)</th>
                         <th class="py-3 px-3 text-center">Tepat Waktu</th>
                         <th class="py-3 px-3 text-center">Terlambat</th>
                         <th class="py-3 px-3 text-center">Luar Radius</th>
@@ -232,7 +275,7 @@ TAB_EVALUASI_HTML = """
                 </div>
                 <div class="bg-teal-50/60 border border-teal-200 rounded-xl p-2.5 text-center">
                     <span class="text-[9px] text-teal-700 uppercase font-bold block">Kehadiran Pos</span>
-                    <span id="eval-modal-att" class="text-lg font-black text-teal-800 mt-0.5 block">0x / 34</span>
+                    <span id="eval-modal-att" class="text-lg font-black text-teal-800 mt-0.5 block">0x / 0</span>
                     <span id="eval-modal-att-pct" class="text-[9px] text-teal-600">0% hadir</span>
                 </div>
                 <div class="bg-rose-50/60 border border-rose-200 rounded-xl p-2.5 text-center">
@@ -297,16 +340,117 @@ EVALUASI_CLIENT_SCRIPT = """
 
 let evaluasiDataCache = null;
 let currentEvaluasiUnit = 'ALL';
+let currentStartDate = '';
+let currentEndDate = '';
+
+// Inisialisasi awal saat load
+function initEvaluasiDateFilters() {
+    if (!currentStartDate || !currentEndDate) {
+        // Default ke 'ALL' (rentang lengkap September - Oktober)
+        setEvaluasiPreset('ALL', false);
+    }
+}
+
+function setEvaluasiPreset(preset, doLoad = true) {
+    const today = new Date();
+    const fmt = d => d.toISOString().split('T')[0];
+
+    const btnPresets = ['all', 'sep', 'oct', '14d', '7d'];
+    btnPresets.forEach(p => {
+        const el = document.getElementById(`eval-preset-${p}`);
+        if (el) {
+            el.className = "px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-300 text-slate-700 shadow-2xs hover:bg-slate-100 transition cursor-pointer";
+        }
+    });
+
+    if (preset === 'ALL') {
+        currentStartDate = '2026-09-01';
+        currentEndDate = '2026-10-31';
+        const el = document.getElementById('eval-preset-all');
+        if (el) el.className = "px-2.5 py-1 text-xs font-bold rounded-lg bg-indigo-600 border border-indigo-600 text-white shadow-xs transition cursor-pointer";
+    } else if (preset === 'SEPTEMBER') {
+        currentStartDate = '2026-09-01';
+        currentEndDate = '2026-09-30';
+        const el = document.getElementById('eval-preset-sep');
+        if (el) el.className = "px-2.5 py-1 text-xs font-bold rounded-lg bg-indigo-600 border border-indigo-600 text-white shadow-xs transition cursor-pointer";
+    } else if (preset === 'OKTOBER') {
+        currentStartDate = '2026-10-01';
+        currentEndDate = '2026-10-31';
+        const el = document.getElementById('eval-preset-oct');
+        if (el) el.className = "px-2.5 py-1 text-xs font-bold rounded-lg bg-indigo-600 border border-indigo-600 text-white shadow-xs transition cursor-pointer";
+    } else if (preset === '14DAYS') {
+        const d14 = new Date(today.getTime() - 14 * 24 * 60 * 60 * 1000);
+        currentStartDate = fmt(d14);
+        currentEndDate = fmt(today);
+        const el = document.getElementById('eval-preset-14d');
+        if (el) el.className = "px-2.5 py-1 text-xs font-bold rounded-lg bg-indigo-600 border border-indigo-600 text-white shadow-xs transition cursor-pointer";
+    } else if (preset === '7DAYS') {
+        const d7 = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+        currentStartDate = fmt(d7);
+        currentEndDate = fmt(today);
+        const el = document.getElementById('eval-preset-7d');
+        if (el) el.className = "px-2.5 py-1 text-xs font-bold rounded-lg bg-indigo-600 border border-indigo-600 text-white shadow-xs transition cursor-pointer";
+    }
+
+    const inpStart = document.getElementById('eval-start-date');
+    const inpEnd = document.getElementById('eval-end-date');
+    if (inpStart) inpStart.value = currentStartDate;
+    if (inpEnd) inpEnd.value = currentEndDate;
+
+    if (doLoad) {
+        loadEvaluasiData();
+    }
+}
+
+function applyCustomDateRange() {
+    const s = document.getElementById('eval-start-date').value;
+    const e = document.getElementById('eval-end-date').value;
+
+    if (!s || !e) {
+        alert('Harap pilih Tanggal Mulai dan Tanggal Selesai terlebih dahulu.');
+        return;
+    }
+
+    if (s > e) {
+        alert('Tanggal Mulai tidak boleh lebih besar dari Tanggal Selesai.');
+        return;
+    }
+
+    currentStartDate = s;
+    currentEndDate = e;
+
+    // Reset preset buttons styling
+    const btnPresets = ['all', 'sep', 'oct', '14d', '7d'];
+    btnPresets.forEach(p => {
+        const el = document.getElementById(`eval-preset-${p}`);
+        if (el) {
+            el.className = "px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-300 text-slate-700 shadow-2xs hover:bg-slate-100 transition cursor-pointer";
+        }
+    });
+
+    loadEvaluasiData();
+}
 
 async function loadEvaluasiData() {
+    initEvaluasiDateFilters();
+
     try {
-        const res = await fetch(`/api/ops/evaluasi/summary?unit=${currentEvaluasiUnit}`);
+        const url = `/api/ops/evaluasi/summary?unit=${currentEvaluasiUnit}&start_date=${currentStartDate}&end_date=${currentEndDate}`;
+        const res = await fetch(url);
         const data = await res.json();
         evaluasiDataCache = data;
 
-        // 1. KPI Cards
-        document.getElementById('eval-stat-target-session').innerText = data.target_sessions_standard || 34;
-        document.getElementById('eval-stat-personnel').innerText = `Dari ${data.total_personnel || 0} personil aktif`;
+        // 1. Header Period Badge & Targets
+        const periodBadge = document.getElementById('eval-header-period-badge');
+        if (periodBadge) {
+            periodBadge.innerText = `Periode: ${data.start_date} s.d. ${data.end_date}`;
+        }
+        document.getElementById('eval-target-ob-badge').innerText = data.target_sessions_ob || 0;
+        document.getElementById('eval-target-gardener-badge').innerText = data.target_sessions_gardener || 0;
+
+        // 2. KPI Cards
+        document.getElementById('eval-stat-personnel').innerText = data.total_personnel || 0;
+        document.getElementById('eval-stat-sessions-info').innerText = `Wajib: OB ${data.target_sessions_ob || 0} • Gardener ${data.target_sessions_gardener || 0}`;
         document.getElementById('eval-stat-attendance-rate').innerText = `${data.overall_attendance || 0}%`;
         document.getElementById('eval-stat-attendance-bar').style.width = `${data.overall_attendance || 0}%`;
         document.getElementById('eval-stat-checkins').innerText = `${data.total_checkins || 0} hadir`;
@@ -314,7 +458,13 @@ async function loadEvaluasiData() {
         document.getElementById('eval-stat-late').innerText = data.top_late?.reduce((a, b) => a + b.terlambat, 0) || 0;
         document.getElementById('eval-stat-late-pct').innerText = `${data.late_rate || 0}% dari sesi hadir`;
 
-        // 2. Render Widgets & Table
+        // Update Export CSV Link
+        const exportBtn = document.getElementById('eval-btn-export-csv');
+        if (exportBtn) {
+            exportBtn.href = `/export/evaluasi?unit=${currentEvaluasiUnit}&start_date=${data.start_date}&end_date=${data.end_date}`;
+        }
+
+        // 3. Render Widgets & Table
         renderEvaluasiWidgets(data.top_missed || [], data.top_late || [], data.top_out_radius || []);
         renderEvaluasiTable();
 
@@ -367,7 +517,7 @@ function renderEvaluasiWidgets(topMissed, topLate, topRadius) {
                             <div class="bg-rose-500 h-1 rounded-full" style="width: ${missedPct}%"></div>
                         </div>
                         <div class="flex items-center justify-between text-[9px] text-slate-500">
-                            <span>Kehadiran: <strong class="text-teal-700">${p.total_checkin} / ${p.target_sessions} (${p.attendance_rate}%)</strong></span>
+                            <span>Hadir: <strong class="text-teal-700">${p.total_checkin} / ${p.target_sessions} (${p.attendance_rate}%)</strong></span>
                             <button type="button" onclick="openModalEvaluasi('${escapeHtml(p.nama)}')" class="text-indigo-600 hover:text-indigo-800 font-bold cursor-pointer">Beri Arahan →</button>
                         </div>
                     </div>
@@ -487,7 +637,7 @@ function renderEvaluasiTable() {
                 </td>
                 <td class="py-2.5 px-2 text-center">${unitBadge}</td>
                 
-                <!-- Target Sesi Wajib -->
+                <!-- Target Sesi Wajib Unit -->
                 <td class="py-2.5 px-2 text-center font-bold text-slate-600 bg-slate-50">${p.target_sessions}</td>
 
                 <!-- Realisasi Hadir Check-in -->
@@ -495,7 +645,7 @@ function renderEvaluasiTable() {
 
                 <!-- Mangkir Pos (Alpha / Tidak Checkin) -->
                 <td class="py-2.5 px-2 text-center bg-rose-50/50">
-                    <span class="font-black ${p.missed_checkin > 10 ? 'text-rose-700' : (p.missed_checkin > 0 ? 'text-amber-700' : 'text-slate-400')} block">${p.missed_checkin} sesi</span>
+                    <span class="font-black ${p.missed_checkin > 5 ? 'text-rose-700' : (p.missed_checkin > 0 ? 'text-amber-700' : 'text-slate-400')} block">${p.missed_checkin} sesi</span>
                     <span class="text-[9px] text-rose-500">${Math.round((p.missed_checkin / p.target_sessions) * 100)}% bolos</span>
                 </td>
 
@@ -561,7 +711,7 @@ function openModalEvaluasi(petugasName) {
 
     const modal = document.getElementById('modal-evaluasi-petugas');
     document.getElementById('eval-modal-name').innerText = p.nama;
-    document.getElementById('eval-modal-unit-badge').innerText = `Unit: ${p.unit} • Kewajiban: ${p.target_sessions} Sesi (${p.days_active} hari kerja aktif)`;
+    document.getElementById('eval-modal-unit-badge').innerText = `Unit: ${p.unit} • Kewajiban Unit: ${p.target_sessions} Sesi (${p.days_active} hari kerja aktif)`;
     document.getElementById('eval-modal-score').innerText = p.discipline_score;
     document.getElementById('eval-modal-badge').innerText = p.eval_badge;
     document.getElementById('eval-modal-att').innerText = `${p.total_checkin}x / ${p.target_sessions}`;
@@ -574,7 +724,7 @@ function openModalEvaluasi(petugasName) {
     // Render late list
     const lateList = document.getElementById('eval-modal-late-list');
     if (!p.late_details || !p.late_details.length) {
-        lateList.innerHTML = '<p class="text-slate-400 italic">Tidak ada catatan keterlambatan terbaru.</p>';
+        lateList.innerHTML = '<p class="text-slate-400 italic">Tidak ada catatan keterlambatan terbaru pada rentang ini.</p>';
     } else {
         lateList.innerHTML = p.late_details.map(d => `
             <div class="flex items-center justify-between p-2 bg-amber-50/60 border border-amber-100 rounded-lg text-[11px]">
