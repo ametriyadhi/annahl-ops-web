@@ -1294,50 +1294,77 @@ HTML_TEMPLATE = """
                             </p>
                         </div>
                         <div class="flex items-center gap-2">
-                            <a href="/export/journal" class="px-3 py-2 bg-teal-600 text-white text-xs font-semibold rounded-xl hover:bg-teal-700 transition shadow-xs flex items-center gap-1.5" title="Export Jurnal ke Excel">
+                            <a href="/export/journal" id="btn-export-journal" class="px-3 py-2 bg-teal-600 text-white text-xs font-semibold rounded-xl hover:bg-teal-700 transition shadow-xs flex items-center gap-1.5" title="Export Jurnal ke Excel">
                                 <i class="fa-solid fa-file-excel"></i> Export Excel
                             </a>
-                            <button onclick="toggleModal('modal-add-journal')" class="px-3.5 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition shadow-xs flex items-center gap-1.5">
+                            <button onclick="toggleModal('modal-add-journal')" class="px-3.5 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition shadow-xs flex items-center gap-1.5 cursor-pointer">
                                 <i class="fa-solid fa-plus"></i> Catat Jurnal Baru
                             </button>
                         </div>
                     </div>
 
-                    <!-- TOOLBAR: FILTER UNIT, SEARCH & VIEW MODE SWITCHER -->
-                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-slate-50/90 p-3 rounded-2xl border border-slate-200 text-xs">
-                        <!-- Filter Unit -->
-                        {% if user_role == 'manager' %}
-                        <div class="flex flex-wrap items-center gap-1.5">
-                            <span class="font-bold text-slate-600 text-[11px] uppercase tracking-wider mr-1">Unit:</span>
-                            <button type="button" onclick="filterJournalsByUnit('ALL')" class="journal-filter-btn px-2.5 py-1 rounded-lg font-bold bg-emerald-600 text-white transition text-xs cursor-pointer shadow-2xs" data-unit="ALL">Semua Unit</button>
-                            <button type="button" onclick="filterJournalsByUnit('IT')" class="journal-filter-btn px-2.5 py-1 rounded-lg font-semibold bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition text-xs cursor-pointer" data-unit="IT">IT</button>
-                            <button type="button" onclick="filterJournalsByUnit('OB')" class="journal-filter-btn px-2.5 py-1 rounded-lg font-semibold bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition text-xs cursor-pointer" data-unit="OB">Office Boy</button>
-                            <button type="button" onclick="filterJournalsByUnit('GARDENER')" class="journal-filter-btn px-2.5 py-1 rounded-lg font-semibold bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition text-xs cursor-pointer" data-unit="GARDENER">Gardener</button>
-                            <button type="button" onclick="filterJournalsByUnit('SECURITY')" class="journal-filter-btn px-2.5 py-1 rounded-lg font-semibold bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition text-xs cursor-pointer" data-unit="SECURITY">Security</button>
-                        </div>
-                        {% else %}
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-slate-700">Unit: {{ user_unit }}</span>
-                        </div>
-                        {% endif %}
-
-                        <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                            <!-- Input Search Live -->
-                            <div class="relative flex-1 sm:w-64">
-                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
-                                <input type="text" id="journal-search-input" onkeyup="searchJournals()" placeholder="Cari kegiatan / PIC / hasil..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-2xs">
+                    <!-- TOOLBAR: FILTER UNIT, PERIODE TANGGAL, SEARCH & VIEW MODE SWITCHER -->
+                    <div class="flex flex-col gap-3 bg-slate-50/90 p-3.5 rounded-2xl border border-slate-200 text-xs">
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                            <!-- Filter Unit -->
+                            {% if user_role == 'manager' %}
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <span class="font-bold text-slate-600 text-[11px] uppercase tracking-wider mr-1">Unit:</span>
+                                <button type="button" onclick="filterJournalsByUnit('ALL')" class="journal-filter-btn px-2.5 py-1 rounded-lg font-bold bg-emerald-600 text-white transition text-xs cursor-pointer shadow-2xs" data-unit="ALL">Semua Unit</button>
+                                <button type="button" onclick="filterJournalsByUnit('IT')" class="journal-filter-btn px-2.5 py-1 rounded-lg font-semibold bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition text-xs cursor-pointer" data-unit="IT">IT</button>
+                                <button type="button" onclick="filterJournalsByUnit('OB')" class="journal-filter-btn px-2.5 py-1 rounded-lg font-semibold bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition text-xs cursor-pointer" data-unit="OB">Office Boy</button>
+                                <button type="button" onclick="filterJournalsByUnit('GARDENER')" class="journal-filter-btn px-2.5 py-1 rounded-lg font-semibold bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition text-xs cursor-pointer" data-unit="GARDENER">Gardener</button>
+                                <button type="button" onclick="filterJournalsByUnit('SECURITY')" class="journal-filter-btn px-2.5 py-1 rounded-lg font-semibold bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition text-xs cursor-pointer" data-unit="SECURITY">Security</button>
                             </div>
+                            {% else %}
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-slate-700">Unit: {{ user_unit }}</span>
+                            </div>
+                            {% endif %}
 
-                            <!-- Switcher Mode Tabel vs Kartu -->
-                            <div class="flex items-center bg-slate-200/80 p-0.5 rounded-xl border border-slate-300/60 shrink-0">
-                                <button type="button" onclick="switchJournalView('table')" id="btn-journal-view-table" class="px-2.5 py-1 rounded-lg font-bold text-slate-800 bg-white shadow-2xs transition flex items-center gap-1 cursor-pointer">
-                                    <i class="fa-solid fa-table-list text-emerald-600"></i>
-                                    <span>Tabel</span>
+                            <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                                <!-- Input Search Live -->
+                                <div class="relative flex-1 sm:w-64">
+                                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                                    <input type="text" id="journal-search-input" onkeyup="searchJournals()" placeholder="Cari kegiatan / PIC / hasil..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-2xs">
+                                </div>
+
+                                <!-- Switcher Mode Tabel vs Kartu -->
+                                <div class="flex items-center bg-slate-200/80 p-0.5 rounded-xl border border-slate-300/60 shrink-0">
+                                    <button type="button" onclick="switchJournalView('table')" id="btn-journal-view-table" class="px-2.5 py-1 rounded-lg font-bold text-slate-800 bg-white shadow-2xs transition flex items-center gap-1 cursor-pointer">
+                                        <i class="fa-solid fa-table-list text-emerald-600"></i>
+                                        <span>Tabel</span>
+                                    </button>
+                                    <button type="button" onclick="switchJournalView('cards')" id="btn-journal-view-cards" class="px-2.5 py-1 rounded-lg font-semibold text-slate-600 hover:text-slate-800 transition flex items-center gap-1 cursor-pointer">
+                                        <i class="fa-solid fa-grip"></i>
+                                        <span>Kartu</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- BARIS KEDUA: FILTER PERIODE TANGGAL -->
+                        <div class="flex items-center justify-between border-t border-slate-200/80 pt-2.5 flex-wrap gap-2">
+                            <div class="flex items-center gap-2 flex-wrap text-xs">
+                                <span class="font-bold text-slate-700 flex items-center gap-1.5">
+                                    <i class="fa-regular fa-calendar-days text-emerald-600"></i> Periode Jurnal:
+                                </span>
+                                <div class="flex items-center gap-1">
+                                    <label for="journal-start-date" class="text-slate-500 text-[11px]">Dari:</label>
+                                    <input type="date" id="journal-start-date" onchange="applyJournalFilters()" class="bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs font-semibold text-slate-700 focus:ring-1 focus:ring-emerald-500 focus:outline-none shadow-2xs">
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <label for="journal-end-date" class="text-slate-500 text-[11px]">Sampai:</label>
+                                    <input type="date" id="journal-end-date" onchange="applyJournalFilters()" class="bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs font-semibold text-slate-700 focus:ring-1 focus:ring-emerald-500 focus:outline-none shadow-2xs">
+                                </div>
+                                <button type="button" onclick="resetJournalDateFilter()" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-xs rounded-lg transition cursor-pointer flex items-center gap-1" title="Reset filter tanggal (tampilkan semua)">
+                                    <i class="fa-solid fa-rotate-left"></i> Reset
                                 </button>
-                                <button type="button" onclick="switchJournalView('cards')" id="btn-journal-view-cards" class="px-2.5 py-1 rounded-lg font-semibold text-slate-600 hover:text-slate-800 transition flex items-center gap-1 cursor-pointer">
-                                    <i class="fa-solid fa-grip"></i>
-                                    <span>Kartu</span>
-                                </button>
+                            </div>
+                            
+                            <!-- Counter Info Jurnal Aktif -->
+                            <div class="text-[11px] text-slate-500 font-medium">
+                                Menampilkan: <strong id="journal-visible-count" class="text-emerald-700 font-bold">{{ journals|length }}</strong> kegiatan
                             </div>
                         </div>
                     </div>
@@ -1357,7 +1384,7 @@ HTML_TEMPLATE = """
                             </thead>
                             <tbody id="journal-table-tbody" class="divide-y divide-slate-100 text-slate-700">
                                 {% for j in journals %}
-                                <tr class="journal-row hover:bg-slate-50/80 transition" data-unit="{{ j.unit_code or 'ALL' }}">
+                                <tr class="journal-row hover:bg-slate-50/80 transition" data-unit="{{ j.unit_code or 'ALL' }}" data-date="{{ j.date }}">
                                     <!-- Waktu & Tanggal -->
                                     <td class="py-3 px-3.5 align-top">
                                         <span class="font-bold text-slate-800 block">{{ j.date }}</span>
@@ -1474,7 +1501,7 @@ HTML_TEMPLATE = """
                     <!-- 2. TAMPILAN KARTU JURNAL (ALTERNATIF / MOBILE MODE) -->
                     <div class="space-y-4 hidden" id="journal-view-cards">
                         {% for j in journals %}
-                        <div class="journal-card p-5 rounded-2xl border border-slate-200 bg-white hover:border-slate-300 transition space-y-3 shadow-xs" data-unit="{{ j.unit_code or 'ALL' }}">
+                        <div class="journal-card p-5 rounded-2xl border border-slate-200 bg-white hover:border-slate-300 transition space-y-3 shadow-xs" data-unit="{{ j.unit_code or 'ALL' }}" data-date="{{ j.date }}">
                             <div class="flex items-start justify-between">
                                 <div class="space-y-1">
                                     <div class="flex flex-wrap items-center gap-2">
@@ -7059,18 +7086,26 @@ HTML_TEMPLATE = """
 
         function applyJournalFilters() {
             const query = (document.getElementById('journal-search-input')?.value || '').toLowerCase().trim();
+            const startDate = document.getElementById('journal-start-date')?.value || '';
+            const endDate = document.getElementById('journal-end-date')?.value || '';
             const unit = currentJournalUnit;
+
+            let visibleCount = 0;
 
             // 1. Filter Tabel Rows
             const rows = document.querySelectorAll('.journal-row');
             rows.forEach(r => {
                 const rUnit = r.getAttribute('data-unit') || '';
+                const rDate = r.getAttribute('data-date') || '';
                 const text = r.innerText.toLowerCase();
+
                 const unitMatch = (unit === 'ALL' || rUnit === unit || (unit === 'ALL' && rUnit === 'ALL'));
                 const queryMatch = !query || text.includes(query);
+                const dateMatch = (!startDate || rDate >= startDate) && (!endDate || rDate <= endDate);
 
-                if (unitMatch && queryMatch) {
+                if (unitMatch && queryMatch && dateMatch) {
                     r.style.display = '';
+                    visibleCount++;
                 } else {
                     r.style.display = 'none';
                 }
@@ -7080,16 +7115,42 @@ HTML_TEMPLATE = """
             const cards = document.querySelectorAll('.journal-card');
             cards.forEach(c => {
                 const cUnit = c.getAttribute('data-unit') || '';
+                const cDate = c.getAttribute('data-date') || '';
                 const text = c.innerText.toLowerCase();
+
                 const unitMatch = (unit === 'ALL' || cUnit === unit || (unit === 'ALL' && cUnit === 'ALL'));
                 const queryMatch = !query || text.includes(query);
+                const dateMatch = (!startDate || cDate >= startDate) && (!endDate || cDate <= endDate);
 
-                if (unitMatch && queryMatch) {
+                if (unitMatch && queryMatch && dateMatch) {
                     c.style.display = '';
                 } else {
                     c.style.display = 'none';
                 }
             });
+
+            // Update counter info
+            const countEl = document.getElementById('journal-visible-count');
+            if (countEl) {
+                countEl.innerText = visibleCount;
+            }
+
+            // Update Link Export Excel
+            const exportBtn = document.getElementById('btn-export-journal');
+            if (exportBtn) {
+                let exportUrl = '/export/journal?unit=' + encodeURIComponent(unit);
+                if (startDate) exportUrl += '&start_date=' + encodeURIComponent(startDate);
+                if (endDate) exportUrl += '&end_date=' + encodeURIComponent(endDate);
+                exportBtn.setAttribute('href', exportUrl);
+            }
+        }
+
+        function resetJournalDateFilter() {
+            const sInput = document.getElementById('journal-start-date');
+            const eInput = document.getElementById('journal-end-date');
+            if (sInput) sInput.value = '';
+            if (eInput) eInput.value = '';
+            applyJournalFilters();
         }
 
         function toggleAddTaskSubScope() {
@@ -8921,20 +8982,34 @@ def export_journal():
     user_unit = session.get('ops_unit_code', '')
     user_username = session.get('ops_username', '')
 
+    filter_unit = request.args.get('unit', 'ALL').strip()
+    start_date = request.args.get('start_date', '').strip()
+    end_date = request.args.get('end_date', '').strip()
+
     import sqlite3
     con = sqlite3.connect("/home/ametriyadhi/sas-annahl/database.sqlite")
     con.row_factory = sqlite3.Row
     cur = con.cursor()
-    if user_role == 'manager':
-        cur.execute("SELECT * FROM ops_journals ORDER BY date DESC, time DESC, created_at DESC")
-    else:
-        cur.execute("""
-            SELECT * FROM ops_journals 
-            WHERE (unit_code = ? OR author_username = ?)
-              AND unit_code != 'ALL'
-              AND (author_username IS NULL OR author_username != 'admin')
-            ORDER BY date DESC, time DESC, created_at DESC
-        """, (user_unit, user_username))
+
+    query = "SELECT * FROM ops_journals WHERE 1=1"
+    params = []
+
+    if user_role != 'manager':
+        query += " AND (unit_code = ? OR author_username = ?) AND unit_code != 'ALL' AND (author_username IS NULL OR author_username != 'admin')"
+        params.extend([user_unit, user_username])
+    elif filter_unit and filter_unit != 'ALL':
+        query += " AND unit_code = ?"
+        params.append(filter_unit)
+
+    if start_date:
+        query += " AND date >= ?"
+        params.append(start_date)
+    if end_date:
+        query += " AND date <= ?"
+        params.append(end_date)
+
+    query += " ORDER BY date DESC, time DESC, created_at DESC"
+    cur.execute(query, params)
     journals = [dict(r) for r in cur.fetchall()]
     con.close()
 
