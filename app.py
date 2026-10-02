@@ -9598,15 +9598,17 @@ def export_evaluasi():
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow([
-        "Peringkat", "Nama Personil", "Unit", "Total Sesi Pos", "Hari Aktif",
+        "Peringkat", "Nama Personil", "Unit", "Kewajiban Sesi Pos", "Realisasi Hadir (Checkin)",
+        "Mangkir Pos (Alpha)", "Tingkat Kehadiran (%)", "Hari Aktif",
         "Tepat Waktu", "Tepat Waktu (%)", "Terlambat", "Terlambat (%)",
         "Luar Radius", "Luar Radius (%)", "Rata-rata Telat (Mnt)", "Paling Telat (Mnt)",
-        "Skor Disiplin (0-100)", "Status Rapor", "Rekomendasi Tindak Lanjut", "Catatan Supervisi Pimpinan"
+        "Skor Disiplin (0-100)", "Status Rapor", "Rekomendasi Tindak Lanjut", "Catatan Supervisi Mr Slam"
     ])
 
     for idx, p in enumerate(leaderboard, 1):
         writer.writerow([
-            idx, p["nama"], p["unit"], p["total_checkin"], p["days_active"],
+            idx, p["nama"], p["unit"], p["target_sessions"], p["total_checkin"],
+            p["missed_checkin"], f"{p['attendance_rate']}%", p["days_active"],
             p["tepat_waktu"], f"{p['on_time_pct']}%", p["terlambat"], f"{p['late_pct']}%",
             p["diluar_radius"], f"{p['out_radius_pct']}%", p["avg_late_min"], p["max_late_min"],
             p["discipline_score"], p["eval_badge"], p["recommendation"], p["supervisor_notes"]
