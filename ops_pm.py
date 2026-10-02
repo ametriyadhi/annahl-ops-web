@@ -506,6 +506,129 @@ def check_and_send_pm_reminders(target_wa: str = "6287809199096@s.whatsapp.net",
     except Exception as e:
         return {"status": "error", "error": str(e), "count": len(items)}
 
+def match_sarpras_by_query(text: str, unit_hint: Optional[str] = None):
+    """Mencocokkan teks bebas dari WhatsApp ke butir master pemeliharaan ISO"""
+    if not text:
+        return None
+    text_lower = text.lower()
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT id, scope, category, sub_category, item_name, executor_type, indicator_standard, frequency FROM ops_pm_master WHERE is_active = 1")
+    masters = cur.fetchall()
+    conn.close()
+
+    candidates = []
+    for m in masters:
+        name_lower = m["item_name"].lower()
+        cat_lower = m["category"].lower()
+        score = 0
+
+        # Category match bonus
+        if cat_lower in text_lower:
+            score += 10
+
+        # Kata kunci khusus
+        if "ac" in text_lower.split() and cat_lower == "ac":
+            score += 15
+        if "rumput" in text_lower and "rumput" in name_lower:
+            score += 25
+        if ("dispenser" in text_lower or "galon" in text_lower) and cat_lower == "dispenser":
+            score += 20
+        if "kandang" in text_lower and cat_lower == "kandang":
+            score += 20
+        if "karpet" in text_lower and "karpet" in cat_lower:
+            score += 20
+        if "kolam" in text_lower and "kolam" in cat_lower:
+            score += 12
+        if "saung" in text_lower and cat_lower == "saung":
+            score += 20
+        if "playground" in text_lower and cat_lower == "playground":
+            score += 20
+        if "cat" in text_lower and "pengecatan" in name_lower:
+            score += 15
+
+        for word in text_lower.split():
+            if len(word) >= 3:
+                if word in name_lower:
+                    score += 4
+                if word in cat_lower:
+                    score += 2
+
+        if unit_hint and m["executor_type"].upper() == unit_hint.upper():
+            score += 5
+
+        if score > 0:
+            candidates.append((score, m))
+
+    candidates.sort(key=lambda x: x[0], reverse=True)
+    return candidates[0][1] if candidates else None
+
+def execute_from_wa(
+    nama: str,
+    unit: str,
+    sarpras_query: str,
+    kondisi: str = "BAIK",
+    keterangan: str = "",
+    photo_url: str = "",
+    sender_phone: str = ""
+) -> Dict[str, Any]:
+    """Menerima dan memproses laporan pemeliharaan dari WhatsApp Bot"""
+    matched = match_sarpras_by_query(sarpras_query, unit)
+    if not matched:
+        # Fallback jika tidak cocok dengan master, tetap catat ke master generik atau temukan kategori terdekat
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT id, item_name, category, indicator_standard FROM ops_pm_master LIMIT 1")
+        matched = cur.fetchone()
+        conn.close()
+
+    master_id = matched["id"]
+    now = datetime.date.today()
+    sched_id = f"PMS-{now.year}{now.month:02d}-{master_id:03d}"
+
+    # Pastikan jadwal instance ada
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT id FROM ops_pm_schedules WHERE id = ?", (sched_id,))
+    if not cur.fetchone():
+        cur.execute("""
+            INSERT INTO ops_pm_schedules (
+                id, master_id, period_year, period_month, cycle_code,
+                due_date, executor_type, assigned_to, status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')
+        """, (sched_id, master_id, now.year, now.month, matched["frequency"], now.strftime("%Y-%m-%d"), matched["executor_type"], nama))
+        conn.commit()
+    conn.close()
+
+    # Normalisasi kondisi
+    norm_kondisi = "BAIK"
+    k_upper = kondisi.upper()
+    if "RUSAK" in k_upper or "BOCOR" in k_upper or "PATAH" in k_upper or "MATI" in k_upper:
+        norm_kondisi = "RUSAK_BUTUH_PERBAIKAN"
+    elif "CUKUP" in k_upper or "PERHATIAN" in k_upper:
+        norm_kondisi = "CUKUP"
+
+    res = record_pm_execution(
+        schedule_id=sched_id,
+        master_id=master_id,
+        execution_date=now.strftime("%Y-%m-%d"),
+        executor_name=f"{nama} ({unit})",
+        executor_type=matched["executor_type"],
+        condition_rating=norm_kondisi,
+        finding_notes=keterangan or f"Laporan via WA oleh {nama}",
+        action_taken="Pemeriksaan & pemeliharaan berkala via WhatsApp",
+        photo_after_url=photo_url,
+        create_ticket=(norm_kondisi == "RUSAK_BUTUH_PERBAIKAN"),
+        verified_by="WhatsApp Bot Auto-Verification"
+    )
+
+    res["matched_item"] = matched["item_name"]
+    res["category"] = matched["category"]
+    res["indicator_standard"] = matched["indicator_standard"]
+    res["scope"] = matched["scope"]
+    res["frequency"] = matched["frequency"]
+    return res
+
 # Inisialisasi awal saat modul dimuat
 init_pm_tables()
 seed_pm_master_data()

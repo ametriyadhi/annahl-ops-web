@@ -30,6 +30,8 @@ from ops_core import ops_core_bp
 from checklist_core import checklist_bp
 import templates_pm
 import ops_pm
+import templates_evaluasi
+import ops_evaluasi
 app.register_blueprint(ops_auth_bp)
 app.register_blueprint(ops_core_bp)
 app.register_blueprint(checklist_bp)
@@ -415,6 +417,13 @@ HTML_TEMPLATE = """
             <button onclick="showTab('tab-pemeliharaan')" id="btn-tab-pemeliharaan" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-screwdriver-wrench text-base w-5 text-teal-400"></i>
                 <span>Pemeliharaan Sarpras (PM)</span>
+            </button>
+            {% endif %}
+
+            {% if user_role in ['manager', 'koordinator_ob', 'koordinator_gardener', 'pic_sarpras'] %}
+            <button onclick="showTab('tab-evaluasi')" id="btn-tab-evaluasi" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-chart-user text-base w-5 text-indigo-400"></i>
+                <span>Rapor & Evaluasi Personil</span>
             </button>
             {% endif %}
 
@@ -2336,6 +2345,9 @@ HTML_TEMPLATE = """
 
             <!-- TAB PEMELIHARAAN SARPRAS (PM ISO FM-UMUM-AIS-03-02) -->
             {{ tab_pemeliharaan_html | safe }}
+
+            <!-- TAB EVALUASI & RAPOR PERSONIL OB & GARDENER -->
+            {{ tab_evaluasi_html | safe }}
 
             <!-- TAB 4: KEBERSIHAN LOGS WITH FILTER -->
             <div id="tab-kebersihan" class="tab-content hidden space-y-6">
@@ -4695,6 +4707,7 @@ HTML_TEMPLATE = """
             'tab-roles': 'Manajemen Role & Hak Akses (RBAC Matrix)',
             'tab-pengadaan': 'Pengadaan Barang & Logistik Sarpras',
             'tab-pemeliharaan': 'Pemeliharaan Sarpras & Fasilitas (ISO FM-UMUM-AIS-03-02)',
+            'tab-evaluasi': 'Rapor & Analisa Kedisiplinan Personil (OB & Gardener)',
         };
 
         function toggleSidebar() {
@@ -4779,6 +4792,9 @@ HTML_TEMPLATE = """
             }
             if (tabId === 'tab-pemeliharaan') {
                 loadPmData();
+            }
+            if (tabId === 'tab-evaluasi') {
+                loadEvaluasiData();
             }
 
             if (window.innerWidth < 768) {
@@ -7992,6 +8008,7 @@ HTML_TEMPLATE = """
 
     </script>
     {{ pm_client_script | safe }}
+    {{ evaluasi_client_script | safe }}
 </body>
 </html>
 """
@@ -8187,7 +8204,9 @@ def index():
         proc_stats=proc_stats,
         analytics=analytics,
         tab_pemeliharaan_html=templates_pm.TAB_PEMELIHARAAN_HTML,
-        pm_client_script=templates_pm.PM_CLIENT_SCRIPT
+        pm_client_script=templates_pm.PM_CLIENT_SCRIPT,
+        tab_evaluasi_html=templates_evaluasi.TAB_EVALUASI_HTML,
+        evaluasi_client_script=templates_evaluasi.EVALUASI_CLIENT_SCRIPT
     )
 
 @app.route("/add_host", methods=["POST"])
@@ -9481,6 +9500,32 @@ def api_ops_pm_execute():
     )
     return jsonify(res)
 
+@app.route("/api/ops/pm/execute_wa", methods=["POST"])
+def api_ops_pm_execute_wa():
+    """Endpoint publik untuk integrasi pemeliharaan dari WhatsApp Bot"""
+    data = request.get_json() or {}
+    nama = data.get("nama", "Petugas").strip()
+    unit = data.get("unit", "OB").strip()
+    sarpras_query = data.get("sarpras", "").strip() or data.get("keterangan", "").strip()
+    kondisi = data.get("kondisi", "BAIK").strip()
+    keterangan = data.get("keterangan", "").strip()
+    photo_url = data.get("photo_url", "").strip()
+    sender_phone = data.get("sender_phone", "").strip()
+
+    if not sarpras_query and not keterangan:
+        return jsonify({"success": False, "error": "Sarpras atau keterangan wajib diisi"}), 400
+
+    res = ops_pm.execute_from_wa(
+        nama=nama,
+        unit=unit,
+        sarpras_query=sarpras_query,
+        kondisi=kondisi,
+        keterangan=keterangan,
+        photo_url=photo_url,
+        sender_phone=sender_phone
+    )
+    return jsonify(res)
+
 @app.route("/export/pm")
 @login_required
 def export_pm():
@@ -9505,6 +9550,70 @@ def export_pm():
 
     response = make_response(output.getvalue())
     response.headers["Content-Disposition"] = "attachment; filename=rekap_pemeliharaan_iso_2026.csv"
+    response.headers["Content-Type"] = "text/csv; charset=utf-8"
+    return response
+
+# =========================================================================
+# MODUL EVALUASI & RAPOR KINERJA PERSONIL (OB & GARDENER)
+# =========================================================================
+
+@app.route("/api/ops/evaluasi/summary", methods=["GET"])
+@login_required
+def api_ops_evaluasi_summary():
+    year = request.args.get("year", type=int)
+    month = request.args.get("month", type=int)
+    unit_filter = request.args.get("unit", "ALL").strip()
+    data = ops_evaluasi.get_evaluasi_analytics(period_year=year, period_month=month, unit_filter=unit_filter)
+    return jsonify(data)
+
+@app.route("/api/ops/evaluasi/notes", methods=["POST"])
+@login_required
+def api_ops_evaluasi_notes():
+    data = request.get_json() or {}
+    petugas_name = data.get("petugas_name", "").strip()
+    unit_code = data.get("unit_code", "OB").strip()
+    notes = data.get("notes", "").strip()
+
+    if not petugas_name:
+        return jsonify({"success": False, "error": "Nama petugas wajib diisi"}), 400
+
+    now = datetime.now()
+    res = ops_evaluasi.save_supervisor_notes(
+        petugas_name=petugas_name,
+        unit_code=unit_code,
+        period_year=now.year,
+        period_month=now.month,
+        notes=notes,
+        supervisor_name=session.get("ops_nama", "Mr Slam")
+    )
+    return jsonify(res)
+
+@app.route("/export/evaluasi")
+@login_required
+def export_evaluasi():
+    import csv, io
+    data = ops_evaluasi.get_evaluasi_analytics()
+    leaderboard = data.get("leaderboard", [])
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "Peringkat", "Nama Personil", "Unit", "Total Sesi Pos", "Hari Aktif",
+        "Tepat Waktu", "Tepat Waktu (%)", "Terlambat", "Terlambat (%)",
+        "Luar Radius", "Luar Radius (%)", "Rata-rata Telat (Mnt)", "Paling Telat (Mnt)",
+        "Skor Disiplin (0-100)", "Status Rapor", "Rekomendasi Tindak Lanjut", "Catatan Supervisi Pimpinan"
+    ])
+
+    for idx, p in enumerate(leaderboard, 1):
+        writer.writerow([
+            idx, p["nama"], p["unit"], p["total_checkin"], p["days_active"],
+            p["tepat_waktu"], f"{p['on_time_pct']}%", p["terlambat"], f"{p['late_pct']}%",
+            p["diluar_radius"], f"{p['out_radius_pct']}%", p["avg_late_min"], p["max_late_min"],
+            p["discipline_score"], p["eval_badge"], p["recommendation"], p["supervisor_notes"]
+        ])
+
+    response = make_response(output.getvalue())
+    response.headers["Content-Disposition"] = "attachment; filename=rapor_evaluasi_personil_2026.csv"
     response.headers["Content-Type"] = "text/csv; charset=utf-8"
     return response
 
