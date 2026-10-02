@@ -1303,19 +1303,176 @@ HTML_TEMPLATE = """
                         </div>
                     </div>
 
-                    {% if user_role == 'manager' %}
-                    <!-- Filter Unit untuk Manager -->
-                    <div class="flex flex-wrap items-center gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs">
-                        <span class="font-bold text-slate-600 text-[11px] uppercase tracking-wider px-2">Filter Unit:</span>
-                        <button onclick="filterJournalsByUnit('ALL')" class="journal-filter-btn px-3 py-1 rounded-lg font-bold bg-emerald-600 text-white transition text-xs" data-unit="ALL">Semua Unit</button>
-                        <button onclick="filterJournalsByUnit('IT')" class="journal-filter-btn px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition text-xs" data-unit="IT">IT</button>
-                        <button onclick="filterJournalsByUnit('OB')" class="journal-filter-btn px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition text-xs" data-unit="OB">Office Boy</button>
-                        <button onclick="filterJournalsByUnit('GARDENER')" class="journal-filter-btn px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition text-xs" data-unit="GARDENER">Gardener</button>
-                        <button onclick="filterJournalsByUnit('SECURITY')" class="journal-filter-btn px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition text-xs" data-unit="SECURITY">Security</button>
-                    </div>
-                    {% endif %}
+                    <!-- TOOLBAR: FILTER UNIT, SEARCH & VIEW MODE SWITCHER -->
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-slate-50/90 p-3 rounded-2xl border border-slate-200 text-xs">
+                        <!-- Filter Unit -->
+                        {% if user_role == 'manager' %}
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <span class="font-bold text-slate-600 text-[11px] uppercase tracking-wider mr-1">Unit:</span>
+                            <button type="button" onclick="filterJournalsByUnit('ALL')" class="journal-filter-btn px-2.5 py-1 rounded-lg font-bold bg-emerald-600 text-white transition text-xs cursor-pointer shadow-2xs" data-unit="ALL">Semua Unit</button>
+                            <button type="button" onclick="filterJournalsByUnit('IT')" class="journal-filter-btn px-2.5 py-1 rounded-lg font-semibold bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition text-xs cursor-pointer" data-unit="IT">IT</button>
+                            <button type="button" onclick="filterJournalsByUnit('OB')" class="journal-filter-btn px-2.5 py-1 rounded-lg font-semibold bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition text-xs cursor-pointer" data-unit="OB">Office Boy</button>
+                            <button type="button" onclick="filterJournalsByUnit('GARDENER')" class="journal-filter-btn px-2.5 py-1 rounded-lg font-semibold bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition text-xs cursor-pointer" data-unit="GARDENER">Gardener</button>
+                            <button type="button" onclick="filterJournalsByUnit('SECURITY')" class="journal-filter-btn px-2.5 py-1 rounded-lg font-semibold bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition text-xs cursor-pointer" data-unit="SECURITY">Security</button>
+                        </div>
+                        {% else %}
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-slate-700">Unit: {{ user_unit }}</span>
+                        </div>
+                        {% endif %}
 
-                    <div class="space-y-4" id="journals-container">
+                        <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                            <!-- Input Search Live -->
+                            <div class="relative flex-1 sm:w-64">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                                <input type="text" id="journal-search-input" onkeyup="searchJournals()" placeholder="Cari kegiatan / PIC / hasil..." class="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-2xs">
+                            </div>
+
+                            <!-- Switcher Mode Tabel vs Kartu -->
+                            <div class="flex items-center bg-slate-200/80 p-0.5 rounded-xl border border-slate-300/60 shrink-0">
+                                <button type="button" onclick="switchJournalView('table')" id="btn-journal-view-table" class="px-2.5 py-1 rounded-lg font-bold text-slate-800 bg-white shadow-2xs transition flex items-center gap-1 cursor-pointer">
+                                    <i class="fa-solid fa-table-list text-emerald-600"></i>
+                                    <span>Tabel</span>
+                                </button>
+                                <button type="button" onclick="switchJournalView('cards')" id="btn-journal-view-cards" class="px-2.5 py-1 rounded-lg font-semibold text-slate-600 hover:text-slate-800 transition flex items-center gap-1 cursor-pointer">
+                                    <i class="fa-solid fa-grip"></i>
+                                    <span>Kartu</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 1. TAMPILAN TABEL JURNAL (DEFAULT UNTUK LAPTOP / DESKTOP) -->
+                    <div id="journal-view-table" class="overflow-x-auto border border-slate-200 rounded-2xl bg-white shadow-xs">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 uppercase tracking-wider text-[10px]">
+                                    <th class="py-3 px-3.5 w-32">Waktu & Tanggal</th>
+                                    <th class="py-3 px-3 w-36">Unit & Penulis</th>
+                                    <th class="py-3 px-4 min-w-[260px]">Aktivitas & Uraian Pekerjaan</th>
+                                    <th class="py-3 px-3.5 min-w-[150px]">Hasil / Output</th>
+                                    <th class="py-3 px-4 min-w-[220px]">Supervisi Pimpinan</th>
+                                    <th class="py-3 px-3 w-28 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="journal-table-tbody" class="divide-y divide-slate-100 text-slate-700">
+                                {% for j in journals %}
+                                <tr class="journal-row hover:bg-slate-50/80 transition" data-unit="{{ j.unit_code or 'ALL' }}">
+                                    <!-- Waktu & Tanggal -->
+                                    <td class="py-3 px-3.5 align-top">
+                                        <span class="font-bold text-slate-800 block">{{ j.date }}</span>
+                                        <span class="text-[11px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.2 rounded border border-slate-200 inline-block mt-0.5">
+                                            <i class="fa-regular fa-clock text-slate-400 mr-0.5"></i>{{ j.time }} WIB
+                                        </span>
+                                    </td>
+
+                                    <!-- Unit & Penulis -->
+                                    <td class="py-3 px-3 align-top">
+                                        {% if j.unit_code == 'IT' %}
+                                        <span class="px-2 py-0.5 text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200 rounded-md block w-fit">Unit IT</span>
+                                        {% elif j.unit_code == 'OB' %}
+                                        <span class="px-2 py-0.5 text-[10px] font-bold bg-teal-100 text-teal-800 border border-teal-200 rounded-md block w-fit">Unit OB</span>
+                                        {% elif j.unit_code == 'GARDENER' %}
+                                        <span class="px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200 rounded-md block w-fit">Unit Gardener</span>
+                                        {% elif j.unit_code == 'SECURITY' %}
+                                        <span class="px-2 py-0.5 text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200 rounded-md block w-fit">Unit Security</span>
+                                        {% else %}
+                                        <span class="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-md block w-fit">{{ j.category or 'Manajemen' }}</span>
+                                        {% endif %}
+                                        <span class="text-xs text-slate-700 font-semibold block mt-1">
+                                            <i class="fa-solid fa-user-pen text-slate-400 mr-1"></i>{{ j.author_nama or 'Mr Slam' }}
+                                        </span>
+                                    </td>
+
+                                    <!-- Aktivitas & Uraian Pekerjaan -->
+                                    <td class="py-3 px-4 align-top">
+                                        <h4 class="font-bold text-slate-800 text-xs mb-1">{{ j.title }}</h4>
+                                        <p class="text-slate-600 text-[11px] leading-relaxed whitespace-pre-line bg-slate-50/70 p-2 rounded-lg border border-slate-100">{{ j.description }}</p>
+                                    </td>
+
+                                    <!-- Hasil / Output -->
+                                    <td class="py-3 px-3.5 align-top">
+                                        {% if j.output %}
+                                        <div class="bg-emerald-50/70 border border-emerald-100 rounded-lg p-2 text-[11px] text-emerald-900 leading-snug">
+                                            <span class="font-bold text-emerald-800 block text-[10px] mb-0.5">
+                                                <i class="fa-solid fa-flag-checkered text-emerald-600 mr-1"></i>Output:
+                                            </span>
+                                            {{ j.output }}
+                                        </div>
+                                        {% else %}
+                                        <span class="text-slate-400 italic text-[11px]">-</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <!-- Supervisi Pimpinan -->
+                                    <td class="py-3 px-4 align-top">
+                                        {% if j.supervisor_feedback %}
+                                        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 text-[11px] space-y-1">
+                                            <div class="flex items-center justify-between text-emerald-800 font-bold text-[10px]">
+                                                <span><i class="fa-solid fa-user-shield text-emerald-600 mr-1"></i>{{ j.supervisor_feedback_by or 'Mr Slam' }}</span>
+                                                <span class="text-slate-400 font-normal">{{ j.supervisor_feedback_at or '' }}</span>
+                                            </div>
+                                            <p class="text-emerald-950 leading-relaxed">{{ j.supervisor_feedback }}</p>
+                                        </div>
+                                        {% else %}
+                                            {% if user_role == 'manager' %}
+                                            <button type="button" onclick="openSupervisorFeedbackModal('{{ j.id }}', '{{ j.title|replace("'", "\\'") }}', '{{ j.author_nama|replace("'", "\\'") }}', '')"
+                                                    class="px-2.5 py-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-600 hover:text-white border border-emerald-200 rounded-lg transition flex items-center gap-1 cursor-pointer">
+                                                <i class="fa-solid fa-comment-dots"></i> Beri Supervisi
+                                            </button>
+                                            {% else %}
+                                            <span class="text-slate-400 italic text-[11px]">Belum ada catatan</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+
+                                    <!-- Aksi -->
+                                    <td class="py-3 px-3 align-top text-center">
+                                        <div class="flex items-center justify-center space-x-1">
+                                            {% if user_role == 'manager' and j.supervisor_feedback %}
+                                            <button type="button" onclick="openSupervisorFeedbackModal('{{ j.id }}', '{{ j.title|replace("'", "\\'") }}', '{{ j.author_nama|replace("'", "\\'") }}', '{{ (j.supervisor_feedback or '')|replace("'", "\\'") }}')" 
+                                                    class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition cursor-pointer" 
+                                                    title="Edit Catatan Supervisi">
+                                                <i class="fa-solid fa-comment-dots"></i>
+                                            </button>
+                                            {% endif %}
+                                            {% if user_role == 'manager' or j.author_username == session.get('ops_username') %}
+                                            <button type="button" onclick="openEditJournalModal(this)"
+                                                    data-id="{{ j.id }}"
+                                                    data-title="{{ j.title }}"
+                                                    data-category="{{ j.category or '' }}"
+                                                    data-unit="{{ j.unit_code or 'ALL' }}"
+                                                    data-date="{{ j.date }}"
+                                                    data-time="{{ j.time }}"
+                                                    data-desc="{{ j.description or '' }}"
+                                                    data-output="{{ j.output or '' }}"
+                                                    class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition text-xs cursor-pointer" title="Edit Jurnal">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </button>
+                                            <form action="/delete_journal" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus jurnal ini?')">
+                                                <input type="hidden" name="journal_id" value="{{ j.id }}">
+                                                <button type="submit" class="p-1.5 text-slate-300 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition text-xs cursor-pointer" title="Hapus Jurnal">
+                                                    <i class="fa-solid fa-trash-can"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="p-8 text-center text-slate-400">
+                                        <i class="fa-solid fa-book-open text-3xl mb-2 text-slate-300"></i>
+                                        <p class="text-sm">Belum ada catatan jurnal kegiatan.</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 2. TAMPILAN KARTU JURNAL (ALTERNATIF / MOBILE MODE) -->
+                    <div class="space-y-4 hidden" id="journal-view-cards">
                         {% for j in journals %}
                         <div class="journal-card p-5 rounded-2xl border border-slate-200 bg-white hover:border-slate-300 transition space-y-3 shadow-xs" data-unit="{{ j.unit_code or 'ALL' }}">
                             <div class="flex items-start justify-between">
@@ -1340,15 +1497,15 @@ HTML_TEMPLATE = """
                                 </div>
                                 <div class="flex items-center space-x-2">
                                     {% if user_role == 'manager' %}
-                                    <button onclick="openSupervisorFeedbackModal('{{ j.id }}', '{{ j.title|replace("'", "\\'") }}', '{{ j.author_nama|replace("'", "\\'") }}', '{{ (j.supervisor_feedback or '')|replace("'", "\\'") }}')" 
-                                            class="px-2.5 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-600 hover:text-white border border-emerald-200 rounded-lg transition flex items-center gap-1" 
+                                    <button type="button" onclick="openSupervisorFeedbackModal('{{ j.id }}', '{{ j.title|replace("'", "\\'") }}', '{{ j.author_nama|replace("'", "\\'") }}', '{{ (j.supervisor_feedback or '')|replace("'", "\\'") }}')" 
+                                            class="px-2.5 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-600 hover:text-white border border-emerald-200 rounded-lg transition flex items-center gap-1 cursor-pointer" 
                                             title="Berikan Catatan Supervisi">
                                         <i class="fa-solid fa-comment-dots"></i>
                                         <span>{% if j.supervisor_feedback %}Edit Supervisi{% else %}Beri Supervisi{% endif %}</span>
                                     </button>
                                     {% endif %}
                                     {% if user_role == 'manager' or j.author_username == session.get('ops_username') %}
-                                    <button onclick="openEditJournalModal(this)"
+                                    <button type="button" onclick="openEditJournalModal(this)"
                                             data-id="{{ j.id }}"
                                             data-title="{{ j.title }}"
                                             data-category="{{ j.category or '' }}"
@@ -1357,12 +1514,12 @@ HTML_TEMPLATE = """
                                             data-time="{{ j.time }}"
                                             data-desc="{{ j.description or '' }}"
                                             data-output="{{ j.output or '' }}"
-                                            class="p-1.5 text-slate-400 hover:text-blue-600 transition text-xs" title="Edit Jurnal">
+                                            class="p-1.5 text-slate-400 hover:text-blue-600 transition text-xs cursor-pointer" title="Edit Jurnal">
                                         <i class="fa-solid fa-pen-to-square"></i>
                                     </button>
                                     <form action="/delete_journal" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus jurnal ini?')">
                                         <input type="hidden" name="journal_id" value="{{ j.id }}">
-                                        <button type="submit" class="p-1.5 text-slate-300 hover:text-rose-600 transition text-xs" title="Hapus Jurnal">
+                                        <button type="submit" class="p-1.5 text-slate-300 hover:text-rose-600 transition text-xs cursor-pointer" title="Hapus Jurnal">
                                             <i class="fa-solid fa-trash-can"></i>
                                         </button>
                                     </form>
@@ -6845,7 +7002,43 @@ HTML_TEMPLATE = """
             });
         }
 
+        let currentJournalUnit = 'ALL';
+        let currentJournalView = 'table';
+
+        function switchJournalView(mode) {
+            currentJournalView = mode;
+            const tableContainer = document.getElementById('journal-view-table');
+            const cardsContainer = document.getElementById('journal-view-cards');
+            const btnTable = document.getElementById('btn-journal-view-table');
+            const btnCards = document.getElementById('btn-journal-view-cards');
+
+            if (mode === 'table') {
+                if (tableContainer) tableContainer.classList.remove('hidden');
+                if (cardsContainer) cardsContainer.classList.add('hidden');
+                if (btnTable) {
+                    btnTable.className = "px-2.5 py-1 rounded-lg font-bold text-slate-800 bg-white shadow-2xs transition flex items-center gap-1 cursor-pointer";
+                    btnTable.querySelector('i').className = "fa-solid fa-table-list text-emerald-600";
+                }
+                if (btnCards) {
+                    btnCards.className = "px-2.5 py-1 rounded-lg font-semibold text-slate-600 hover:text-slate-800 transition flex items-center gap-1 cursor-pointer";
+                    btnCards.querySelector('i').className = "fa-solid fa-grip text-slate-500";
+                }
+            } else {
+                if (tableContainer) tableContainer.classList.add('hidden');
+                if (cardsContainer) cardsContainer.classList.remove('hidden');
+                if (btnCards) {
+                    btnCards.className = "px-2.5 py-1 rounded-lg font-bold text-slate-800 bg-white shadow-2xs transition flex items-center gap-1 cursor-pointer";
+                    btnCards.querySelector('i').className = "fa-solid fa-grip text-emerald-600";
+                }
+                if (btnTable) {
+                    btnTable.className = "px-2.5 py-1 rounded-lg font-semibold text-slate-600 hover:text-slate-800 transition flex items-center gap-1 cursor-pointer";
+                    btnTable.querySelector('i').className = "fa-solid fa-table-list text-slate-500";
+                }
+            }
+        }
+
         function filterJournalsByUnit(unit) {
+            currentJournalUnit = unit;
             const btns = document.querySelectorAll('.journal-filter-btn');
             btns.forEach(b => {
                 if (b.getAttribute('data-unit') === unit) {
@@ -6857,10 +7050,41 @@ HTML_TEMPLATE = """
                 }
             });
 
+            applyJournalFilters();
+        }
+
+        function searchJournals() {
+            applyJournalFilters();
+        }
+
+        function applyJournalFilters() {
+            const query = (document.getElementById('journal-search-input')?.value || '').toLowerCase().trim();
+            const unit = currentJournalUnit;
+
+            // 1. Filter Tabel Rows
+            const rows = document.querySelectorAll('.journal-row');
+            rows.forEach(r => {
+                const rUnit = r.getAttribute('data-unit') || '';
+                const text = r.innerText.toLowerCase();
+                const unitMatch = (unit === 'ALL' || rUnit === unit || (unit === 'ALL' && rUnit === 'ALL'));
+                const queryMatch = !query || text.includes(query);
+
+                if (unitMatch && queryMatch) {
+                    r.style.display = '';
+                } else {
+                    r.style.display = 'none';
+                }
+            });
+
+            // 2. Filter Cards
             const cards = document.querySelectorAll('.journal-card');
             cards.forEach(c => {
-                const cardUnit = c.getAttribute('data-unit') || '';
-                if (unit === 'ALL' || cardUnit === unit || (unit === 'ALL' && cardUnit === 'ALL')) {
+                const cUnit = c.getAttribute('data-unit') || '';
+                const text = c.innerText.toLowerCase();
+                const unitMatch = (unit === 'ALL' || cUnit === unit || (unit === 'ALL' && cUnit === 'ALL'));
+                const queryMatch = !query || text.includes(query);
+
+                if (unitMatch && queryMatch) {
                     c.style.display = '';
                 } else {
                     c.style.display = 'none';
