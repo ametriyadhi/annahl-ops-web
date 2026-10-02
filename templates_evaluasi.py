@@ -17,7 +17,7 @@ TAB_EVALUASI_HTML = """
                     <span id="eval-header-period-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800 uppercase tracking-wider">Periode: Memuat...</span>
                 </div>
                 <h2 class="text-base sm:text-xl font-bold text-slate-800 flex items-center gap-2 mt-1">
-                    <i class="fa-solid fa-chart-user text-indigo-600"></i>
+                    <i class="fa-solid fa-clipboard-user text-indigo-600"></i>
                     Rapor & Evaluasi Kedisiplinan Personil (OB & Gardener)
                 </h2>
                 <p class="text-xs text-slate-500 mt-0.5">Penilaian kinerja adil berbasis kewajiban sesi standby unit. Deteksi mangkir pos (alpha/tidak checkin), keterlambatan jam tiba, dan radius geofence.</p>

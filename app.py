@@ -429,7 +429,7 @@ HTML_TEMPLATE = """
 
             {% if user_role in ['manager', 'koordinator_ob', 'koordinator_gardener', 'pic_sarpras'] %}
             <button onclick="showTab('tab-evaluasi')" id="btn-tab-evaluasi" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fa-solid fa-chart-user text-base w-5 shrink-0 text-center text-indigo-400"></i>
+                <i class="fa-solid fa-clipboard-user text-base w-5 shrink-0 text-center text-indigo-400"></i>
                 <span class="text-left flex-1">Rapor & Evaluasi Personil</span>
             </button>
             {% endif %}
