@@ -367,131 +367,151 @@ HTML_TEMPLATE = """
 
         <!-- Navigation Links -->
         <div class="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-dashboard' in user_permissions or 'tab-tasks' in user_permissions or 'tab-todo' in user_permissions or 'tab-journal' in user_permissions %}
             <div class="px-3 text-[10px] font-bold tracking-wider text-slate-500 uppercase mb-2">Operasional & Koordinator</div>
 
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-dashboard' in user_permissions %}
             <button onclick="showTab('tab-dashboard')" id="btn-tab-dashboard" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-white bg-emerald-600 transition">
                 <i class="fa-solid fa-gauge text-base w-5 shrink-0 text-center"></i>
                 <span class="text-left flex-1">Dashboard Utama</span>
             </button>
+            {% endif %}
 
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-tasks' in user_permissions %}
             <button onclick="showTab('tab-tasks')" id="btn-tab-tasks" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-clipboard-list text-base w-5 shrink-0 text-center"></i>
                 <span class="text-left flex-1">Tiket & Pendelegasian</span>
             </button>
+            {% endif %}
 
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-todo' in user_permissions %}
             <button onclick="showTab('tab-todo')" id="btn-tab-todo" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-square-check text-base w-5 shrink-0 text-center"></i>
                 <span class="text-left flex-1">To-Do List Unit</span>
             </button>
+            {% endif %}
 
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-journal' in user_permissions %}
             <button onclick="showTab('tab-journal')" id="btn-tab-journal" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-book text-base w-5 shrink-0 text-center"></i>
                 <span class="text-left flex-1">Jurnal Kegiatan Harian</span>
             </button>
+            {% endif %}
+            {% endif %}
 
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-standby' in user_permissions or 'tab-checklist' in user_permissions or 'tab-mutabaah' in user_permissions or 'tab-kebersihan' in user_permissions or 'tab-pengadaan' in user_permissions or 'tab-keuangan' in user_permissions or 'tab-keuangan-ecopark' in user_permissions or 'tab-pemeliharaan' in user_permissions or 'tab-evaluasi' in user_permissions or 'tab-sapaais' in user_permissions or 'tab-mutubaah' in user_permissions %}
             <div class="px-3 text-[10px] font-bold tracking-wider text-slate-500 uppercase mt-4 mb-2">Log Lapangan & Sarpras</div>
 
-            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-standby' in user_permissions or user_role in ['koordinator_ob', 'koordinator_gardener', 'koordinator_security'] %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-standby' in user_permissions %}
             <button onclick="showTab('tab-standby')" id="btn-tab-standby" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-satellite-dish text-base w-5 shrink-0 text-center text-sky-400"></i>
                 <span class="text-left flex-1">Kesiagaan Pos (Standby)</span>
             </button>
             {% endif %}
 
-            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-checklist' in user_permissions or user_role in ['koordinator_ob', 'koordinator_gardener', 'pic_sarpras'] %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-checklist' in user_permissions %}
             <button onclick="showTab('tab-checklist')" id="btn-tab-checklist" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-clipboard-check text-base w-5 shrink-0 text-center text-emerald-400"></i>
                 <span class="text-left flex-1">Checklist OB & Green Ops</span>
             </button>
             {% endif %}
 
-            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-mutabaah' in user_permissions or user_role in ['koordinator_ob', 'koordinator_security'] %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-mutabaah' in user_permissions %}
             <button onclick="showTab('tab-mutabaah')" id="btn-tab-mutabaah" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-hands-praying text-base w-5 shrink-0 text-center"></i>
                 <span class="text-left flex-1">Log Mutabaah WA</span>
             </button>
             {% endif %}
 
-            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-kebersihan' in user_permissions or user_role in ['koordinator_ob', 'koordinator_gardener', 'pic_sarpras'] %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-kebersihan' in user_permissions %}
             <button onclick="showTab('tab-kebersihan')" id="btn-tab-kebersihan" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-broom text-base w-5 shrink-0 text-center"></i>
                 <span class="text-left flex-1">Log Kebersihan & Foto</span>
             </button>
             {% endif %}
 
-            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-pengadaan' in user_permissions or user_role in ['pic_pengadaan', 'pic_sarpras'] %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-pengadaan' in user_permissions %}
             <button onclick="showTab('tab-pengadaan')" id="btn-tab-pengadaan" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-cart-shopping text-base w-5 shrink-0 text-center text-amber-400"></i>
                 <span class="text-left flex-1">Pengadaan Barang & Sarpras</span>
             </button>
             {% endif %}
 
-            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-keuangan' in user_permissions or user_role in ['pic_pengadaan', 'pic_sarpras'] %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-keuangan' in user_permissions %}
             <button onclick="showTab('tab-keuangan')" id="btn-tab-keuangan" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-file-invoice-dollar text-base w-5 shrink-0 text-center text-emerald-400"></i>
                 <span class="text-left flex-1">Keuangan & FKP GA</span>
             </button>
             {% endif %}
 
-            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-keuangan-ecopark' in user_permissions or user_role in ['koordinator_gardener', 'pic_pengadaan'] %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-keuangan-ecopark' in user_permissions %}
             <button onclick="showTab('tab-keuangan-ecopark')" id="btn-tab-keuangan-ecopark" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-tree text-base w-5 shrink-0 text-center text-emerald-400"></i>
                 <span class="text-left flex-1">Keuangan Ecopark</span>
             </button>
             {% endif %}
 
-            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-pemeliharaan' in user_permissions or user_role in ['koordinator_ob', 'koordinator_gardener', 'pic_sarpras'] %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-pemeliharaan' in user_permissions %}
             <button onclick="showTab('tab-pemeliharaan')" id="btn-tab-pemeliharaan" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-screwdriver-wrench text-base w-5 shrink-0 text-center text-teal-400"></i>
                 <span class="text-left flex-1">Pemeliharaan Sarpras (PM)</span>
             </button>
             {% endif %}
 
-            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-evaluasi' in user_permissions or user_role in ['koordinator_ob', 'koordinator_gardener', 'pic_sarpras'] %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-evaluasi' in user_permissions %}
             <button onclick="showTab('tab-evaluasi')" id="btn-tab-evaluasi" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-clipboard-user text-base w-5 shrink-0 text-center text-indigo-400"></i>
                 <span class="text-left flex-1">Rapor & Evaluasi Personil</span>
             </button>
             {% endif %}
 
-            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-sapaais' in user_permissions or user_role in ['koordinator_it', 'pic_sarpras', 'koordinator_ob'] %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-sapaais' in user_permissions %}
             <button onclick="showTab('tab-sapaais')" id="btn-tab-sapaais" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-bullhorn text-base w-5 shrink-0 text-center text-emerald-400"></i>
                 <span class="text-left flex-1">Sapa Ais / LaporPak</span>
             </button>
             {% endif %}
 
-            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-mutubaah' in user_permissions or user_role in ['koordinator_it', 'pic_sarpras', 'koordinator_ob', 'koordinator_gardener', 'koordinator_security', 'pic_pengadaan'] %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-mutubaah' in user_permissions %}
             <button onclick="showTab('tab-mutubaah')" id="btn-tab-mutubaah" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-book-open text-base w-5 shrink-0 text-center text-teal-400"></i>
                 <span class="text-left flex-1">Mutabaah Diri Civitas</span>
             </button>
             {% endif %}
+            {% endif %}
 
-            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-server' in user_permissions or 'tab-kuma' in user_permissions or user_role in ['koordinator_it'] %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-server' in user_permissions or 'tab-kuma' in user_permissions %}
             <div class="px-3 text-[10px] font-bold tracking-wider text-slate-500 uppercase mt-4 mb-2">Monitor Server</div>
 
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-server' in user_permissions %}
             <button onclick="showTab('tab-server')" id="btn-tab-server" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-server text-base w-5 shrink-0 text-center text-blue-400"></i>
                 <span class="text-left flex-1">Server</span>
             </button>
+            {% endif %}
 
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-kuma' in user_permissions %}
             <button onclick="showTab('tab-kuma')" id="btn-tab-kuma" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-tower-broadcast text-base w-5 shrink-0 text-center text-rose-400"></i>
                 <span class="text-left flex-1">Uptime Kuma Monitor</span>
             </button>
             {% endif %}
+            {% endif %}
 
             {% if user_role == 'manager' or 'all' in user_permissions or 'tab-analytics' in user_permissions or 'tab-report' in user_permissions %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-analytics' in user_permissions %}
             <button onclick="showTab('tab-analytics')" id="btn-tab-analytics" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-chart-pie text-base w-5 shrink-0 text-center"></i>
                 <span class="text-left flex-1">Grafik & Analitik Tren</span>
             </button>
+            {% endif %}
 
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-report' in user_permissions %}
             <button onclick="showTab('tab-report')" id="btn-tab-report" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-print text-base w-5 shrink-0 text-center"></i>
                 <span class="text-left flex-1">Cetak Laporan</span>
             </button>
+            {% endif %}
             {% endif %}
 
             {% if user_role == 'manager' or 'all' in user_permissions or 'manage_users' in user_permissions or 'manage_roles' in user_permissions or 'tab-users' in user_permissions or 'tab-roles' in user_permissions %}
@@ -500,15 +520,19 @@ HTML_TEMPLATE = """
                 <span class="text-[9px] px-1.5 py-0.2 bg-emerald-950 border border-emerald-700 text-emerald-300 rounded">Admin</span>
             </div>
 
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-users' in user_permissions or 'manage_users' in user_permissions %}
             <button onclick="showTab('tab-users')" id="btn-tab-users" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-users-gear text-base w-5 shrink-0 text-center text-emerald-400"></i>
                 <span class="text-left flex-1">Manajemen User</span>
             </button>
+            {% endif %}
 
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-roles' in user_permissions or 'manage_roles' in user_permissions %}
             <button onclick="showTab('tab-roles')" id="btn-tab-roles" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-shield-halved text-base w-5 shrink-0 text-center text-teal-400"></i>
                 <span class="text-left flex-1">Pengaturan Role Akses</span>
             </button>
+            {% endif %}
 
             <a href="/bot-qr" target="_blank" class="w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition group">
                 <i class="fa-brands fa-whatsapp text-base w-5 shrink-0 text-center text-emerald-400 group-hover:scale-110 transition"></i>
@@ -7470,8 +7494,19 @@ HTML_TEMPLATE = """
             const tabParam = urlParams.get('tab');
             const hashParam = window.location.hash.replace('#', '');
             const targetTab = tabParam || hashParam;
-            if (targetTab && document.getElementById(targetTab)) {
+            if (targetTab && document.getElementById(targetTab) && document.getElementById('btn-' + targetTab)) {
                 showTab(targetTab);
+            } else {
+                // Jika tab aktif tidak tersedia (misal role staf tidak memiliki hak ke dashboard utama),
+                // otomatis arahkan ke tab pertama yang diizinkan untuk peran pengguna ini
+                const currentDashboardBtn = document.getElementById('btn-tab-dashboard');
+                if (!currentDashboardBtn) {
+                    const firstPermittedBtn = document.querySelector('.tab-btn');
+                    if (firstPermittedBtn) {
+                        const firstTabId = firstPermittedBtn.id.replace('btn-', '');
+                        showTab(firstTabId);
+                    }
+                }
             }
         });
 
@@ -9334,20 +9369,21 @@ def index():
     user_role_name = session.get('ops_role_name', 'IT Manager & Kabag Umum')
     user_unit = session.get('ops_unit_code', 'ALL')
     user_sub_scope = session.get('ops_sub_scope', '')
+    user_roles = session.get('ops_roles')
+    if not user_roles:
+        from ops_auth import parse_roles_list
+        user_roles = parse_roles_list(session.get('ops_role_code', 'staff'))
 
-    # Load fresh permissions from DB for the role
+    # Load fresh permissions from DB for ALL roles of this user
     try:
+        from ops_auth import get_permissions_for_roles
         con_auth = get_ops_db()
-        role_row = con_auth.execute('SELECT permissions, role_name FROM ops_roles WHERE role_code = ?', (user_role,)).fetchone()
+        user_permissions, role_names = get_permissions_for_roles(user_roles, con_auth)
         con_auth.close()
-        if role_row and role_row['permissions']:
-            user_permissions = json.loads(role_row['permissions'])
-            session['ops_permissions'] = user_permissions
-            if role_row['role_name']:
-                user_role_name = role_row['role_name']
-                session['ops_role_name'] = user_role_name
-        else:
-            user_permissions = session.get('ops_permissions', ['all'])
+        session['ops_permissions'] = user_permissions
+        if role_names:
+            user_role_name = ' + '.join(role_names)
+            session['ops_role_name'] = user_role_name
     except Exception:
         user_permissions = session.get('ops_permissions', ['all'])
 
