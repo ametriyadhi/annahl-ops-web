@@ -181,60 +181,60 @@ TAB_KEUANGAN_ECOPARK_HTML = """
     </div>
 
     <!-- 4. CARD ANALIS KEUANGAN AIS (AI FINANCIAL ANALYST EXECUTIVE INSIGHTS) -->
-    <div class="bg-gradient-to-br from-slate-900 via-slate-850 to-emerald-950 rounded-2xl p-5 text-white shadow-md border border-emerald-900/40">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-white/10 pb-3.5">
+    <div class="bg-white rounded-2xl shadow-xs border border-emerald-200/80 p-4 sm:p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400">
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shadow-2xs shrink-0">
                     <i class="fa-solid fa-brain-circuit text-lg"></i>
                 </div>
                 <div>
-                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                    <h3 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
                         Diagnosa & Analisis Keuangan Eksekutif (Ais Finance Intelligence)
                     </h3>
-                    <p class="text-[11px] text-slate-300">Penilaian otomatis kesehatan arus kas, struktur profitabilitas, dan pusat biaya Ecopark.</p>
+                    <p class="text-xs text-slate-500 font-medium mt-0.5">Penilaian otomatis kesehatan arus kas, struktur profitabilitas, dan pusat biaya Ecopark.</p>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
-                <span class="text-xs text-slate-300">Status Finansial:</span>
-                <span id="ai-eco-status-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            <div class="flex items-center gap-2 self-start sm:self-auto">
+                <span class="text-xs font-semibold text-slate-500">Status Finansial:</span>
+                <span id="ai-eco-status-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5 shadow-2xs">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     <span id="ai-eco-status-text">SURPLUS SEHAT</span>
                 </span>
             </div>
         </div>
 
-        <!-- 4 Mini Financial Ratios -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-3.5 pb-3">
-            <div class="bg-white/5 rounded-xl p-3 border border-white/5">
-                <div class="text-[11px] text-slate-400 font-medium">Margin Surplus (Net Margin)</div>
-                <div id="ai-eco-margin" class="text-lg font-bold text-emerald-400 mt-0.5">9.2%</div>
-                <div class="text-[10px] text-slate-400">Persentase kas tersisa dari omset</div>
+        <!-- 4 Mini Financial Ratios Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="bg-emerald-50/60 rounded-xl p-3.5 border border-emerald-200/70">
+                <div class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Margin Surplus (Net)</div>
+                <div id="ai-eco-margin" class="text-xl sm:text-2xl font-black text-emerald-900 mt-1">9.2%</div>
+                <div class="text-[11px] text-emerald-700 font-medium mt-0.5">Persentase kas tersisa dari omset</div>
             </div>
-            <div class="bg-white/5 rounded-xl p-3 border border-white/5">
-                <div class="text-[11px] text-slate-400 font-medium">Operating Expense Ratio</div>
-                <div id="ai-eco-oer" class="text-lg font-bold text-amber-400 mt-0.5">90.8%</div>
-                <div class="text-[10px] text-slate-400">Proporsi belanja thd omset</div>
+            <div class="bg-amber-50/60 rounded-xl p-3.5 border border-amber-200/70">
+                <div class="text-[11px] font-bold text-amber-800 uppercase tracking-wider">Operating Expense Ratio</div>
+                <div id="ai-eco-oer" class="text-xl sm:text-2xl font-black text-amber-900 mt-1">90.8%</div>
+                <div class="text-[11px] text-amber-700 font-medium mt-0.5">Proporsi belanja thd omset</div>
             </div>
-            <div class="bg-white/5 rounded-xl p-3 border border-white/5">
-                <div class="text-[11px] text-slate-400 font-medium">Kontributor Omset Utama</div>
-                <div id="ai-eco-top-rev" class="text-sm font-bold text-sky-300 truncate mt-1">Sewa Fasilitas (63.8%)</div>
-                <div class="text-[10px] text-slate-400">Kolam Aquatic & Futsal</div>
+            <div class="bg-blue-50/60 rounded-xl p-3.5 border border-blue-200/70">
+                <div class="text-[11px] font-bold text-blue-800 uppercase tracking-wider">Kontributor Omset Utama</div>
+                <div id="ai-eco-top-rev" class="text-xs sm:text-sm font-extrabold text-slate-900 truncate mt-1.5" title="Sewa Fasilitas (63.8%)">Sewa Fasilitas (63.8%)</div>
+                <div class="text-[11px] text-blue-700 font-semibold mt-0.5 truncate">Kolam Aquatic & Futsal</div>
             </div>
-            <div class="bg-white/5 rounded-xl p-3 border border-white/5">
-                <div class="text-[11px] text-slate-400 font-medium">Pusat Beban Belanja Terbesar</div>
-                <div id="ai-eco-top-cost" class="text-sm font-bold text-rose-300 truncate mt-1">PEMELIHARAAN (61.5%)</div>
-                <div class="text-[10px] text-slate-400">Fasilitas, Sarpras & BBM</div>
+            <div class="bg-rose-50/60 rounded-xl p-3.5 border border-rose-200/70">
+                <div class="text-[11px] font-bold text-rose-800 uppercase tracking-wider">Pusat Beban Belanja</div>
+                <div id="ai-eco-top-cost" class="text-xs sm:text-sm font-extrabold text-rose-900 truncate mt-1.5" title="PEMELIHARAAN (61.5%)">PEMELIHARAAN (61.5%)</div>
+                <div class="text-[11px] text-rose-700 font-semibold mt-0.5 truncate">Fasilitas, Sarpras & BBM</div>
             </div>
         </div>
 
         <!-- Actionable Insights List -->
-        <div class="bg-white/5 rounded-xl p-3.5 border border-white/5 mt-1">
-            <div class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <i class="fa-solid fa-lightbulb"></i>
-                <span>Catatan Analis Ais untuk Manajemen (Mr Slam & Tim Ecopark):</span>
+        <div class="bg-slate-50/90 rounded-xl p-4 border border-slate-200/80">
+            <div class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2.5 flex items-center gap-2">
+                <i class="fa-solid fa-lightbulb text-amber-500"></i>
+                <span>Catatan & Rekomendasi Analis Ais untuk Manajemen (Mr Slam & Tim):</span>
             </div>
-            <ul id="ai-eco-insights-list" class="space-y-1.5 text-xs text-slate-200">
-                <li class="flex items-start gap-2"><i class="fa-solid fa-circle-check text-emerald-400 mt-1 text-[10px]"></i><span>Memuat analisis eksekutif...</span></li>
+            <ul id="ai-eco-insights-list" class="space-y-2 text-xs">
+                <li class="flex items-start gap-2.5 text-slate-700 font-medium"><i class="fa-solid fa-circle-check text-emerald-600 mt-0.5 shrink-0 text-sm"></i><span>Memuat analisis eksekutif...</span></li>
             </ul>
         </div>
     </div>
@@ -852,11 +852,11 @@ JS_KEUANGAN_ECOPARK_SCRIPTS = """
         if (statusBadge && statusText) {
             statusText.innerText = ai.status || 'SURPLUS SEHAT';
             if (ai.status_color === 'rose') {
-                statusBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center gap-1.5';
+                statusBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 flex items-center gap-1.5 shadow-2xs';
             } else if (ai.status_color === 'amber') {
-                statusBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1.5';
+                statusBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1.5 shadow-2xs';
             } else {
-                statusBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5';
+                statusBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5 shadow-2xs';
             }
         }
 
@@ -867,18 +867,22 @@ JS_KEUANGAN_ECOPARK_SCRIPTS = """
             document.getElementById('ai-eco-oer').innerText = (ai.burn_ratio || 0) + '%';
         }
         if (document.getElementById('ai-eco-top-rev')) {
-            document.getElementById('ai-eco-top-rev').innerText = ai.top_revenue_driver || 'Sewa Fasilitas';
+            const revEl = document.getElementById('ai-eco-top-rev');
+            revEl.innerText = ai.top_revenue_driver || 'Sewa Fasilitas';
+            revEl.title = ai.top_revenue_driver || 'Sewa Fasilitas';
         }
         if (document.getElementById('ai-eco-top-cost')) {
-            document.getElementById('ai-eco-top-cost').innerText = ai.top_cost_center || 'PEMELIHARAAN';
+            const costEl = document.getElementById('ai-eco-top-cost');
+            costEl.innerText = ai.top_cost_center || 'PEMELIHARAAN';
+            costEl.title = ai.top_cost_center || 'PEMELIHARAAN';
         }
 
         const insightsList = document.getElementById('ai-eco-insights-list');
         if (insightsList && ai.insights) {
             insightsList.innerHTML = ai.insights.map(txt => `
-                <li class="flex items-start gap-2">
-                    <i class="fa-solid fa-circle-check text-emerald-400 mt-1 text-[10px]"></i>
-                    <span>${txt}</span>
+                <li class="flex items-start gap-2.5 text-xs text-slate-800 font-medium">
+                    <i class="fa-solid fa-circle-check text-emerald-600 mt-0.5 shrink-0 text-sm"></i>
+                    <span class="leading-relaxed">${txt}</span>
                 </li>
             `).join('');
         }
