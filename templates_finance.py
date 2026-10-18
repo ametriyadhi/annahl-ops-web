@@ -174,8 +174,8 @@ TAB_KEUANGAN_HTML = """
             </div>
             <div class="bg-amber-50/60 rounded-xl p-3.5 border border-amber-200/70">
                 <div class="text-[11px] font-bold text-amber-800 uppercase tracking-wider">Penerima Transaksi Terbesar</div>
-                <div id="ai-ga-top-vendor" class="text-xs sm:text-sm font-extrabold text-amber-900 truncate mt-1.5" title="Devyzar Syam">DEVYZAR SYAM (Rp 10.0M)</div>
-                <div class="text-[11px] text-amber-700 font-semibold mt-0.5 truncate">Penambahan SPC Ruang UKS SD</div>
+                <div id="ai-ga-top-vendor" class="text-xs sm:text-sm font-extrabold text-amber-900 truncate mt-1.5" title="Memuat...">Memuat...</div>
+                <div id="ai-ga-top-vendor-desc" class="text-[11px] text-amber-700 font-semibold mt-0.5 truncate" title="Memuat uraian...">Memuat...</div>
             </div>
             <div class="bg-purple-50/60 rounded-xl p-3.5 border border-purple-200/70">
                 <div class="text-[11px] font-bold text-purple-800 uppercase tracking-wider">Arsip Bukti & Keamanan</div>
@@ -733,8 +733,13 @@ JS_KEUANGAN_SCRIPTS = """
         }
         if (document.getElementById('ai-ga-top-vendor')) {
             const vendorEl = document.getElementById('ai-ga-top-vendor');
-            vendorEl.innerText = ai.top_vendor || 'DEVYZAR SYAM';
-            vendorEl.title = ai.top_vendor || 'DEVYZAR SYAM';
+            vendorEl.innerText = ai.top_vendor || '-';
+            vendorEl.title = ai.top_vendor || '-';
+        }
+        if (document.getElementById('ai-ga-top-vendor-desc')) {
+            const vendorDescEl = document.getElementById('ai-ga-top-vendor-desc');
+            vendorDescEl.innerText = ai.top_vendor_desc || 'Akumulasi transaksi vendor';
+            vendorDescEl.title = ai.top_vendor_desc || '';
         }
 
         const insightsList = document.getElementById('ai-ga-insights-list');

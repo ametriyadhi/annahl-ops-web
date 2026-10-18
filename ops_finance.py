@@ -566,7 +566,7 @@ def api_get_ga_expense_stats():
         # 3. Diagnosa Analis Keuangan Eksekutif untuk GA
         highest_cat = max(category_summary, key=lambda x: x['realisasi']) if category_summary else None
         top_vendor_row = conn.execute(f"""
-            SELECT vendor_name, SUM(amount) as total
+            SELECT vendor_name, SUM(amount) as total, COUNT(*) as cnt
             FROM ops_ga_expenses
             WHERE 1=1 {time_and} AND vendor_name != '-' AND vendor_name != '' AND amount > 0
             GROUP BY vendor_name
@@ -574,13 +574,32 @@ def api_get_ga_expense_stats():
         """, params).fetchone()
         top_vendor_name = top_vendor_row['vendor_name'] if top_vendor_row else "N/A"
         top_vendor_val = top_vendor_row['total'] if top_vendor_row else 0.0
+        top_vendor_desc = "Akumulasi operasional GA"
+
+        if top_vendor_row:
+            cnt = top_vendor_row['cnt'] or 1
+            # Ambil transaksi terbesar untuk vendor ini dalam periode terfilter
+            top_trx_row = conn.execute(f"""
+                SELECT description, unit_target, amount
+                FROM ops_ga_expenses
+                WHERE vendor_name = ? {time_and}
+                ORDER BY amount DESC LIMIT 1
+            """, [top_vendor_name] + params).fetchone()
+
+            if top_trx_row:
+                desc = top_trx_row['description'] or ''
+                unit = top_trx_row['unit_target'] or ''
+                if cnt > 1:
+                    top_vendor_desc = f"{desc} ({cnt} trx)"
+                else:
+                    top_vendor_desc = f"{desc} ({unit})" if unit else desc
 
         key_insights = []
         key_insights.append(f"Total belanja tercatat: Rp {grand_total:,.0f} (Serapan {overall_pct}% dari plafon tahunan Rp {grand_budget:,.0f})".replace(',', '.'))
         if highest_cat and highest_cat['realisasi'] > 0:
             key_insights.append(f"Pusat beban belanja terbesar: {highest_cat['category']} menyerap Rp {highest_cat['realisasi']:,.0f} ({highest_cat['persentase']}% dari plafon pos)".replace(',', '.'))
         if top_vendor_row and top_vendor_val > 0:
-            key_insights.append(f"Penerima / Vendor transaksi terbesar: {top_vendor_name} senilai Rp {top_vendor_val:,.0f}".replace(',', '.'))
+            key_insights.append(f"Penerima / Vendor transaksi terbesar: {top_vendor_name} senilai Rp {top_vendor_val:,.0f} ({top_vendor_desc})".replace(',', '.'))
         key_insights.append("Penyimpanan bukti nota 100% dialirkan ke Google Drive folder Keuangan_GA (Server Disk aman 0 Byte).")
 
         ai_analysis = {
@@ -589,6 +608,9 @@ def api_get_ga_expense_stats():
             'overall_pct': overall_pct,
             'top_cost_center': f"{highest_cat['category']} ({highest_cat['persentase']}%)" if highest_cat else "N/A",
             'top_vendor': f"{top_vendor_name} (Rp {top_vendor_val:,.0f})".replace(',', '.') if top_vendor_row else "N/A",
+            'top_vendor_name': top_vendor_name,
+            'top_vendor_val': top_vendor_val,
+            'top_vendor_desc': top_vendor_desc,
             'insights': key_insights
         }
 
