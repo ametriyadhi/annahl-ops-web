@@ -31,6 +31,10 @@ TAB_KEUANGAN_ECOPARK_HTML = """
                     <i class="fa-solid fa-arrows-rotate"></i>
                     <span>Refresh</span>
                 </button>
+                <a href="https://wa.me/6285139373029" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-semibold transition cursor-pointer shadow-2xs" title="Buka Chat WhatsApp Bot An Nahl Ops">
+                    <i class="fa-brands fa-whatsapp text-emerald-600 text-sm"></i>
+                    <span>Japri Bot: 0851-3937-3029</span>
+                </a>
                 <button type="button" onclick="openCreateEcoModal('EXPENSE')" class="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
                     <i class="fa-solid fa-receipt"></i>
                     <span>+ Catat Belanja</span>
@@ -653,7 +657,7 @@ TAB_KEUANGAN_ECOPARK_HTML = """
                 </div>
                 <div>
                     <h3 class="font-bold text-sm sm:text-base">Panduan Format WhatsApp Tim Ecopark</h3>
-                    <p class="text-[11px] text-emerald-100">Kirim format ini ke bot WA An Nahl Ops</p>
+                    <p class="text-[11px] text-emerald-100">Kirim format ini ke bot WA An Nahl Ops (0851-3937-3029)</p>
                 </div>
             </div>
             <button type="button" onclick="toggleModal('modal-eco-format')" class="text-white/80 hover:text-white cursor-pointer text-lg">
@@ -667,7 +671,7 @@ TAB_KEUANGAN_ECOPARK_HTML = """
                     <i class="fa-solid fa-bolt text-emerald-600"></i>
                     <span>Praktis dengan Foto Struk / Screenshot Transfer:</span>
                 </div>
-                <p class="text-slate-600 text-[11px]">Cukup jepret foto struk belanja / bukti transfer m-banking, lalu kirim ke nomor bot WhatsApp dengan caption <b>#belanja_ecopark</b> atau <b>#pemasukan_ecopark</b>. Vision AI akan otomatis mengurai detailnya!</p>
+                <p class="text-slate-600 text-[11px]">Cukup jepret foto struk belanja / bukti transfer m-banking, lalu kirim ke nomor bot WhatsApp (<b>0851-3937-3029</b>) dengan caption <b>#belanja_ecopark</b> atau <b>#pemasukan_ecopark</b>. Vision AI akan otomatis mengurai detailnya!</p>
             </div>
 
             <div class="space-y-1.5">

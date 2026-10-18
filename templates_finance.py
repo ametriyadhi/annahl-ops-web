@@ -30,10 +30,10 @@ TAB_KEUANGAN_HTML = """
                     <i class="fa-solid fa-arrows-rotate"></i>
                     <span>Refresh</span>
                 </button>
-                <div class="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-semibold">
-                    <i class="fa-brands fa-whatsapp text-emerald-500 text-sm"></i>
-                    <span>Japri Bot: 0858-8229-6329</span>
-                </div>
+                <a href="https://wa.me/6285139373029" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-semibold transition cursor-pointer shadow-2xs" title="Buka Chat WhatsApp Bot An Nahl Ops">
+                    <i class="fa-brands fa-whatsapp text-emerald-600 text-sm"></i>
+                    <span>Japri Bot: 0851-3937-3029</span>
+                </a>
                 <button type="button" onclick="exportGAExcel()" class="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Unduh Laporan Keuangan GA Format Microsoft Excel (.xlsx)">
                     <i class="fa-solid fa-file-excel text-emerald-600"></i>
                     <span>Ekspor Excel (.xlsx)</span>
