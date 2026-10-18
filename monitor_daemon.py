@@ -119,7 +119,7 @@ def check_target(item):
 
     return is_up, round(latency_ms, 2), error_msg
 
-def broadcast_alert(host_name, target, category, is_down, details="", latency_ms=0):
+def broadcast_alert(host_name, target, category, is_down, details="", latency_ms=0.0):
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     wa_targets = get_wa_targets()
 
@@ -185,42 +185,69 @@ def main_loop():
                 up_count = item.get("up_count", 0)
                 alerted_down = item.get("alerted_down", False)
 
+                # Deteksi tipe perangkat: Workstation/Laptop vs Server/Infrastruktur
+                category = item.get("category", "Server")
+                cat_lower = str(category).lower()
+                name_lower = str(item.get("name", "")).lower()
+                is_workstation = (
+                    "workstation" in cat_lower or 
+                    "laptop" in cat_lower or 
+                    "client" in cat_lower or 
+                    "pc" in cat_lower or 
+                    "laptop" in name_lower
+                )
+
+                # Ambang batas debounce:
+                # - Server/CCTV (24/7): 2x gagal (60s) & 1x pulih (30s)
+                # - Workstation/Laptop (sering sleep/powersave/roaming): 6x gagal (3 menit) & 3x pulih stabil (1.5 menit)
+                req_down_count = 6 if is_workstation else 2
+                req_up_count = 3 if is_workstation else 1
+                cooldown_sec = 300 if is_workstation else 60 # Cooldown anti-flapping (5 menit untuk workstation)
+
+                last_alert_ts = item.get("last_alert_timestamp", 0)
+                now_ts = time.time()
+                can_alert = (now_ts - last_alert_ts) >= cooldown_sec
+
                 if new_status == "OFFLINE":
                     down_count += 1
                     up_count = 0
                     item["down_count"] = down_count
                     item["up_count"] = 0
 
-                    # Kirim alert DOWN setelah 2x berturut-turut OFFLINE (60 detik), dan hanya jika belum dikirim alert DOWN
-                    if down_count >= 2 and not alerted_down:
-                        item["alerted_down"] = True
-                        data_changed = True
-                        broadcast_alert(
-                            host_name=item.get("name"),
-                            target=item.get("host"),
-                            category=item.get("category", "Server"),
-                            is_down=True,
-                            details=error_msg,
-                            latency_ms=latency_ms
-                        )
+                    # Kirim alert DOWN setelah mencapai req_down_count, belum pernah alerted_down, dan lewat masa cooldown
+                    if down_count >= req_down_count and not alerted_down:
+                        if can_alert:
+                            item["alerted_down"] = True
+                            item["last_alert_timestamp"] = now_ts
+                            data_changed = True
+                            broadcast_alert(
+                                host_name=item.get("name"),
+                                target=item.get("host"),
+                                category=category,
+                                is_down=True,
+                                details=error_msg,
+                                latency_ms=latency_ms
+                            )
                 else:
                     up_count += 1
                     down_count = 0
                     item["up_count"] = up_count
                     item["down_count"] = 0
 
-                    # Kirim alert RECOVERY HANYA jika sebelumnya sudah dikirim alert DOWN (alerted_down == True)
-                    if alerted_down and up_count >= 1:
-                        item["alerted_down"] = False
-                        data_changed = True
-                        broadcast_alert(
-                            host_name=item.get("name"),
-                            target=item.get("host"),
-                            category=item.get("category", "Server"),
-                            is_down=False,
-                            details="Perangkat kembali merespons normal",
-                            latency_ms=latency_ms
-                        )
+                    # Kirim alert RECOVERY HANYA jika sebelumnya sudah dikirim alert DOWN dan stabil sebanyak req_up_count
+                    if alerted_down and up_count >= req_up_count:
+                        if can_alert:
+                            item["alerted_down"] = False
+                            item["last_alert_timestamp"] = now_ts
+                            data_changed = True
+                            broadcast_alert(
+                                host_name=item.get("name"),
+                                target=item.get("host"),
+                                category=category,
+                                is_down=False,
+                                details="Perangkat kembali merespons normal",
+                                latency_ms=latency_ms
+                            )
 
             data["monitored_hosts"] = hosts
             save_data(data)
