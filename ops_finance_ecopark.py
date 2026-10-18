@@ -16,6 +16,7 @@ import base64
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from flask import Blueprint, request, jsonify, session, Response
+from typing import Any
 
 WIB = ZoneInfo("Asia/Jakarta")
 
@@ -739,8 +740,8 @@ def api_create_manual_eco_transaction():
 
 
 @ops_finance_ecopark_bp.route('/api/eco/export', methods=['GET'])
-def api_export_eco_csv():
-    """Ekspor seluruh data transaksi Ecopark ke format CSV Excel."""
+def api_export_eco_excel():
+    """Ekspor seluruh data transaksi Ecopark ke format Microsoft Excel (.xlsx) dengan 2 sheet rapi."""
     conn = get_db()
     try:
         month = request.args.get('month', '').strip()
@@ -766,23 +767,58 @@ def api_export_eco_csv():
         query += " ORDER BY transaction_date DESC, created_at DESC"
         rows = conn.execute(query, params).fetchall()
 
-        import csv
+        import openpyxl
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
         import io
 
-        output = io.StringIO()
-        writer = csv.writer(output)
+        wb = openpyxl.Workbook()
 
-        writer.writerow([
-            'ID Transaksi', 'Tipe', 'Tanggal', 'Bulan', 'Kategori',
+        # ==========================================
+        # SHEET 1: DATA TRANSAKSI
+        # ==========================================
+        ws1: Any = wb.active or wb.worksheets[0]
+        ws1.title = "Data Transaksi"
+        ws1.views.sheetView[0].showGridLines = True
+
+        headers = [
+            'No', 'ID Transaksi', 'Tipe', 'Tanggal', 'Bulan', 'Kategori',
             'Kode Akun', 'Nama Pos Anggaran', 'Pihak (Toko / Pembeli)',
             'Uraian Transaksi', 'Qty', 'Satuan', 'Nominal (Rp)',
             'Metode Pembayaran', 'Pelapor', 'Sumber Data', 'Link Bukti Drive'
-        ])
+        ]
+        ws1.append(headers)
 
-        for r in rows:
-            writer.writerow([
+        header_fill = PatternFill(start_color="047857", end_color="047857", fill_type="solid")
+        header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
+        thin_border = Border(
+            left=Side(style='thin', color='D1D5DB'),
+            right=Side(style='thin', color='D1D5DB'),
+            top=Side(style='thin', color='D1D5DB'),
+            bottom=Side(style='thin', color='D1D5DB')
+        )
+
+        ws1.row_dimensions[1].height = 26
+        for col_idx in range(1, len(headers) + 1):
+            cell = ws1.cell(row=1, column=col_idx)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+        inc_fill = PatternFill(start_color="E6F4EA", end_color="E6F4EA", fill_type="solid")
+        inc_font = Font(name="Calibri", size=10, bold=True, color="0D652D")
+        exp_fill = PatternFill(start_color="FCE8E6", end_color="FCE8E6", fill_type="solid")
+        exp_font = Font(name="Calibri", size=10, bold=True, color="C5221F")
+
+        for idx, r in enumerate(rows, start=1):
+            row_num = idx + 1
+            is_inc = r['trx_type'] == 'INCOME'
+            tipe_label = 'KAS MASUK (OMSET)' if is_inc else 'KAS KELUAR (BELANJA)'
+
+            row_data = [
+                idx,
                 r['id'],
-                'KAS MASUK (OMSET)' if r['trx_type'] == 'INCOME' else 'KAS KELUAR (BELANJA)',
+                tipe_label,
                 r['transaction_date'],
                 r['month_period'],
                 r['main_category'] or '',
@@ -792,20 +828,186 @@ def api_export_eco_csv():
                 r['description'] or '',
                 r['qty'] or 1,
                 r['unit'] or '',
-                f"{r['amount']:,.0f}".replace(',', '.'),
+                float(r['amount'] or 0.0),
                 r['payment_method'] or '',
                 r['reporter_name'] or '',
                 r['source'] or '',
                 r['drive_file_url'] or ''
-            ])
+            ]
+            ws1.append(row_data)
+            ws1.row_dimensions[row_num].height = 20
 
-        csv_data = output.getvalue()
-        filename = f"Keuangan_Ecopark_{month.replace(' ', '_') if month else 'Semua'}_{now_wib().strftime('%Y%m%d')}.csv"
+            # Cell styling
+            for col_idx in range(1, len(row_data) + 1):
+                c = ws1.cell(row=row_num, column=col_idx)
+                c.border = thin_border
+                c.font = Font(name="Calibri", size=10)
+                if col_idx in [1, 2, 4, 5, 7, 14]:
+                    c.alignment = Alignment(horizontal="center", vertical="center")
+                elif col_idx in [11, 13]:
+                    c.alignment = Alignment(horizontal="right", vertical="center")
+                else:
+                    c.alignment = Alignment(horizontal="left", vertical="center")
+
+            # Format nominal rupiah
+            ws1.cell(row=row_num, column=13).number_format = '#,##0'
+
+            # Badge style kolom Tipe (Kolom 3)
+            cell_tipe = ws1.cell(row=row_num, column=3)
+            cell_tipe.fill = inc_fill if is_inc else exp_fill
+            cell_tipe.font = inc_font if is_inc else exp_font
+            cell_tipe.alignment = Alignment(horizontal="center", vertical="center")
+
+        # Auto width columns Sheet 1
+        for col in ws1.columns:
+            max_len = 0
+            col_letter = get_column_letter(int(col[0].column or 1))
+            for cell in col:
+                val_str = str(cell.value or '')
+                if len(val_str) > max_len:
+                    max_len = len(val_str)
+            ws1.column_dimensions[col_letter].width = min(max(max_len + 3, 10), 45)
+
+        # ==========================================
+        # SHEET 2: RINGKASAN & SERAPAN RKAS
+        # ==========================================
+        ws2 = wb.create_sheet(title="Ringkasan & Serapan RKAS")
+        ws2.views.sheetView[0].showGridLines = True
+
+        ws2.merge_cells("A1:G1")
+        ws2["A1"] = "RINGKASAN REALISASI KEUANGAN CIANGSANA ECOPARK"
+        ws2["A1"].font = Font(name="Calibri", size=14, bold=True, color="047857")
+        ws2["A1"].alignment = Alignment(horizontal="left", vertical="center")
+
+        periode_str = "Semua Periode (Mulai Juli 2026 s/d Kini)"
+        if start_date and end_date:
+            periode_str = f"Periode: {start_date} s/d {end_date}"
+        elif start_date:
+            periode_str = f"Mulai Tanggal: {start_date}"
+        elif end_date:
+            periode_str = f"Hingga Tanggal: {end_date}"
+        elif month:
+            periode_str = f"Bulan: {month}"
+
+        ws2.merge_cells("A2:G2")
+        ws2["A2"] = f"Standar RKAS FKP ECO 2026–2027 | {periode_str}"
+        ws2["A2"].font = Font(name="Calibri", size=11, italic=True, color="4B5563")
+
+        # Query ringkasan
+        time_clauses = []
+        t_params = []
+        if start_date:
+            time_clauses.append("transaction_date >= ?")
+            t_params.append(start_date)
+        if end_date:
+            time_clauses.append("transaction_date <= ?")
+            t_params.append(end_date)
+        if month and not (start_date or end_date):
+            time_clauses.append("month_period = ?")
+            t_params.append(month)
+        t_and = (" AND " + " AND ".join(time_clauses)) if time_clauses else ""
+
+        inc_sum = conn.execute(f"SELECT SUM(amount) as t, COUNT(*) as c FROM ops_eco_transactions WHERE trx_type = 'INCOME' {t_and}", t_params).fetchone()
+        exp_sum = conn.execute(f"SELECT SUM(amount) as t, COUNT(*) as c FROM ops_eco_transactions WHERE trx_type = 'EXPENSE' {t_and}", t_params).fetchone()
+
+        tot_inc = inc_sum['t'] or 0.0
+        cnt_inc = inc_sum['c'] or 0
+        tot_exp = exp_sum['t'] or 0.0
+        cnt_exp = exp_sum['c'] or 0
+        saldo = tot_inc - tot_exp
+
+        ws2.append([])
+        ws2.append(["INDIKATOR ARUS KAS", "", "NOMINAL (RP)", "JUMLAH TRANSAKSI", "KETERANGAN"])
+        ws2.row_dimensions[4].height = 24
+        for c in range(1, 6):
+            cell = ws2.cell(row=4, column=c)
+            cell.fill = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
+            cell.font = Font(name="Calibri", size=10, bold=True, color="FFFFFF")
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+
+        kpi_rows = [
+            ("Kas Masuk (Omset)", "", tot_inc, f"{cnt_inc} Transaksi", "Penerimaan sewa kolam aquatic, lapangan, sayur, telur, buah"),
+            ("Kas Keluar (Belanja)", "", tot_exp, f"{cnt_exp} Transaksi", "Operasional pakan ternak, budidaya, BBM, sarpras & pemeliharaan"),
+            ("Saldo Kas Bersih", "", saldo, "-", "Surplus / Net Cashflow periode ini"),
+            ("Plafon Anggaran RKAS", "", 282850000.0, "50 Sub-Pos", "Total Plafon RKAS FKP ECO 2026–2027")
+        ]
+
+        for idx, k in enumerate(kpi_rows, start=5):
+            ws2.append(list(k))
+            ws2.row_dimensions[idx].height = 20
+            ws2.cell(row=idx, column=1).font = Font(name="Calibri", size=10, bold=True)
+            ws2.cell(row=idx, column=3).number_format = '#,##0'
+            ws2.cell(row=idx, column=3).font = Font(name="Calibri", size=10, bold=True)
+            for col_idx in range(1, 6):
+                ws2.cell(row=idx, column=col_idx).border = thin_border
+
+        # Tabel Kontrol 6 Pos FKP ECO
+        ws2.append([])
+        ws2.append([])
+        ws2.merge_cells("A11:G11")
+        ws2["A11"] = "KONTROL 6 POS INDUK BELANJA OPERASIONAL FKP ECO 2026–2027"
+        ws2["A11"].font = Font(name="Calibri", size=12, bold=True, color="047857")
+
+        cat_headers = ["Kode Akun", "Induk Pos Anggaran", "Plafon Anggaran (Rp)", "Realisasi Belanja (Rp)", "Sisa Plafon (Rp)", "Serapan (%)", "Jml Trx"]
+        ws2.append(cat_headers)
+        ws2.row_dimensions[12].height = 24
+        for c in range(1, 8):
+            cell = ws2.cell(row=12, column=c)
+            cell.fill = PatternFill(start_color="047857", end_color="047857", fill_type="solid")
+            cell.font = Font(name="Calibri", size=10, bold=True, color="FFFFFF")
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+
+        parent_coas = conn.execute("SELECT coa_code, coa_name, budget_annual FROM ops_eco_coa WHERE is_parent = 1 ORDER BY coa_code ASC").fetchall()
+        exp_by_parent = conn.execute(f"SELECT main_category, SUM(amount) as realisasi, COUNT(*) as cnt FROM ops_eco_transactions WHERE trx_type = 'EXPENSE' {t_and} GROUP BY main_category", t_params).fetchall()
+        real_map = {r['main_category']: (r['realisasi'] or 0.0) for r in exp_by_parent}
+        cnt_map = {r['main_category']: (r['cnt'] or 0) for r in exp_by_parent}
+
+        for idx, p in enumerate(parent_coas, start=13):
+            c_code = p['coa_code']
+            c_name = p['coa_name']
+            bgt = p['budget_annual'] or 0.0
+            real = real_map.get(c_name, 0.0)
+            sisa = bgt - real
+            pct = round((real / bgt * 100), 1) if bgt > 0 else 0.0
+            c_cnt = cnt_map.get(c_name, 0)
+
+            ws2.append([c_code, c_name, bgt, real, sisa, f"{pct}%", c_cnt])
+            ws2.row_dimensions[idx].height = 20
+            ws2.cell(row=idx, column=1).alignment = Alignment(horizontal="center", vertical="center")
+            ws2.cell(row=idx, column=3).number_format = '#,##0'
+            ws2.cell(row=idx, column=4).number_format = '#,##0'
+            ws2.cell(row=idx, column=5).number_format = '#,##0'
+            ws2.cell(row=idx, column=6).alignment = Alignment(horizontal="center", vertical="center")
+            ws2.cell(row=idx, column=7).alignment = Alignment(horizontal="center", vertical="center")
+            for col_idx in range(1, 8):
+                ws2.cell(row=idx, column=col_idx).border = thin_border
+
+        for col in ws2.columns:
+            max_len = 0
+            col_letter = get_column_letter(int(col[0].column or 1))
+            for cell in col:
+                val_str = str(cell.value or '')
+                if len(val_str) > max_len:
+                    max_len = len(val_str)
+            ws2.column_dimensions[col_letter].width = min(max(max_len + 3, 12), 40)
+
+        # Simpan ke BytesIO
+        excel_bio = io.BytesIO()
+        wb.save(excel_bio)
+        excel_bytes = excel_bio.getvalue()
+
+        file_suffix = "Semua"
+        if start_date and end_date:
+            file_suffix = f"{start_date}_sd_{end_date}"
+        elif month:
+            file_suffix = month.replace(" ", "_")
+
+        filename = f"Keuangan_Ecopark_{file_suffix}_{now_wib().strftime('%Y%m%d')}.xlsx"
 
         return Response(
-            "\ufeff" + csv_data,
-            mimetype="text/csv; charset=utf-8",
-            headers={"Content-Disposition": f"attachment;filename={filename}"}
+            excel_bytes,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename=\"{filename}\""}
         )
     finally:
         conn.close()

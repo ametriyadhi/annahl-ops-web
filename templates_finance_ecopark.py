@@ -173,9 +173,9 @@ TAB_KEUANGAN_ECOPARK_HTML = """
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
                 </div>
 
-                <button type="button" onclick="exportEcoCSV()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 cursor-pointer">
+                <button type="button" onclick="exportEcoExcel()" class="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
                     <i class="fa-solid fa-file-excel text-emerald-600"></i>
-                    <span>Ekspor CSV</span>
+                    <span>Ekspor Excel (.xlsx)</span>
                 </button>
             </div>
         </div>
@@ -997,7 +997,7 @@ JS_KEUANGAN_ECOPARK_SCRIPTS = """
         toggleModal('modal-eco-image');
     }
 
-    function exportEcoCSV() {
+    function exportEcoExcel() {
         const startDate = document.getElementById('filter-eco-start-date') ? document.getElementById('filter-eco-start-date').value : '';
         const endDate = document.getElementById('filter-eco-end-date') ? document.getElementById('filter-eco-end-date').value : '';
         let url = '/api/eco/export?1=1';
@@ -1006,6 +1006,7 @@ JS_KEUANGAN_ECOPARK_SCRIPTS = """
         if (G_ECO_TYPE_FILTER) url += '&type=' + encodeURIComponent(G_ECO_TYPE_FILTER);
         window.open(url, '_blank');
     }
+    const exportEcoCSV = exportEcoExcel;
 
     function copyFormatText(elemId) {
         const el = document.getElementById(elemId);
