@@ -6861,7 +6861,7 @@ HTML_TEMPLATE = """
                 .then(r => r.json())
                 .then(data => {
                     if (!Array.isArray(data) || data.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-slate-400">Belum ada laporan mutabaah yang tercatat sesuai filter.<br><span class="text-[11px] text-slate-400">Silakan kirim laporan harian via WhatsApp bot atau klik tombol <b>Input Mutaba\'ah</b> di atas.</span></td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-slate-400">Belum ada laporan mutabaah yang tercatat sesuai filter.<br><span class="text-[11px] text-slate-400">Silakan kirim laporan harian via WhatsApp bot atau klik tombol <b>Input Mutabaah</b> di atas.</span></td></tr>';
                         document.getElementById('mutubaah-tilawah-hari').innerText = '-';
                         document.getElementById('mutubaah-khatam').innerText = '-';
                         document.getElementById('mutubaah-sholat').innerText = '-%';
