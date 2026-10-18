@@ -45,6 +45,15 @@ TAB_KEUANGAN_ECOPARK_HTML = """
             </div>
         </div>
 
+        <!-- 4 Summary Metric Cards Header Info -->
+        <div class="flex items-center justify-between text-xs text-slate-500 pt-1 px-1">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-700">Ringkasan Kas Ecopark</span>
+                <span id="eco-stat-period-tag" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800">Semua Periode (Juli 2026 s/d Kini)</span>
+            </div>
+            <span class="text-[11px] text-slate-400">Gunakan filter bulan di bawah untuk melihat rincian per bulan</span>
+        </div>
+
         <!-- 4 Summary Metric Cards -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pt-1">
             <!-- 1. Total Pemasukan -->
@@ -74,7 +83,7 @@ TAB_KEUANGAN_ECOPARK_HTML = """
                     <i class="fa-solid fa-wallet text-indigo-600 text-sm"></i>
                 </div>
                 <div id="eco-stat-balance" class="text-lg sm:text-2xl font-bold text-indigo-800 mt-1">Rp 0</div>
-                <div class="text-[11px] text-indigo-600 font-medium mt-0.5">Net Cashflow Juli 2026 s/d Kini</div>
+                <div id="eco-stat-balance-desc" class="text-[11px] text-indigo-600 font-medium mt-0.5">Net Cashflow Juli 2026 s/d Kini</div>
             </div>
 
             <!-- 4. Kontrol Plafon RKAS -->
@@ -121,12 +130,12 @@ TAB_KEUANGAN_ECOPARK_HTML = """
 
             <!-- Filter Bulan, Kategori & Search -->
             <div class="flex items-center gap-2 flex-wrap flex-1 sm:justify-end">
-                <select id="filter-eco-month" onchange="filterEcoData()" class="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
-                    <option value="">Semua Bulan (Mulai Juli 2026)</option>
-                    <option value="Oktober 2026" selected>Oktober 2026</option>
-                    <option value="September 2026">September 2026</option>
-                    <option value="Agustus 2026">Agustus 2026</option>
-                    <option value="Juli 2026">Juli 2026</option>
+                <select id="filter-eco-month" onchange="onEcoMonthChange()" class="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-semibold">
+                    <option value="" selected>Semua Periode (Juli 2026 s/d Kini)</option>
+                    <option value="Oktober 2026">Bulan: Oktober 2026</option>
+                    <option value="September 2026">Bulan: September 2026</option>
+                    <option value="Agustus 2026">Bulan: Agustus 2026</option>
+                    <option value="Juli 2026">Bulan: Juli 2026</option>
                 </select>
 
                 <select id="filter-eco-category" onchange="filterEcoData()" class="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
@@ -458,6 +467,10 @@ JS_KEUANGAN_ECOPARK_SCRIPTS = """
     let G_ECO_TYPE_FILTER = '';
     let G_ECO_SEARCH_TIMER = null;
 
+    function onEcoMonthChange() {
+        loadKeuanganEcopark();
+    }
+
     async function loadKeuanganEcopark() {
         try {
             // 1. Fetch COA Master jika belum ada
@@ -483,7 +496,7 @@ JS_KEUANGAN_ECOPARK_SCRIPTS = """
             }
 
             // 3. Fetch Transactions
-            let url = '/api/eco/transactions?limit=250';
+            let url = '/api/eco/transactions?limit=1000';
             if (selMonth) url += '&month=' + encodeURIComponent(selMonth);
             const resTrx = await fetch(url);
             if (resTrx.ok) {
@@ -528,11 +541,33 @@ JS_KEUANGAN_ECOPARK_SCRIPTS = """
         const bal = sum.saldo_kas || 0;
         const pct = sum.overall_pct || 0;
 
+        const selMonth = document.getElementById('filter-eco-month') ? document.getElementById('filter-eco-month').value : '';
+        const tagEl = document.getElementById('eco-stat-period-tag');
+        const balDescEl = document.getElementById('eco-stat-balance-desc');
+
+        if (tagEl) {
+            if (selMonth) {
+                tagEl.innerText = `Bulan: ${selMonth}`;
+                tagEl.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800';
+            } else {
+                tagEl.innerText = 'Semua Periode (Juli 2026 s/d Kini)';
+                tagEl.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800';
+            }
+        }
+
+        if (balDescEl) {
+            balDescEl.innerText = selMonth ? `Net Cashflow Bulan ${selMonth}` : 'Net Cashflow Juli 2026 s/d Kini';
+        }
+
         document.getElementById('eco-stat-income').innerText = 'Rp ' + Math.round(inc).toLocaleString('id-ID');
-        document.getElementById('eco-stat-income-count').innerText = (sum.count_income || 0) + ' Transaksi Penjualan / Sewa';
+        document.getElementById('eco-stat-income-count').innerText = selMonth
+            ? `${sum.count_income || 0} Transaksi di ${selMonth}`
+            : `${sum.count_income || 0} Transaksi Penjualan / Sewa (Kumulatif)`;
 
         document.getElementById('eco-stat-expense').innerText = 'Rp ' + Math.round(exp).toLocaleString('id-ID');
-        document.getElementById('eco-stat-expense-count').innerText = (sum.count_expense || 0) + ' Transaksi Operasional';
+        document.getElementById('eco-stat-expense-count').innerText = selMonth
+            ? `${sum.count_expense || 0} Transaksi di ${selMonth}`
+            : `${sum.count_expense || 0} Transaksi Operasional (Kumulatif)`;
 
         const balEl = document.getElementById('eco-stat-balance');
         balEl.innerText = 'Rp ' + Math.round(bal).toLocaleString('id-ID');
