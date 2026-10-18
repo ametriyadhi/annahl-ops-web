@@ -491,6 +491,8 @@ def api_get_eco_transactions():
     try:
         trx_type = request.args.get('type', '').strip().upper()
         month = request.args.get('month', '').strip()
+        start_date = request.args.get('start_date', '').strip()
+        end_date = request.args.get('end_date', '').strip()
         category = request.args.get('category', '').strip()
         search = request.args.get('search', '').strip()
         limit = int(request.args.get('limit', 150))
@@ -502,7 +504,13 @@ def api_get_eco_transactions():
         if trx_type in ['INCOME', 'EXPENSE']:
             query += " AND trx_type = ?"
             params.append(trx_type)
-        if month:
+        if start_date:
+            query += " AND transaction_date >= ?"
+            params.append(start_date)
+        if end_date:
+            query += " AND transaction_date <= ?"
+            params.append(end_date)
+        if month and not (start_date or end_date):
             query += " AND month_period = ?"
             params.append(month)
         if category:
@@ -526,21 +534,31 @@ def api_get_eco_transactions():
 
 @ops_finance_ecopark_bp.route('/api/eco/stats', methods=['GET'])
 def api_get_eco_stats():
-    """Mengambil statistik realisasi kas Ecopark vs RKAS FKP ECO."""
+    """Mengambil statistik realisasi kas Ecopark vs RKAS FKP ECO (mendukung rentang tanggal fleksibel)."""
     conn = get_db()
     try:
+        start_date = request.args.get('start_date', '').strip()
+        end_date = request.args.get('end_date', '').strip()
         month = request.args.get('month', '').strip()
 
-        # Filter query
-        time_clause = ""
+        # Build dynamic time filter clauses
+        time_clauses = []
         params = []
-        if month:
-            time_clause = " WHERE month_period = ?"
-            params = [month]
+        if start_date:
+            time_clauses.append("transaction_date >= ?")
+            params.append(start_date)
+        if end_date:
+            time_clauses.append("transaction_date <= ?")
+            params.append(end_date)
+        if month and not (start_date or end_date):
+            time_clauses.append("month_period = ?")
+            params.append(month)
+
+        time_and = (" AND " + " AND ".join(time_clauses)) if time_clauses else ""
 
         # Total Income & Expense
-        inc_row = conn.execute(f"SELECT SUM(amount) as total, COUNT(*) as cnt FROM ops_eco_transactions {time_clause} {'AND' if time_clause else 'WHERE'} trx_type = 'INCOME'", params).fetchone()
-        exp_row = conn.execute(f"SELECT SUM(amount) as total, COUNT(*) as cnt FROM ops_eco_transactions {time_clause} {'AND' if time_clause else 'WHERE'} trx_type = 'EXPENSE'", params).fetchone()
+        inc_row = conn.execute(f"SELECT SUM(amount) as total, COUNT(*) as cnt FROM ops_eco_transactions WHERE trx_type = 'INCOME' {time_and}", params).fetchone()
+        exp_row = conn.execute(f"SELECT SUM(amount) as total, COUNT(*) as cnt FROM ops_eco_transactions WHERE trx_type = 'EXPENSE' {time_and}", params).fetchone()
 
         tot_income = inc_row['total'] or 0.0
         cnt_income = inc_row['cnt'] or 0
@@ -556,13 +574,13 @@ def api_get_eco_stats():
             ORDER BY coa_code ASC
         """).fetchall()
 
-        # Realisasi per parent category
-        exp_by_parent = conn.execute("""
+        # Realisasi per parent category (dengan filter waktu dinamis)
+        exp_by_parent = conn.execute(f"""
             SELECT main_category, SUM(amount) as realisasi, COUNT(*) as cnt
             FROM ops_eco_transactions
-            WHERE trx_type = 'EXPENSE'
+            WHERE trx_type = 'EXPENSE' {time_and}
             GROUP BY main_category
-        """).fetchall()
+        """, params).fetchall()
         real_map = {r['main_category']: (r['realisasi'] or 0.0) for r in exp_by_parent}
         cnt_map = {r['main_category']: (r['cnt'] or 0) for r in exp_by_parent}
 
@@ -726,11 +744,19 @@ def api_export_eco_csv():
     conn = get_db()
     try:
         month = request.args.get('month', '').strip()
+        start_date = request.args.get('start_date', '').strip()
+        end_date = request.args.get('end_date', '').strip()
         trx_type = request.args.get('type', '').strip().upper()
 
         query = "SELECT * FROM ops_eco_transactions WHERE 1=1"
         params = []
-        if month:
+        if start_date:
+            query += " AND transaction_date >= ?"
+            params.append(start_date)
+        if end_date:
+            query += " AND transaction_date <= ?"
+            params.append(end_date)
+        if month and not (start_date or end_date):
             query += " AND month_period = ?"
             params.append(month)
         if trx_type in ['INCOME', 'EXPENSE']:

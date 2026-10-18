@@ -128,17 +128,28 @@ TAB_KEUANGAN_ECOPARK_HTML = """
                 </button>
             </div>
 
-            <!-- Filter Bulan, Kategori & Search -->
+            <!-- Filter Tanggal Murni & Rentang Dinamis -->
             <div class="flex items-center gap-2 flex-wrap flex-1 sm:justify-end">
-                <select id="filter-eco-month" onchange="onEcoMonthChange()" class="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-semibold">
-                    <option value="" selected>Semua Periode (Juli 2026 s/d Kini)</option>
-                    <option value="Oktober 2026">Bulan: Oktober 2026</option>
-                    <option value="September 2026">Bulan: September 2026</option>
-                    <option value="Agustus 2026">Bulan: Agustus 2026</option>
-                    <option value="Juli 2026">Bulan: Juli 2026</option>
-                </select>
+                <!-- Date Range Box (Pilih Tanggal Mulai & Selesai) -->
+                <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl text-xs text-slate-700 shadow-2xs">
+                    <i class="fa-regular fa-calendar-days text-emerald-600"></i>
+                    <input type="date" id="filter-eco-start-date" onchange="onEcoDateChange()" class="bg-transparent text-slate-700 text-xs font-semibold focus:outline-hidden cursor-pointer" title="Tanggal Mulai (YYYY-MM-DD)" />
+                    <span class="text-slate-400 font-bold text-[11px]">s/d</span>
+                    <input type="date" id="filter-eco-end-date" onchange="onEcoDateChange()" class="bg-transparent text-slate-700 text-xs font-semibold focus:outline-hidden cursor-pointer" title="Tanggal Selesai (YYYY-MM-DD)" />
+                    <button type="button" onclick="clearEcoDateFilter()" id="btn-eco-clear-date" class="text-slate-400 hover:text-rose-600 transition ml-1 cursor-pointer" title="Reset Rentang Tanggal">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </button>
+                </div>
 
-                <select id="filter-eco-category" onchange="filterEcoData()" class="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
+                <!-- Preset Shortcut Cepat Tanggal -->
+                <div class="inline-flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl text-xs">
+                    <button type="button" onclick="setEcoQuickDate('today')" class="px-2 py-1 text-[11px] font-semibold rounded-lg bg-white text-slate-700 hover:text-emerald-700 shadow-2xs transition">Hari Ini</button>
+                    <button type="button" onclick="setEcoQuickDate('7days')" class="px-2 py-1 text-[11px] font-semibold rounded-lg bg-white text-slate-700 hover:text-emerald-700 shadow-2xs transition">7 Hari</button>
+                    <button type="button" onclick="setEcoQuickDate('this_month')" class="px-2 py-1 text-[11px] font-semibold rounded-lg bg-white text-slate-700 hover:text-emerald-700 shadow-2xs transition">Bulan Ini</button>
+                    <button type="button" onclick="setEcoQuickDate('all')" class="px-2 py-1 text-[11px] font-semibold rounded-lg bg-white text-slate-700 hover:text-emerald-700 shadow-2xs transition">Semua</button>
+                </div>
+
+                <select id="filter-eco-category" onchange="filterEcoData()" class="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-medium">
                     <option value="">Semua Kategori / Pos</option>
                     <optgroup label="Pengeluaran (FKP ECO)">
                         <option value="OPERASIONAL BUDIDAYA">52111 Operasional Budidaya</option>
@@ -467,7 +478,48 @@ JS_KEUANGAN_ECOPARK_SCRIPTS = """
     let G_ECO_TYPE_FILTER = '';
     let G_ECO_SEARCH_TIMER = null;
 
-    function onEcoMonthChange() {
+    function onEcoDateChange() {
+        loadKeuanganEcopark();
+    }
+
+    function clearEcoDateFilter() {
+        const sEl = document.getElementById('filter-eco-start-date');
+        const eEl = document.getElementById('filter-eco-end-date');
+        if (sEl) sEl.value = '';
+        if (eEl) eEl.value = '';
+        loadKeuanganEcopark();
+    }
+
+    function setEcoQuickDate(preset) {
+        const sEl = document.getElementById('filter-eco-start-date');
+        const eEl = document.getElementById('filter-eco-end-date');
+        if (!sEl || !eEl) return;
+
+        const now = new Date();
+        const formatDate = (d) => {
+            const yr = d.getFullYear();
+            const mo = String(d.getMonth() + 1).padStart(2, '0');
+            const da = String(d.getDate()).padStart(2, '0');
+            return `${yr}-${mo}-${da}`;
+        };
+
+        if (preset === 'today') {
+            const todayStr = formatDate(now);
+            sEl.value = todayStr;
+            eEl.value = todayStr;
+        } else if (preset === '7days') {
+            const past = new Date();
+            past.setDate(past.getDate() - 7);
+            sEl.value = formatDate(past);
+            eEl.value = formatDate(now);
+        } else if (preset === 'this_month') {
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            sEl.value = formatDate(firstDay);
+            eEl.value = formatDate(now);
+        } else if (preset === 'all') {
+            sEl.value = '';
+            eEl.value = '';
+        }
         loadKeuanganEcopark();
     }
 
@@ -485,9 +537,17 @@ JS_KEUANGAN_ECOPARK_SCRIPTS = """
                 }
             }
 
-            // 2. Fetch Stats
-            const selMonth = document.getElementById('filter-eco-month') ? document.getElementById('filter-eco-month').value : '';
-            const resStats = await fetch('/api/eco/stats' + (selMonth ? '?month=' + encodeURIComponent(selMonth) : ''));
+            // 2. Fetch Stats & Transactions based on Date Range
+            const startDate = document.getElementById('filter-eco-start-date') ? document.getElementById('filter-eco-start-date').value : '';
+            const endDate = document.getElementById('filter-eco-end-date') ? document.getElementById('filter-eco-end-date').value : '';
+
+            let queryParams = [];
+            if (startDate) queryParams.push('start_date=' + encodeURIComponent(startDate));
+            if (endDate) queryParams.push('end_date=' + encodeURIComponent(endDate));
+            const qStr = queryParams.length ? '?' + queryParams.join('&') : '';
+
+            // Fetch Stats
+            const resStats = await fetch('/api/eco/stats' + qStr);
             if (resStats.ok) {
                 const sData = await resStats.json();
                 if (sData.success) {
@@ -495,9 +555,8 @@ JS_KEUANGAN_ECOPARK_SCRIPTS = """
                 }
             }
 
-            // 3. Fetch Transactions
-            let url = '/api/eco/transactions?limit=1000';
-            if (selMonth) url += '&month=' + encodeURIComponent(selMonth);
+            // Fetch Transactions
+            let url = '/api/eco/transactions?limit=1000' + (qStr ? '&' + queryParams.join('&') : '');
             const resTrx = await fetch(url);
             if (resTrx.ok) {
                 const tData = await resTrx.json();
@@ -541,32 +600,48 @@ JS_KEUANGAN_ECOPARK_SCRIPTS = """
         const bal = sum.saldo_kas || 0;
         const pct = sum.overall_pct || 0;
 
-        const selMonth = document.getElementById('filter-eco-month') ? document.getElementById('filter-eco-month').value : '';
+        const startDate = document.getElementById('filter-eco-start-date') ? document.getElementById('filter-eco-start-date').value : '';
+        const endDate = document.getElementById('filter-eco-end-date') ? document.getElementById('filter-eco-end-date').value : '';
         const tagEl = document.getElementById('eco-stat-period-tag');
         const balDescEl = document.getElementById('eco-stat-balance-desc');
 
-        if (tagEl) {
-            if (selMonth) {
-                tagEl.innerText = `Bulan: ${selMonth}`;
-                tagEl.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800';
+        let periodLabel = 'Semua Periode (Juli 2026 s/d Kini)';
+        let isFiltered = false;
+
+        if (startDate && endDate) {
+            if (startDate === endDate) {
+                periodLabel = `Tanggal: ${startDate}`;
             } else {
-                tagEl.innerText = 'Semua Periode (Juli 2026 s/d Kini)';
-                tagEl.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800';
+                periodLabel = `${startDate} s/d ${endDate}`;
             }
+            isFiltered = true;
+        } else if (startDate) {
+            periodLabel = `Mulai ${startDate}`;
+            isFiltered = true;
+        } else if (endDate) {
+            periodLabel = `Hingga ${endDate}`;
+            isFiltered = true;
+        }
+
+        if (tagEl) {
+            tagEl.innerText = periodLabel;
+            tagEl.className = isFiltered
+                ? 'text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800'
+                : 'text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800';
         }
 
         if (balDescEl) {
-            balDescEl.innerText = selMonth ? `Net Cashflow Bulan ${selMonth}` : 'Net Cashflow Juli 2026 s/d Kini';
+            balDescEl.innerText = isFiltered ? `Net Cashflow (${periodLabel})` : 'Net Cashflow Juli 2026 s/d Kini';
         }
 
         document.getElementById('eco-stat-income').innerText = 'Rp ' + Math.round(inc).toLocaleString('id-ID');
-        document.getElementById('eco-stat-income-count').innerText = selMonth
-            ? `${sum.count_income || 0} Transaksi di ${selMonth}`
+        document.getElementById('eco-stat-income-count').innerText = isFiltered
+            ? `${sum.count_income || 0} Transaksi (${periodLabel})`
             : `${sum.count_income || 0} Transaksi Penjualan / Sewa (Kumulatif)`;
 
         document.getElementById('eco-stat-expense').innerText = 'Rp ' + Math.round(exp).toLocaleString('id-ID');
-        document.getElementById('eco-stat-expense-count').innerText = selMonth
-            ? `${sum.count_expense || 0} Transaksi di ${selMonth}`
+        document.getElementById('eco-stat-expense-count').innerText = isFiltered
+            ? `${sum.count_expense || 0} Transaksi (${periodLabel})`
             : `${sum.count_expense || 0} Transaksi Operasional (Kumulatif)`;
 
         const balEl = document.getElementById('eco-stat-balance');
@@ -923,9 +998,11 @@ JS_KEUANGAN_ECOPARK_SCRIPTS = """
     }
 
     function exportEcoCSV() {
-        const selMonth = document.getElementById('filter-eco-month') ? document.getElementById('filter-eco-month').value : '';
+        const startDate = document.getElementById('filter-eco-start-date') ? document.getElementById('filter-eco-start-date').value : '';
+        const endDate = document.getElementById('filter-eco-end-date') ? document.getElementById('filter-eco-end-date').value : '';
         let url = '/api/eco/export?1=1';
-        if (selMonth) url += '&month=' + encodeURIComponent(selMonth);
+        if (startDate) url += '&start_date=' + encodeURIComponent(startDate);
+        if (endDate) url += '&end_date=' + encodeURIComponent(endDate);
         if (G_ECO_TYPE_FILTER) url += '&type=' + encodeURIComponent(G_ECO_TYPE_FILTER);
         window.open(url, '_blank');
     }
