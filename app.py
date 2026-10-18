@@ -391,81 +391,84 @@ HTML_TEMPLATE = """
 
             <div class="px-3 text-[10px] font-bold tracking-wider text-slate-500 uppercase mt-4 mb-2">Log Lapangan & Sarpras</div>
 
-            {% if user_role in ['manager', 'koordinator_ob', 'koordinator_gardener', 'koordinator_security'] %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-standby' in user_permissions or user_role in ['koordinator_ob', 'koordinator_gardener', 'koordinator_security'] %}
             <button onclick="showTab('tab-standby')" id="btn-tab-standby" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-satellite-dish text-base w-5 shrink-0 text-center text-sky-400"></i>
                 <span class="text-left flex-1">Kesiagaan Pos (Standby)</span>
             </button>
             {% endif %}
 
-            {% if user_role in ['manager', 'koordinator_ob', 'koordinator_gardener', 'pic_sarpras'] %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-checklist' in user_permissions or user_role in ['koordinator_ob', 'koordinator_gardener', 'pic_sarpras'] %}
             <button onclick="showTab('tab-checklist')" id="btn-tab-checklist" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-clipboard-check text-base w-5 shrink-0 text-center text-emerald-400"></i>
                 <span class="text-left flex-1">Checklist OB & Green Ops</span>
             </button>
             {% endif %}
 
-            {% if user_role in ['manager', 'koordinator_ob', 'koordinator_security'] %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-mutabaah' in user_permissions or user_role in ['koordinator_ob', 'koordinator_security'] %}
             <button onclick="showTab('tab-mutabaah')" id="btn-tab-mutabaah" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-hands-praying text-base w-5 shrink-0 text-center"></i>
                 <span class="text-left flex-1">Log Mutabaah WA</span>
             </button>
             {% endif %}
 
-            {% if user_role in ['manager', 'koordinator_ob', 'koordinator_gardener', 'pic_sarpras'] %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-kebersihan' in user_permissions or user_role in ['koordinator_ob', 'koordinator_gardener', 'pic_sarpras'] %}
             <button onclick="showTab('tab-kebersihan')" id="btn-tab-kebersihan" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-broom text-base w-5 shrink-0 text-center"></i>
                 <span class="text-left flex-1">Log Kebersihan & Foto</span>
             </button>
             {% endif %}
 
-            {% if user_role in ['manager', 'pic_pengadaan', 'pic_sarpras'] %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-pengadaan' in user_permissions or user_role in ['pic_pengadaan', 'pic_sarpras'] %}
             <button onclick="showTab('tab-pengadaan')" id="btn-tab-pengadaan" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-cart-shopping text-base w-5 shrink-0 text-center text-amber-400"></i>
                 <span class="text-left flex-1">Pengadaan Barang & Sarpras</span>
             </button>
+            {% endif %}
+
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-keuangan' in user_permissions or user_role in ['pic_pengadaan', 'pic_sarpras'] %}
             <button onclick="showTab('tab-keuangan')" id="btn-tab-keuangan" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-file-invoice-dollar text-base w-5 shrink-0 text-center text-emerald-400"></i>
                 <span class="text-left flex-1">Keuangan & FKP GA</span>
             </button>
             {% endif %}
 
-            {% if user_role in ['manager', 'koordinator_gardener', 'pic_pengadaan'] %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-keuangan-ecopark' in user_permissions or user_role in ['koordinator_gardener', 'pic_pengadaan'] %}
             <button onclick="showTab('tab-keuangan-ecopark')" id="btn-tab-keuangan-ecopark" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-tree text-base w-5 shrink-0 text-center text-emerald-400"></i>
                 <span class="text-left flex-1">Keuangan Ecopark</span>
             </button>
             {% endif %}
 
-            {% if user_role in ['manager', 'koordinator_ob', 'koordinator_gardener', 'pic_sarpras'] %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-pemeliharaan' in user_permissions or user_role in ['koordinator_ob', 'koordinator_gardener', 'pic_sarpras'] %}
             <button onclick="showTab('tab-pemeliharaan')" id="btn-tab-pemeliharaan" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-screwdriver-wrench text-base w-5 shrink-0 text-center text-teal-400"></i>
                 <span class="text-left flex-1">Pemeliharaan Sarpras (PM)</span>
             </button>
             {% endif %}
 
-            {% if user_role in ['manager', 'koordinator_ob', 'koordinator_gardener', 'pic_sarpras'] %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-evaluasi' in user_permissions or user_role in ['koordinator_ob', 'koordinator_gardener', 'pic_sarpras'] %}
             <button onclick="showTab('tab-evaluasi')" id="btn-tab-evaluasi" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-clipboard-user text-base w-5 shrink-0 text-center text-indigo-400"></i>
                 <span class="text-left flex-1">Rapor & Evaluasi Personil</span>
             </button>
             {% endif %}
 
-            {% if user_role in ['manager', 'koordinator_it', 'pic_sarpras', 'koordinator_ob'] %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-sapaais' in user_permissions or user_role in ['koordinator_it', 'pic_sarpras', 'koordinator_ob'] %}
             <button onclick="showTab('tab-sapaais')" id="btn-tab-sapaais" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-bullhorn text-base w-5 shrink-0 text-center text-emerald-400"></i>
                 <span class="text-left flex-1">Sapa Ais / LaporPak</span>
             </button>
             {% endif %}
 
-            {% if user_role in ['manager', 'koordinator_it', 'pic_sarpras', 'koordinator_ob', 'koordinator_gardener', 'koordinator_security', 'pic_pengadaan'] %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-mutubaah' in user_permissions or user_role in ['koordinator_it', 'pic_sarpras', 'koordinator_ob', 'koordinator_gardener', 'koordinator_security', 'pic_pengadaan'] %}
             <button onclick="showTab('tab-mutubaah')" id="btn-tab-mutubaah" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-book-open text-base w-5 shrink-0 text-center text-teal-400"></i>
                 <span class="text-left flex-1">Mutabaah Diri Civitas</span>
             </button>
             {% endif %}
 
-            {% if user_role in ['manager', 'koordinator_it'] %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-server' in user_permissions or 'tab-kuma' in user_permissions or user_role in ['koordinator_it'] %}
             <div class="px-3 text-[10px] font-bold tracking-wider text-slate-500 uppercase mt-4 mb-2">Monitor Server</div>
 
             <button onclick="showTab('tab-server')" id="btn-tab-server" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
@@ -479,7 +482,7 @@ HTML_TEMPLATE = """
             </button>
             {% endif %}
 
-            {% if user_role == 'manager' %}
+            {% if user_role == 'manager' or 'all' in user_permissions or 'tab-analytics' in user_permissions or 'tab-report' in user_permissions %}
             <button onclick="showTab('tab-analytics')" id="btn-tab-analytics" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-chart-pie text-base w-5 shrink-0 text-center"></i>
                 <span class="text-left flex-1">Grafik & Analitik Tren</span>
@@ -489,7 +492,9 @@ HTML_TEMPLATE = """
                 <i class="fa-solid fa-print text-base w-5 shrink-0 text-center"></i>
                 <span class="text-left flex-1">Cetak Laporan</span>
             </button>
+            {% endif %}
 
+            {% if user_role == 'manager' or 'all' in user_permissions or 'manage_users' in user_permissions or 'manage_roles' in user_permissions or 'tab-users' in user_permissions or 'tab-roles' in user_permissions %}
             <div class="px-3 text-[10px] font-bold tracking-wider text-emerald-400 uppercase mt-4 mb-2 flex items-center justify-between">
                 <span>Pengaturan & Akses</span>
                 <span class="text-[9px] px-1.5 py-0.2 bg-emerald-950 border border-emerald-700 text-emerald-300 rounded">Admin</span>
@@ -502,7 +507,7 @@ HTML_TEMPLATE = """
 
             <button onclick="showTab('tab-roles')" id="btn-tab-roles" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-shield-halved text-base w-5 shrink-0 text-center text-teal-400"></i>
-                <span class="text-left flex-1">Manajemen Role Akses</span>
+                <span class="text-left flex-1">Pengaturan Role Akses</span>
             </button>
 
             <a href="/bot-qr" target="_blank" class="w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition group">
@@ -3203,103 +3208,229 @@ HTML_TEMPLATE = """
 
             <!-- TAB: MANAJEMEN ROLE & HAK AKSES (KHUSUS MANAGER) -->
             <div id="tab-roles" class="tab-content hidden space-y-6">
-                <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-6 space-y-6">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-5 sm:p-7 space-y-6">
+                    <!-- Header -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
                         <div>
-                            <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800 uppercase tracking-wider">Access Control List (RBAC)</span>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">Real-Time Sync</span>
+                            </div>
+                            <h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2 mt-1.5">
                                 <i class="fa-solid fa-shield-halved text-emerald-600"></i>
-                                Manajemen Role & Hak Akses (RBAC Matrix)
+                                Pengaturan Role & Hak Akses Pengguna
                             </h2>
-                            <p class="text-xs text-slate-500 mt-1">Konfigurasi izin akses modul dan visibilitas tab untuk pimpinan serta 4 unit koordinator</p>
+                            <p class="text-xs text-slate-500 mt-1">Konfigurasi hak akses menu dashboard, wewenang edit data, approval pengadaan, pencatatan kas, dan kontrol fitur untuk setiap penanggung jawab.</p>
                         </div>
-                        <button onclick="loadOpsRoles()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-arrows-rotate"></i> Refresh Matrix
-                        </button>
+                        <div class="flex items-center gap-2 sm:gap-2.5 flex-wrap">
+                            <button type="button" onclick="loadOpsRoles()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 cursor-pointer">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                                <span>Refresh</span>
+                            </button>
+                            <button type="button" onclick="openCreateRoleModal()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>+ Tambah Role Baru</span>
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Role Cards Overview -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="ops-roles-cards-container">
-                        <!-- Rendered by JS -->
+                    <!-- Role Selector Cards -->
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                                <i class="fa-solid fa-id-badge text-emerald-600"></i>
+                                Pilih Peran / Role untuk Dikonfigurasi:
+                            </h3>
+                            <span class="text-[11px] text-slate-400">Klik salah satu kartu di bawah untuk menyetel izinnya</span>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" id="ops-roles-cards-container">
+                            <div class="col-span-full p-6 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat daftar role...</div>
+                        </div>
                     </div>
 
-                    <!-- Permission Matrix Table -->
-                    <div class="mt-6 border border-slate-200 rounded-xl overflow-hidden shadow-xs">
-                        <div class="bg-slate-50 p-3.5 border-b border-slate-200 flex items-center justify-between">
-                            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Matriks Hak Akses Modul Operasional</h3>
-                            <span class="text-[11px] text-slate-500"><i class="fa-solid fa-circle-info mr-1 text-emerald-600"></i>Terproteksi secara real-time pada sesi pengguna</span>
+                    <!-- Active Role Permission Configuration Matrix Box -->
+                    <div id="role-config-panel" class="border border-slate-200/90 rounded-2xl overflow-hidden shadow-xs bg-slate-50/50">
+                        <!-- Role Banner & Action Presets -->
+                        <div class="p-4 sm:p-5 bg-white border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div class="flex items-center gap-3.5">
+                                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center text-lg shadow-xs shrink-0" id="role-panel-icon">
+                                    <i class="fa-solid fa-shield"></i>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <h3 class="font-bold text-base text-slate-800" id="role-panel-name">Manager Operasional & IT</h3>
+                                        <span class="px-2 py-0.5 rounded-md font-mono text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200" id="role-panel-code">manager</span>
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800" id="role-panel-perm-count">0 Izin Aktif</span>
+                                    </div>
+                                    <p class="text-xs text-slate-500 mt-1" id="role-panel-desc">Pimpinan IT & Kabag Umum dengan kendali penuh.</p>
+                                </div>
+                            </div>
+                            <!-- Preset Buttons & Save -->
+                            <div class="flex items-center gap-2 flex-wrap shrink-0">
+                                <button type="button" onclick="selectAllRolePerms()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition cursor-pointer" title="Centang seluruh izin">
+                                    <i class="fa-solid fa-check-double text-emerald-600 mr-1"></i>Pilih Semua
+                                </button>
+                                <button type="button" onclick="selectReadOnlyRolePerms()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition cursor-pointer" title="Hanya menu tampilan, tanpa izin aksi/edit">
+                                    <i class="fa-solid fa-eye text-blue-600 mr-1"></i>Hanya Baca
+                                </button>
+                                <button type="button" onclick="resetCurrentRolePerms()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition cursor-pointer" title="Kembalikan ke settingan tersimpan">
+                                    <i class="fa-solid fa-rotate-left text-amber-600 mr-1"></i>Reset
+                                </button>
+                                <button type="button" onclick="saveOpsRolePermissions()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer">
+                                    <i class="fa-solid fa-floppy-disk"></i>
+                                    <span>Simpan Hak Akses</span>
+                                </button>
+                            </div>
                         </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse text-xs">
-                                <thead>
-                                    <tr class="bg-slate-100/70 border-b border-slate-200 text-slate-600 font-semibold uppercase">
-                                        <th class="p-3">Fitur / Tab Modul</th>
-                                        <th class="p-3 text-center">Manager (Mr. Slam)</th>
-                                        <th class="p-3 text-center">Koord. IT</th>
-                                        <th class="p-3 text-center">Koord. OB</th>
-                                        <th class="p-3 text-center">Koord. Gardener</th>
-                                        <th class="p-3 text-center">Koord. Security</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100 text-slate-700">
-                                    <tr class="hover:bg-slate-50/80">
-                                        <td class="p-3 font-semibold flex items-center gap-2"><i class="fa-solid fa-gauge text-emerald-600 w-4"></i> Dashboard Utama</td>
-                                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">Semua Unit</span></td>
-                                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800">Unit IT</span></td>
-                                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded bg-teal-100 text-teal-800">Unit OB</span></td>
-                                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800">Gardener</span></td>
-                                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-800">Security</span></td>
-                                    </tr>
-                                    <tr class="hover:bg-slate-50/80">
-                                        <td class="p-3 font-semibold flex items-center gap-2"><i class="fa-solid fa-clipboard-list text-slate-600 w-4"></i> Pendelegasian Tugas (Tasks)</td>
-                                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">Buat & Disposisi</span></td>
-                                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700">Update Progres</span></td>
-                                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700">Update Progres</span></td>
-                                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700">Update Progres</span></td>
-                                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700">Update Progres</span></td>
-                                    </tr>
-                                    <tr class="hover:bg-slate-50/80">
-                                        <td class="p-3 font-semibold flex items-center gap-2"><i class="fa-solid fa-book text-amber-600 w-4"></i> Jurnal Harian Koordinator</td>
-                                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">Baca Semua & Feedback</span></td>
-                                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">Input Harian IT</span></td>
-                                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">Input Harian OB</span></td>
-                                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">Input Harian Gardener</span></td>
-                                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">Input Harian Security</span></td>
-                                    </tr>
-                                    <tr class="hover:bg-slate-50/80">
-                                        <td class="p-3 font-semibold flex items-center gap-2"><i class="fa-solid fa-broom text-teal-600 w-4"></i> Log Kebersihan & Foto Sarpras</td>
-                                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">Kontrol & Buat Tiket</span></td>
-                                        <td class="p-3 text-center text-slate-300">-</td>
-                                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded bg-teal-100 text-teal-800 font-medium">Indoor & Toilet</span></td>
-                                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-medium">Outdoor & Taman</span></td>
-                                        <td class="p-3 text-center text-slate-300">-</td>
-                                    </tr>
-                                    <tr class="hover:bg-slate-50/80">
-                                        <td class="p-3 font-semibold flex items-center gap-2"><i class="fa-solid fa-hands-praying text-emerald-600 w-4"></i> Log Mutabaah Yaumiyah Ibadah</td>
-                                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">Rekap Global</span></td>
-                                        <td class="p-3 text-center text-slate-300">-</td>
-                                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded bg-teal-100 text-teal-800">Anggota OB</span></td>
-                                        <td class="p-3 text-center text-slate-300">-</td>
-                                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-800">Anggota Security</span></td>
-                                    </tr>
-                                    <tr class="hover:bg-slate-50/80">
-                                        <td class="p-3 font-semibold flex items-center gap-2"><i class="fa-solid fa-server text-blue-600 w-4"></i> Server & Uptime Kuma</td>
-                                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">Akses Penuh</span></td>
-                                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-medium">Akses Monitoring</span></td>
-                                        <td class="p-3 text-center text-slate-300">-</td>
-                                        <td class="p-3 text-center text-slate-300">-</td>
-                                        <td class="p-3 text-center text-slate-300">-</td>
-                                    </tr>
-                                    <tr class="hover:bg-slate-50/80 bg-slate-50/50">
-                                        <td class="p-3 font-bold flex items-center gap-2 text-emerald-900"><i class="fa-solid fa-users-gear text-emerald-700 w-4"></i> Manajemen User & Role Akses</td>
-                                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded bg-emerald-600 text-white font-bold">Khusus Manager</span></td>
-                                        <td class="p-3 text-center text-slate-300"><i class="fa-solid fa-lock text-slate-300"></i></td>
-                                        <td class="p-3 text-center text-slate-300"><i class="fa-solid fa-lock text-slate-300"></i></td>
-                                        <td class="p-3 text-center text-slate-300"><i class="fa-solid fa-lock text-slate-300"></i></td>
-                                        <td class="p-3 text-center text-slate-300"><i class="fa-solid fa-lock text-slate-300"></i></td>
-                                    </tr>
-                                </tbody>
-                            </table>
+
+                        <!-- Special Alert for Root Manager -->
+                        <div id="role-manager-special-note" class="hidden p-3.5 mx-4 mt-4 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 flex items-center gap-2.5">
+                            <i class="fa-solid fa-crown text-emerald-600 text-base"></i>
+                            <div>
+                                <b>Hak Akses Penuh Manager (Mr. Slam):</b> Role Manager memegang wewenang <code>all</code> (Super Admin). Seluruh menu dan fitur otomatis terbuka penuh.
+                            </div>
                         </div>
+
+                        <!-- 3 Categorized Permission Matrix Sections -->
+                        <div class="p-4 sm:p-6 space-y-6">
+                            <!-- KELOMPOK 1: MENU SIDEBAR & TAB DASHBOARD -->
+                            <div class="bg-white rounded-xl border border-slate-200/80 p-4 sm:p-5 shadow-2xs space-y-3.5">
+                                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">1</div>
+                                        <div>
+                                            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Akses Menu Sidebar & Tab Dashboard (Visibilitas Modul)</h4>
+                                            <p class="text-[11px] text-slate-500">Menu yang dicentang akan otomatis muncul di navigasi samping pengguna dengan role ini.</p>
+                                        </div>
+                                    </div>
+                                    <button type="button" onclick="toggleCategoryPerms('tab-')" class="text-[11px] text-emerald-700 hover:text-emerald-900 font-semibold cursor-pointer">Toggle Semua Menu</button>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5" id="matrix-tabs-container">
+                                    <!-- Rendered by JS -->
+                                </div>
+                            </div>
+
+                            <!-- KELOMPOK 2: HAK AKSI & OTORISASI OPERASIONAL -->
+                            <div class="bg-white rounded-xl border border-slate-200/80 p-4 sm:p-5 shadow-2xs space-y-3.5">
+                                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">2</div>
+                                        <div>
+                                            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Hak Aksi, Wewenang & Otorisasi Operasional</h4>
+                                            <p class="text-[11px] text-slate-500">Izin untuk mengeksekusi aksi penting seperti membuat tugas, approval belanja, input kas, dll.</p>
+                                        </div>
+                                    </div>
+                                    <button type="button" onclick="toggleCategoryPerms('act-')" class="text-[11px] text-amber-700 hover:text-amber-900 font-semibold cursor-pointer">Toggle Semua Aksi</button>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5" id="matrix-actions-container">
+                                    <!-- Rendered by JS -->
+                                </div>
+                            </div>
+
+                            <!-- KELOMPOK 3: CAKUPAN UNIT & LINGKUP KERJA -->
+                            <div class="bg-white rounded-xl border border-slate-200/80 p-4 sm:p-5 shadow-2xs space-y-3.5">
+                                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold">3</div>
+                                        <div>
+                                            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Cakupan Unit & Lingkup Penugasan (Unit Scoping)</h4>
+                                            <p class="text-[11px] text-slate-500">Menentukan apakah role ini memiliki akses ke seluruh unit (manager/superuser) atau terikat pada satu divisi.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5" id="matrix-units-container">
+                                    <!-- Rendered by JS -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer Bar inside Panel -->
+                        <div class="p-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <span class="text-xs text-slate-500 flex items-center gap-1.5">
+                                <i class="fa-solid fa-shield-check text-emerald-600 text-sm"></i>
+                                Perubahan izin langsung tersimpan di database dan berlaku pada sesi pengguna berikutnya.
+                            </span>
+                            <button type="button" onclick="saveOpsRolePermissions()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center justify-center gap-2 cursor-pointer">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                                <span>Simpan Hak Akses Role</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODAL TAMBAH ROLE BARU -->
+                <div id="modal-create-role" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+                    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                            <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                                <i class="fa-solid fa-shield-plus text-emerald-600"></i>
+                                <span>Tambah Role / Peran Baru</span>
+                            </h3>
+                            <button type="button" onclick="toggleModal('modal-create-role')" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+                        </div>
+                        <form id="form-create-role" onsubmit="submitCreateRole(event)" class="space-y-3.5 text-xs">
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Kode Role (Unik, Huruf Kecil & Underscore) <span class="text-rose-500">*</span></label>
+                                <input type="text" id="new-role-code" name="role_code" required placeholder="misal: pic_keuangan, spv_lapangan" pattern="[a-z0-9_]{3,32}" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 font-mono focus:bg-white focus:border-emerald-500">
+                                <span class="text-[10px] text-slate-400 mt-0.5 block">Hanya huruf kecil, angka, dan underscore (3-32 karakter).</span>
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Nama Tampilan Role <span class="text-rose-500">*</span></label>
+                                <input type="text" id="new-role-name" name="role_name" required placeholder="misal: PIC Keuangan & Kasir" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:bg-white focus:border-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Deskripsi & Ruang Lingkup Wewenang</label>
+                                <textarea id="new-role-desc" name="description" rows="2" placeholder="Deskripsi tugas dan tanggung jawab..." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:bg-white focus:border-emerald-500"></textarea>
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Salin Izin Awal Dari Role Lain (Opsional)</label>
+                                <select id="new-role-template" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700">
+                                    <option value="">-- Role Kosong (Atur dari Awal) --</option>
+                                </select>
+                            </div>
+                            <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+                                <button type="button" onclick="toggleModal('modal-create-role')" class="px-4 py-2 text-xs font-semibold bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition cursor-pointer">Batal</button>
+                                <button type="submit" class="px-5 py-2 text-xs font-bold bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition shadow-xs flex items-center gap-1.5 cursor-pointer">
+                                    <i class="fa-solid fa-plus"></i>
+                                    <span>Buat Role Baru</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- MODAL EDIT ROLE -->
+                <div id="modal-edit-role" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+                    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                            <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                                <i class="fa-solid fa-pen-to-square text-emerald-600"></i>
+                                <span>Edit Informasi Role</span>
+                            </h3>
+                            <button type="button" onclick="toggleModal('modal-edit-role')" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+                        </div>
+                        <form id="form-edit-role" onsubmit="submitEditRole(event)" class="space-y-3.5 text-xs">
+                            <input type="hidden" id="edit-role-code" name="role_code">
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Kode Role</label>
+                                <input type="text" id="edit-role-code-display" disabled class="w-full p-2.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 font-mono">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Nama Tampilan Role <span class="text-rose-500">*</span></label>
+                                <input type="text" id="edit-role-name" name="role_name" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:bg-white focus:border-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Deskripsi</label>
+                                <textarea id="edit-role-desc" name="description" rows="2" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:bg-white focus:border-emerald-500"></textarea>
+                            </div>
+                            <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+                                <button type="button" onclick="toggleModal('modal-edit-role')" class="px-4 py-2 text-xs font-semibold bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition cursor-pointer">Batal</button>
+                                <button type="submit" class="px-5 py-2 text-xs font-bold bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition shadow-xs flex items-center gap-1.5 cursor-pointer">
+                                    <i class="fa-solid fa-floppy-disk"></i>
+                                    <span>Simpan Perubahan</span>
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -5752,33 +5883,465 @@ HTML_TEMPLATE = """
             .catch(err => alert('Terjadi kesalahan: ' + err.message));
         }
 
+        // ============ MANAJEMEN ROLE & HAK AKSES PENGGUNA (RBAC MATRIX) ============
+        let G_OPS_ROLES = [];
+        let G_CURRENT_ROLE_CODE = 'manager';
+        let G_OPS_USER_COUNTS = {};
+
+        const PERM_CATALOG = {
+            tabs: [
+                { id: 'tab-dashboard', label: 'Dashboard Utama', desc: 'Ringkasan operasional harian, quick stats, dan status', icon: 'fa-gauge', color: 'text-emerald-600' },
+                { id: 'tab-tasks', label: 'Tiket & Pendelegasian', desc: 'Daftar penugasan koordinator dan status progres tiket', icon: 'fa-clipboard-list', color: 'text-slate-600' },
+                { id: 'tab-todo', label: 'To-Do List Agenda', desc: 'Agenda kerja harian per unit', icon: 'fa-square-check', color: 'text-emerald-600' },
+                { id: 'tab-journal', label: 'Jurnal Kegiatan Harian', desc: 'Catatan aktivitas harian unit & supervisi pimpinan', icon: 'fa-book', color: 'text-amber-600' },
+                { id: 'tab-standby', label: 'Kesiagaan Pos Standby', desc: 'Radar pos siaga, validasi lokasi GPS & presensi QR', icon: 'fa-satellite-dish', color: 'text-sky-500' },
+                { id: 'tab-checklist', label: 'Checklist OB & Green Ops', desc: 'Inspeksi kebersihan toilet, kelas, taman & tiket sarpras', icon: 'fa-clipboard-check', color: 'text-emerald-600' },
+                { id: 'tab-mutabaah', label: 'Log Mutabaah WA', desc: 'Rekap ibadah yaumiyah petugas dari WhatsApp', icon: 'fa-hands-praying', color: 'text-teal-600' },
+                { id: 'tab-kebersihan', label: 'Log Kebersihan & Foto', desc: 'Riwayat foto bukti kebersihan OB & area sekolah', icon: 'fa-broom', color: 'text-teal-600' },
+                { id: 'tab-pengadaan', label: 'Pengadaan Barang & Sarpras', desc: 'Pengajuan material, approval biaya, dan nota belanja', icon: 'fa-cart-shopping', color: 'text-amber-500' },
+                { id: 'tab-keuangan', label: 'Keuangan & FKP GA', desc: 'Buku kas belanja umum, analitik 4 chart, dan plafon', icon: 'fa-file-invoice-dollar', color: 'text-emerald-600' },
+                { id: 'tab-keuangan-ecopark', label: 'Keuangan Ecopark', desc: 'Arus kas masuk omset, belanja budidaya & peternakan', icon: 'fa-tree', color: 'text-emerald-600' },
+                { id: 'tab-pemeliharaan', label: 'Pemeliharaan Sarpras (PM)', desc: 'Jadwal servis preventif, aset, dan riwayat maintenance', icon: 'fa-screwdriver-wrench', color: 'text-teal-600' },
+                { id: 'tab-evaluasi', label: 'Rapor & Evaluasi Personil', desc: 'Penilaian SLA, skor kepatuhan, dan rekap kinerja tim', icon: 'fa-clipboard-user', color: 'text-indigo-600' },
+                { id: 'tab-sapaais', label: 'Sapa Ais / LaporPak', desc: 'Laporan keluhan sarpras civitas & tindak lanjut tiket', icon: 'fa-bullhorn', color: 'text-emerald-600' },
+                { id: 'tab-mutubaah', label: 'Mutabaah Diri Civitas', desc: 'Peningkatan kualitas ibadah & dzikir pimpinan/civitas', icon: 'fa-book-open', color: 'text-teal-600' },
+                { id: 'tab-server', label: 'Monitor Server VPS', desc: 'Spesifikasi VPS, memory, CPU, dan storage disk', icon: 'fa-server', color: 'text-blue-600' },
+                { id: 'tab-kuma', label: 'Uptime Kuma Monitor', desc: 'Pinger real-time server, gateway AI, dan CCTV', icon: 'fa-tower-broadcast', color: 'text-rose-600' },
+                { id: 'tab-analytics', label: 'Grafik & Analitik Tren', desc: 'Tren 7 hari tiket terselesaikan & kepatuhan standby', icon: 'fa-chart-pie', color: 'text-indigo-600' },
+                { id: 'tab-report', label: 'Cetak Laporan Harian', desc: 'Ekspor laporan teks harian siap cetak pimpinan', icon: 'fa-print', color: 'text-slate-600' },
+                { id: 'tab-users', label: 'Manajemen User', desc: 'Kelola akun login koordinator dan status aktif', icon: 'fa-users-gear', color: 'text-emerald-600' },
+                { id: 'tab-roles', label: 'Pengaturan Role Akses', desc: 'Konfigurasi matriks wewenang RBAC sistem', icon: 'fa-shield-halved', color: 'text-teal-600' }
+            ],
+            actions: [
+                { id: 'delegate_tasks', label: 'Delegasikan Tugas Baru', desc: 'Membuat tiket penugasan untuk koordinator lain', icon: 'fa-paper-plane', color: 'text-amber-600' },
+                { id: 'verify_tasks', label: 'Verifikasi & Selesaikan Tiket', desc: 'Menandai pekerjaan lapangan telah tuntas dan valid', icon: 'fa-circle-check', color: 'text-emerald-600' },
+                { id: 'manage_journals', label: 'Kelola Jurnal Kerja', desc: 'Menambah dan mengedit jurnal aktivitas harian unit', icon: 'fa-pen-to-square', color: 'text-blue-600' },
+                { id: 'feedback_journals', label: 'Supervisi & Catatan Pimpinan', desc: 'Memberikan feedback evaluasi pada jurnal staf', icon: 'fa-comment-dots', color: 'text-purple-600' },
+                { id: 'manage_procurements', label: 'Ajukan Pengadaan Barang', desc: 'Mengajukan permohonan material atau suku cadang', icon: 'fa-cart-plus', color: 'text-amber-600' },
+                { id: 'approve_procurements', label: 'Approval Pengadaan Pimpinan', desc: 'Menyetujui atau menolak permohonan belanja dana', icon: 'fa-stamp', color: 'text-rose-600' },
+                { id: 'purchase_procurements', label: 'Eksekusi Pembelian Logistik', desc: 'Mencatat nota toko & proses beli barang (PIC Pengadaan)', icon: 'fa-basket-shopping', color: 'text-teal-600' },
+                { id: 'manage_finance_ga', label: 'Kelola Belanja Keuangan GA', desc: 'Tambah, edit, dan hapus data transaksi kas keluar GA', icon: 'fa-receipt', color: 'text-emerald-600' },
+                { id: 'manage_finance_eco', label: 'Kelola Kas Keuangan Ecopark', desc: 'Catat omset kas masuk dan belanja budidaya Ecopark', icon: 'fa-hand-holding-dollar', color: 'text-emerald-600' },
+                { id: 'export_data', label: 'Ekspor Excel (.xlsx) & CSV', desc: 'Mengunduh rekap spreadsheet ke komputer', icon: 'fa-file-excel', color: 'text-emerald-600' },
+                { id: 'manage_users', label: 'Kelola Akun Pengguna', desc: 'Membuat akun koordinator & reset kata sandi', icon: 'fa-user-gear', color: 'text-indigo-600' },
+                { id: 'manage_roles', label: 'Konfigurasi Hak Akses Role', desc: 'Mengubah wewenang izin per role di RBAC', icon: 'fa-lock-open', color: 'text-rose-600' }
+            ],
+            units: [
+                { id: 'all', label: 'Akses Semua Unit (Global)', desc: 'Dapat memonitor seluruh unit tanpa filter batasan', icon: 'fa-globe', color: 'text-emerald-600' },
+                { id: 'unit_it', label: 'Khusus Unit IT', desc: 'Terikat pada infrastruktur & sistem digital', icon: 'fa-laptop-code', color: 'text-blue-600' },
+                { id: 'unit_ob', label: 'Khusus Unit Office Boy', desc: 'Terikat pada sanitasi & kebersihan indoor', icon: 'fa-broom', color: 'text-teal-600' },
+                { id: 'unit_gardener', label: 'Khusus Unit Gardener', desc: 'Terikat pada taman, budidaya & Ecopark', icon: 'fa-leaf', color: 'text-amber-600' },
+                { id: 'unit_security', label: 'Khusus Unit Security', desc: 'Terikat pada gerbang, pos & keamanan kampus', icon: 'fa-shield-halved', color: 'text-indigo-600' },
+                { id: 'unit_sarpras', label: 'Khusus Teknisi Sarpras', desc: 'Terikat pada pemeliharaan utilitas fisik sekolah', icon: 'fa-wrench', color: 'text-slate-600' },
+                { id: 'unit_pengadaan', label: 'Khusus Pengadaan & Logistik', desc: 'Terikat pada pembelian barang & nota belanja', icon: 'fa-truck-ramp-box', color: 'text-amber-600' }
+            ]
+        };
+
+        const CORE_ROLES = ['manager', 'koordinator_it', 'koordinator_ob', 'koordinator_gardener', 'koordinator_security', 'pic_sarpras', 'pic_pengadaan'];
+
+        function getRoleIcon(roleCode) {
+            switch(roleCode) {
+                case 'manager': return 'fa-shield-halved';
+                case 'koordinator_it': return 'fa-laptop-code';
+                case 'koordinator_ob': return 'fa-broom';
+                case 'koordinator_gardener': return 'fa-leaf';
+                case 'koordinator_security': return 'fa-user-shield';
+                case 'pic_sarpras': return 'fa-screwdriver-wrench';
+                case 'pic_pengadaan': return 'fa-cart-shopping';
+                default: return 'fa-id-badge';
+            }
+        }
+
         function loadOpsRoles() {
             const container = document.getElementById('ops-roles-cards-container');
             if (!container) return;
-            container.innerHTML = '<div class="col-span-3 p-6 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat data role...</div>';
+            container.innerHTML = '<div class="col-span-full p-6 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat konfigurasi role & hak akses...</div>';
             
-            fetch('/api/ops/roles')
-                .then(r => r.json())
-                .then(roles => {
-                    let html = '';
-                    roles.forEach(r => {
-                        const permCount = Array.isArray(r.permissions) ? r.permissions.length : 0;
-                        html += `
-                            <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs hover:border-emerald-300 transition">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-bold text-slate-800 font-mono">${r.role_code}</span>
-                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">${permCount} Izin</span>
-                                </div>
-                                <h4 class="text-sm font-bold text-emerald-700">${r.role_name}</h4>
-                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">${r.description || '-'}</p>
-                            </div>
-                        `;
-                    });
-                    container.innerHTML = html;
-                })
-                .catch(err => {
-                    container.innerHTML = `<div class="col-span-3 p-6 text-center text-rose-500"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Gagal memuat role: ${err.message}</div>`;
+            // Ambil data users dan roles secara paralel
+            Promise.all([
+                fetch('/api/ops/roles').then(r => r.json()),
+                fetch('/api/ops/users').then(r => r.json()).catch(() => ({ users: [] }))
+            ])
+            .then(([roles, usersData]) => {
+                G_OPS_ROLES = Array.isArray(roles) ? roles : [];
+                
+                // Hitung jumlah user per role
+                G_OPS_USER_COUNTS = {};
+                const users = usersData.users || [];
+                users.forEach(u => {
+                    const r = u.role_code;
+                    G_OPS_USER_COUNTS[r] = (G_OPS_USER_COUNTS[r] || 0) + 1;
                 });
+
+                // Update template dropdown di modal tambah role
+                const templateSelect = document.getElementById('new-role-template');
+                if (templateSelect) {
+                    let opts = '<option value="">-- Role Kosong (Atur dari Awal) --</option>';
+                    G_OPS_ROLES.forEach(r => {
+                        opts += `<option value="${r.role_code}">Salin dari ${r.role_name}</option>`;
+                    });
+                    templateSelect.innerHTML = opts;
+                }
+
+                // Render role cards selector
+                renderRoleCards();
+
+                // Pilih role aktif (default manager atau yang terakhir dipilih)
+                const exists = G_OPS_ROLES.some(r => r.role_code === G_CURRENT_ROLE_CODE);
+                if (!exists && G_OPS_ROLES.length > 0) {
+                    G_CURRENT_ROLE_CODE = G_OPS_ROLES[0].role_code;
+                }
+                selectOpsRole(G_CURRENT_ROLE_CODE);
+            })
+            .catch(err => {
+                container.innerHTML = `<div class="col-span-full p-6 text-center text-rose-500"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Gagal memuat role: ${err.message}</div>`;
+            });
+        }
+
+        function renderRoleCards() {
+            const container = document.getElementById('ops-roles-cards-container');
+            if (!container) return;
+            if (G_OPS_ROLES.length === 0) {
+                container.innerHTML = '<div class="col-span-full p-6 text-center text-slate-400">Belum ada role terdaftar.</div>';
+                return;
+            }
+
+            let html = '';
+            G_OPS_ROLES.forEach(r => {
+                const isSelected = r.role_code === G_CURRENT_ROLE_CODE;
+                const permCount = Array.isArray(r.permissions) ? r.permissions.length : 0;
+                const userCount = G_OPS_USER_COUNTS[r.role_code] || 0;
+                const icon = getRoleIcon(r.role_code);
+                const isCore = CORE_ROLES.includes(r.role_code);
+
+                html += `
+                    <div onclick="selectOpsRole('${r.role_code}')" class="group relative bg-white rounded-xl border ${isSelected ? 'border-emerald-500 ring-2 ring-emerald-500/20 shadow-sm' : 'border-slate-200/90 hover:border-emerald-300 hover:shadow-xs'} p-3.5 transition cursor-pointer flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="w-8 h-8 rounded-lg ${isSelected ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 group-hover:bg-emerald-50 group-hover:text-emerald-700'} flex items-center justify-center text-sm transition">
+                                    <i class="fa-solid ${icon}"></i>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${isSelected ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}">${permCount} Izin</span>
+                                    ${!isCore ? `
+                                        <button type="button" onclick="event.stopPropagation(); openEditRoleModal('${r.role_code}')" class="p-1 text-slate-400 hover:text-blue-600 text-xs" title="Edit Role"><i class="fa-solid fa-pen"></i></button>
+                                        <button type="button" onclick="event.stopPropagation(); deleteCustomRole('${r.role_code}')" class="p-1 text-slate-400 hover:text-rose-600 text-xs" title="Hapus Role"><i class="fa-solid fa-trash-can"></i></button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            <h4 class="font-bold text-xs sm:text-sm text-slate-800 group-hover:text-emerald-700 transition line-clamp-1">${r.role_name}</h4>
+                            <p class="font-mono text-[10px] text-slate-400 mt-0.5">${r.role_code}</p>
+                            <p class="text-[11px] text-slate-500 mt-1 line-clamp-2 leading-tight">${r.description || '-'}</p>
+                        </div>
+                        <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[10px]">
+                            <span class="text-slate-400 font-medium"><i class="fa-solid fa-users mr-1"></i>${userCount} Akun</span>
+                            <span class="${isSelected ? 'text-emerald-700 font-bold' : 'text-slate-400 group-hover:text-slate-600'}">
+                                ${isSelected ? '<i class="fa-solid fa-check-circle text-emerald-600 mr-1"></i>Aktif' : 'Atur Izin &rarr;'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function selectOpsRole(roleCode) {
+            G_CURRENT_ROLE_CODE = roleCode;
+            const role = G_OPS_ROLES.find(r => r.role_code === roleCode);
+            if (!role) return;
+
+            // Re-render selector cards to highlight active role
+            renderRoleCards();
+
+            // Set role banner header
+            document.getElementById('role-panel-name').innerText = role.role_name;
+            document.getElementById('role-panel-code').innerText = role.role_code;
+            document.getElementById('role-panel-desc').innerText = role.description || '-';
+            
+            const iconEl = document.getElementById('role-panel-icon');
+            if (iconEl) {
+                iconEl.innerHTML = `<i class="fa-solid ${getRoleIcon(role.role_code)}"></i>`;
+            }
+
+            // Note khusus manager
+            const noteMgr = document.getElementById('role-manager-special-note');
+            if (noteMgr) {
+                if (role.role_code === 'manager') {
+                    noteMgr.classList.remove('hidden');
+                } else {
+                    noteMgr.classList.add('hidden');
+                }
+            }
+
+            // Populate checkboxes
+            const perms = Array.isArray(role.permissions) ? role.permissions : [];
+            const isManager = role.role_code === 'manager';
+
+            // Kategori 1: Tabs
+            const tabsCont = document.getElementById('matrix-tabs-container');
+            if (tabsCont) {
+                let html = '';
+                PERM_CATALOG.tabs.forEach(t => {
+                    const checked = isManager || perms.includes(t.id) || perms.includes('all');
+                    html += `
+                        <label class="flex items-start gap-3 p-2.5 bg-slate-50/70 hover:bg-emerald-50/40 rounded-xl border border-slate-200/70 hover:border-emerald-300 transition cursor-pointer group">
+                            <input type="checkbox" data-perm="${t.id}" class="ops-perm-cb mt-0.5 w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer" ${checked ? 'checked' : ''} onchange="updatePermCountBadge()">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-1.5">
+                                    <i class="fa-solid ${t.icon} ${t.color} text-xs w-4"></i>
+                                    <span class="text-xs font-bold text-slate-700 group-hover:text-emerald-900">${t.label}</span>
+                                </div>
+                                <p class="text-[10px] text-slate-500 mt-0.5 line-clamp-1 leading-tight">${t.desc}</p>
+                            </div>
+                        </label>
+                    `;
+                });
+                tabsCont.innerHTML = html;
+            }
+
+            // Kategori 2: Actions
+            const actsCont = document.getElementById('matrix-actions-container');
+            if (actsCont) {
+                let html = '';
+                PERM_CATALOG.actions.forEach(a => {
+                    const checked = isManager || perms.includes(a.id) || perms.includes('all');
+                    html += `
+                        <label class="flex items-start gap-3 p-2.5 bg-slate-50/70 hover:bg-amber-50/40 rounded-xl border border-slate-200/70 hover:border-amber-300 transition cursor-pointer group">
+                            <input type="checkbox" data-perm="${a.id}" class="ops-perm-cb mt-0.5 w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500 cursor-pointer" ${checked ? 'checked' : ''} onchange="updatePermCountBadge()">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-1.5">
+                                    <i class="fa-solid ${a.icon} ${a.color} text-xs w-4"></i>
+                                    <span class="text-xs font-bold text-slate-700 group-hover:text-amber-900">${a.label}</span>
+                                </div>
+                                <p class="text-[10px] text-slate-500 mt-0.5 line-clamp-1 leading-tight">${a.desc}</p>
+                            </div>
+                        </label>
+                    `;
+                });
+                actsCont.innerHTML = html;
+            }
+
+            // Kategori 3: Units
+            const unitsCont = document.getElementById('matrix-units-container');
+            if (unitsCont) {
+                let html = '';
+                PERM_CATALOG.units.forEach(u => {
+                    const checked = isManager || perms.includes(u.id) || perms.includes('all');
+                    html += `
+                        <label class="flex items-start gap-3 p-2.5 bg-slate-50/70 hover:bg-indigo-50/40 rounded-xl border border-slate-200/70 hover:border-indigo-300 transition cursor-pointer group">
+                            <input type="checkbox" data-perm="${u.id}" class="ops-perm-cb mt-0.5 w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer" ${checked ? 'checked' : ''} onchange="updatePermCountBadge()">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-1.5">
+                                    <i class="fa-solid ${u.icon} ${u.color} text-xs w-4"></i>
+                                    <span class="text-xs font-bold text-slate-700 group-hover:text-indigo-900">${u.label}</span>
+                                </div>
+                                <p class="text-[10px] text-slate-500 mt-0.5 line-clamp-1 leading-tight">${u.desc}</p>
+                            </div>
+                        </label>
+                    `;
+                });
+                unitsCont.innerHTML = html;
+            }
+
+            updatePermCountBadge();
+        }
+
+        function updatePermCountBadge() {
+            const checkedBoxes = document.querySelectorAll('.ops-perm-cb:checked');
+            const badge = document.getElementById('role-panel-perm-count');
+            if (badge) {
+                badge.innerText = `${checkedBoxes.length} Izin Aktif`;
+            }
+        }
+
+        function saveOpsRolePermissions() {
+            if (!G_CURRENT_ROLE_CODE) return;
+            const checkedBoxes = document.querySelectorAll('.ops-perm-cb:checked');
+            const selectedPerms = [];
+            checkedBoxes.forEach(cb => {
+                const p = cb.getAttribute('data-perm');
+                if (p && !selectedPerms.includes(p)) {
+                    selectedPerms.push(p);
+                }
+            });
+
+            // Pastikan role manager selalu mempertahankan izin root 'all'
+            if (G_CURRENT_ROLE_CODE === 'manager' && !selectedPerms.includes('all')) {
+                selectedPerms.push('all');
+            }
+
+            fetch(`/api/ops/roles/${G_CURRENT_ROLE_CODE}/permissions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ permissions: selectedPerms })
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.error) {
+                    alert('Gagal menyimpan izin: ' + res.error);
+                } else {
+                    // Update cache lokal
+                    const role = G_OPS_ROLES.find(r => r.role_code === G_CURRENT_ROLE_CODE);
+                    if (role) {
+                        role.permissions = selectedPerms;
+                    }
+                    renderRoleCards();
+                    updatePermCountBadge();
+                    alert(`✅ Berhasil! Hak akses untuk role '${G_CURRENT_ROLE_CODE}' berhasil diperbarui (${selectedPerms.length} izin aktif).`);
+                }
+            })
+            .catch(err => alert('Terjadi kesalahan koneksi: ' + err.message));
+        }
+
+        function selectAllRolePerms() {
+            const boxes = document.querySelectorAll('.ops-perm-cb');
+            boxes.forEach(cb => cb.checked = true);
+            updatePermCountBadge();
+        }
+
+        function selectReadOnlyRolePerms() {
+            const boxes = document.querySelectorAll('.ops-perm-cb');
+            boxes.forEach(cb => {
+                const perm = cb.getAttribute('data-perm') || '';
+                // Hanya centang yang berawalan tab- dan uncheck aksi/edit
+                cb.checked = perm.startsWith('tab-') && !perm.includes('users') && !perm.includes('roles');
+            });
+            updatePermCountBadge();
+        }
+
+        function resetCurrentRolePerms() {
+            const role = G_OPS_ROLES.find(r => r.role_code === G_CURRENT_ROLE_CODE);
+            if (!role) return;
+            selectOpsRole(role.role_code);
+        }
+
+        function toggleCategoryPerms(prefix) {
+            let selector = '';
+            if (prefix === 'tab-') {
+                selector = '#matrix-tabs-container .ops-perm-cb';
+            } else if (prefix === 'act-') {
+                selector = '#matrix-actions-container .ops-perm-cb';
+            }
+            if (!selector) return;
+
+            const boxes = document.querySelectorAll(selector);
+            if (boxes.length === 0) return;
+            const anyUnchecked = Array.from(boxes).some(b => !b.checked);
+            boxes.forEach(b => b.checked = anyUnchecked);
+            updatePermCountBadge();
+        }
+
+        // ============ MODAL TAMBAH & EDIT ROLE ============
+        function openCreateRoleModal() {
+            const form = document.getElementById('form-create-role');
+            if (form) form.reset();
+            toggleModal('modal-create-role');
+        }
+
+        function submitCreateRole(e) {
+            e.preventDefault();
+            const form = e.target;
+            const roleCode = form.role_code.value.trim().toLowerCase();
+            const roleName = form.role_name.value.trim();
+            const description = form.description.value.trim();
+            const templateRole = form.querySelector('#new-role-template').value;
+
+            // Salin permissions dari template jika dipilih
+            let initialPerms = ['tab-dashboard', 'tab-tasks', 'tab-todo', 'tab-journal'];
+            if (templateRole) {
+                const src = G_OPS_ROLES.find(r => r.role_code === templateRole);
+                if (src && Array.isArray(src.permissions)) {
+                    initialPerms = [...src.permissions];
+                }
+            }
+
+            fetch('/api/ops/roles/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    role_code: roleCode,
+                    role_name: roleName,
+                    description: description,
+                    permissions: initialPerms
+                })
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.error) {
+                    alert('Gagal membuat role: ' + res.error);
+                } else {
+                    toggleModal('modal-create-role');
+                    G_CURRENT_ROLE_CODE = roleCode;
+                    loadOpsRoles();
+                    alert(`✅ Role baru '${roleName}' (${roleCode}) berhasil dibuat!`);
+                }
+            })
+            .catch(err => alert('Terjadi kesalahan: ' + err.message));
+        }
+
+        function openEditRoleModal(roleCode) {
+            const role = G_OPS_ROLES.find(r => r.role_code === roleCode);
+            if (!role) return;
+
+            document.getElementById('edit-role-code').value = role.role_code;
+            document.getElementById('edit-role-code-display').value = role.role_code;
+            document.getElementById('edit-role-name').value = role.role_name;
+            document.getElementById('edit-role-desc').value = role.description || '';
+
+            toggleModal('modal-edit-role');
+        }
+
+        function submitEditRole(e) {
+            e.preventDefault();
+            const form = e.target;
+            const roleCode = form.role_code.value;
+            const roleName = form.role_name.value.trim();
+            const description = form.description.value.trim();
+
+            fetch(`/api/ops/roles/${roleCode}/edit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    role_name: roleName,
+                    description: description
+                })
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.error) {
+                    alert('Gagal mengedit role: ' + res.error);
+                } else {
+                    toggleModal('modal-edit-role');
+                    loadOpsRoles();
+                    alert('✅ Informasi role berhasil diperbarui!');
+                }
+            })
+            .catch(err => alert('Terjadi kesalahan: ' + err.message));
+        }
+
+        function deleteCustomRole(roleCode) {
+            if (CORE_ROLES.includes(roleCode)) {
+                alert('Role sistem utama tidak dapat dihapus.');
+                return;
+            }
+            if (!confirm(`Apakah Anda yakin ingin menghapus role '${roleCode}'?`)) {
+                return;
+            }
+
+            fetch(`/api/ops/roles/${roleCode}/delete`, {
+                method: 'POST'
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.error) {
+                    alert('Gagal menghapus role: ' + res.error);
+                } else {
+                    G_CURRENT_ROLE_CODE = 'manager';
+                    loadOpsRoles();
+                    alert('✅ Role berhasil dihapus!');
+                }
+            })
+            .catch(err => alert('Terjadi kesalahan: ' + err.message));
         }
 
         // ============ Mutabaah Diri Pimpinan & Civitas Loader ============
@@ -8348,7 +8911,22 @@ def index():
     user_role_name = session.get('ops_role_name', 'IT Manager & Kabag Umum')
     user_unit = session.get('ops_unit_code', 'ALL')
     user_sub_scope = session.get('ops_sub_scope', '')
-    user_permissions = session.get('ops_permissions', ['all'])
+
+    # Load fresh permissions from DB for the role
+    try:
+        con_auth = get_ops_db()
+        role_row = con_auth.execute('SELECT permissions, role_name FROM ops_roles WHERE role_code = ?', (user_role,)).fetchone()
+        con_auth.close()
+        if role_row and role_row['permissions']:
+            user_permissions = json.loads(role_row['permissions'])
+            session['ops_permissions'] = user_permissions
+            if role_row['role_name']:
+                user_role_name = role_row['role_name']
+                session['ops_role_name'] = user_role_name
+        else:
+            user_permissions = session.get('ops_permissions', ['all'])
+    except Exception:
+        user_permissions = session.get('ops_permissions', ['all'])
 
     data = load_data()
     stats = get_server_stats()

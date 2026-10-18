@@ -1,4 +1,5 @@
 import os
+import re
 import sqlite3
 import json
 from datetime import datetime
@@ -63,9 +64,11 @@ def init_ops_auth_db():
                 "all", "view_all_units", "delegate_tasks", "verify_tasks",
                 "manage_users", "manage_roles",
                 "tab-dashboard", "tab-journal", "tab-todo", "tab-tasks",
-                "tab-mutabaah", "tab-kebersihan", "tab-sapaais", "tab-mutubaah",
+                "tab-standby", "tab-checklist", "tab-mutabaah", "tab-kebersihan",
+                "tab-pengadaan", "tab-keuangan", "tab-keuangan-ecopark",
+                "tab-pemeliharaan", "tab-evaluasi", "tab-sapaais", "tab-mutubaah",
                 "tab-server", "tab-kuma", "tab-analytics", "tab-report",
-                "tab-users", "tab-roles", "tab-pengadaan", "tab-evaluasi", "tab-pemeliharaan"
+                "tab-users", "tab-roles"
             ])
         ),
         (
@@ -129,11 +132,11 @@ def init_ops_auth_db():
             INSERT OR IGNORE INTO ops_roles (role_code, role_name, description, permissions)
             VALUES (?, ?, ?, ?)
         ''', (r_code, r_name, r_desc, r_perms))
-        # Update permissions if role already exists
+        # Update deskripsi jika ada perubahan tanpa menimpa permissions yang telah dikustomisasi
         cur.execute('''
-            UPDATE ops_roles SET role_name = ?, description = ?, permissions = ?
-            WHERE role_code = ?
-        ''', (r_name, r_desc, r_perms, r_code))
+            UPDATE ops_roles SET role_name = ?, description = ?
+            WHERE role_code = ? AND (permissions IS NULL OR permissions = '')
+        ''', (r_name, r_desc, r_code))
     con.commit()
     
     # Pre-seed User Awal jika belum ada
@@ -685,8 +688,88 @@ def api_update_role_permissions(role_code):
         return jsonify({"error": "Permissions harus berupa array"}), 400
 
     con = get_ops_db()
+    # Pastikan role ada
+    role = con.execute('SELECT * FROM ops_roles WHERE role_code = ?', (role_code,)).fetchone()
+    if not role:
+        con.close()
+        return jsonify({"error": f"Role '{role_code}' tidak ditemukan"}), 404
+
     con.execute('UPDATE ops_roles SET permissions = ? WHERE role_code = ?', (json.dumps(permissions), role_code))
     con.commit()
     con.close()
 
     return jsonify({"success": True, "message": f"Izin akses role '{role_code}' berhasil diperbarui."})
+
+@ops_auth_bp.route('/api/ops/roles/create', methods=['POST'])
+@login_required
+@role_required(['manager'])
+def api_create_role():
+    data = request.get_json() or {}
+    role_code = (data.get('role_code') or '').strip().lower()
+    role_name = (data.get('role_name') or '').strip()
+    description = (data.get('description') or '').strip()
+    permissions = data.get('permissions', [])
+
+    if not role_code or not role_name:
+        return jsonify({"error": "Kode role dan Nama role wajib diisi"}), 400
+
+    # Format role_code: hanya huruf, angka, underscore
+    if not re.match(r'^[a-z0-9_]{3,32}$', role_code):
+        return jsonify({"error": "Kode role harus 3-32 karakter, huruf kecil, angka, dan underscore saja"}), 400
+
+    con = get_ops_db()
+    existing = con.execute('SELECT * FROM ops_roles WHERE role_code = ?', (role_code,)).fetchone()
+    if existing:
+        con.close()
+        return jsonify({"error": f"Kode role '{role_code}' sudah digunakan"}), 400
+
+    con.execute('''
+        INSERT INTO ops_roles (role_code, role_name, description, permissions)
+        VALUES (?, ?, ?, ?)
+    ''', (role_code, role_name, description, json.dumps(permissions)))
+    con.commit()
+    con.close()
+
+    return jsonify({"success": True, "message": f"Role '{role_name}' ({role_code}) berhasil dibuat."})
+
+@ops_auth_bp.route('/api/ops/roles/<role_code>/edit', methods=['POST'])
+@login_required
+@role_required(['manager'])
+def api_edit_role(role_code):
+    data = request.get_json() or {}
+    role_name = (data.get('role_name') or '').strip()
+    description = (data.get('description') or '').strip()
+
+    if not role_name:
+        return jsonify({"error": "Nama role wajib diisi"}), 400
+
+    con = get_ops_db()
+    con.execute('''
+        UPDATE ops_roles SET role_name = ?, description = ?
+        WHERE role_code = ?
+    ''', (role_name, description, role_code))
+    con.commit()
+    con.close()
+
+    return jsonify({"success": True, "message": f"Informasi role '{role_code}' berhasil diperbarui."})
+
+@ops_auth_bp.route('/api/ops/roles/<role_code>/delete', methods=['POST'])
+@login_required
+@role_required(['manager'])
+def api_delete_role(role_code):
+    CORE_ROLES = ['manager', 'koordinator_it', 'koordinator_ob', 'koordinator_gardener', 'koordinator_security', 'pic_sarpras', 'pic_pengadaan']
+    if role_code in CORE_ROLES:
+        return jsonify({"error": f"Role inti sistem '{role_code}' tidak dapat dihapus"}), 403
+
+    con = get_ops_db()
+    # Cek apakah ada user yang masih menggunakan role ini
+    user_count = con.execute('SELECT COUNT(*) FROM ops_users WHERE role_code = ?', (role_code,)).fetchone()[0]
+    if user_count > 0:
+        con.close()
+        return jsonify({"error": f"Role tidak dapat dihapus karena masih digunakan oleh {user_count} pengguna aktif"}), 400
+
+    con.execute('DELETE FROM ops_roles WHERE role_code = ?', (role_code,))
+    con.commit()
+    con.close()
+
+    return jsonify({"success": True, "message": f"Role '{role_code}' berhasil dihapus."})
