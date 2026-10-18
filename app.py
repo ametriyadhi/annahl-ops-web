@@ -28,13 +28,19 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 from ops_core import ops_core_bp
 from checklist_core import checklist_bp
+from ops_finance import ops_finance_bp
+from ops_finance_ecopark import ops_finance_ecopark_bp
 import templates_pm
 import ops_pm
 import templates_evaluasi
 import ops_evaluasi
+import templates_finance
+import templates_finance_ecopark
 app.register_blueprint(ops_auth_bp)
 app.register_blueprint(ops_core_bp)
 app.register_blueprint(checklist_bp)
+app.register_blueprint(ops_finance_bp)
+app.register_blueprint(ops_finance_ecopark_bp)
 
 @app.route("/favicon.ico")
 def favicon():
@@ -417,6 +423,17 @@ HTML_TEMPLATE = """
             <button onclick="showTab('tab-pengadaan')" id="btn-tab-pengadaan" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-cart-shopping text-base w-5 shrink-0 text-center text-amber-400"></i>
                 <span class="text-left flex-1">Pengadaan Barang & Sarpras</span>
+            </button>
+            <button onclick="showTab('tab-keuangan')" id="btn-tab-keuangan" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-file-invoice-dollar text-base w-5 shrink-0 text-center text-emerald-400"></i>
+                <span class="text-left flex-1">Keuangan & FKP GA</span>
+            </button>
+            {% endif %}
+
+            {% if user_role in ['manager', 'koordinator_gardener', 'pic_pengadaan'] %}
+            <button onclick="showTab('tab-keuangan-ecopark')" id="btn-tab-keuangan-ecopark" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-tree text-base w-5 shrink-0 text-center text-emerald-400"></i>
+                <span class="text-left flex-1">Keuangan Ecopark</span>
             </button>
             {% endif %}
 
@@ -2539,6 +2556,12 @@ HTML_TEMPLATE = """
 
             <!-- TAB EVALUASI & RAPOR PERSONIL OB & GARDENER -->
             {{ tab_evaluasi_html | safe }}
+
+            <!-- TAB KEUANGAN & FKP GA AN NAHL -->
+            {{ tab_keuangan_html | safe }}
+
+            <!-- TAB KEUANGAN TERPADU CIANGSANA ECOPARK -->
+            {{ tab_keuangan_ecopark_html | safe }}
 
             <!-- TAB 4: KEBERSIHAN LOGS WITH FILTER -->
             <div id="tab-kebersihan" class="tab-content hidden space-y-6">
@@ -4897,6 +4920,8 @@ HTML_TEMPLATE = """
             'tab-users': 'Manajemen Pengguna & Koordinator Unit',
             'tab-roles': 'Manajemen Role & Hak Akses (RBAC Matrix)',
             'tab-pengadaan': 'Pengadaan Barang & Logistik Sarpras',
+            'tab-keuangan': 'Buku Kas & Pengeluaran Bagian Umum (FKP GA)',
+            'tab-keuangan-ecopark': 'Buku Kas & Keuangan Terpadu Ciangsana Ecopark',
             'tab-pemeliharaan': 'Pemeliharaan Sarpras & Fasilitas (ISO FM-UMUM-AIS-03-02)',
             'tab-evaluasi': 'Rapor & Analisa Kedisiplinan Personil (OB & Gardener)',
         };
@@ -4986,6 +5011,12 @@ HTML_TEMPLATE = """
             }
             if (tabId === 'tab-evaluasi') {
                 loadEvaluasiData();
+            }
+            if (tabId === 'tab-keuangan') {
+                loadKeuanganGA();
+            }
+            if (tabId === 'tab-keuangan-ecopark') {
+                loadKeuanganEcopark();
             }
 
             if (window.innerWidth < 768) {
@@ -8301,6 +8332,8 @@ HTML_TEMPLATE = """
     </script>
     {{ pm_client_script | safe }}
     {{ evaluasi_client_script | safe }}
+    {{ finance_client_script | safe }}
+    {{ finance_ecopark_client_script | safe }}
 </body>
 </html>
 """
@@ -8498,7 +8531,11 @@ def index():
         tab_pemeliharaan_html=templates_pm.TAB_PEMELIHARAAN_HTML,
         pm_client_script=templates_pm.PM_CLIENT_SCRIPT,
         tab_evaluasi_html=templates_evaluasi.TAB_EVALUASI_HTML,
-        evaluasi_client_script=templates_evaluasi.EVALUASI_CLIENT_SCRIPT
+        evaluasi_client_script=templates_evaluasi.EVALUASI_CLIENT_SCRIPT,
+        tab_keuangan_html=templates_finance.TAB_KEUANGAN_HTML,
+        finance_client_script=templates_finance.JS_KEUANGAN_SCRIPTS,
+        tab_keuangan_ecopark_html=templates_finance_ecopark.TAB_KEUANGAN_ECOPARK_HTML,
+        finance_ecopark_client_script=templates_finance_ecopark.JS_KEUANGAN_ECOPARK_SCRIPTS
     )
 
 @app.route("/add_host", methods=["POST"])

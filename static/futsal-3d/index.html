@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Interactive Model - Proyek Atap Lapangan Futsal & Basket An Nahl</title>
+    <!-- Fonts & Tailwind -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #0b1120;
+            color: #f8fafc;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            letter-spacing: -0.011em;
+        }
+        #webgl-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            display: block;
+        }
+
+        /* Glassmorphism UI Components */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.78);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+            border-radius: 16px;
+        }
+        .glass-btn {
+            background: rgba(30, 41, 59, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: #e2e8f0;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .glass-btn:hover {
+            background: rgba(51, 65, 85, 0.95);
+            border-color: rgba(56, 189, 248, 0.5);
+            color: #38bdf8;
+            transform: translateY(-1px);
+        }
+        .glass-btn.active {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            border-color: #38bdf8;
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(2, 132, 199, 0.4);
+        }
+
+        /* Top Header */
+        .top-bar {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            right: 16px;
+            z-index: 10;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: auto;
+        }
+        .brand-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-box {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+        }
+        .brand-text h1 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #f8fafc;
+            line-height: 1.2;
+        }
+        .brand-text p {
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        /* Bottom Floating View Presets */
+        .camera-presets {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            pointer-events: auto;
+        }
+
+        /* Right Floating Engineering Controls */
+        .control-sidebar {
+            position: absolute;
+            top: 86px;
+            right: 16px;
+            width: 290px;
+            z-index: 10;
+            padding: 18px;
+            pointer-events: auto;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+        .control-sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .control-sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        .section-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #38bdf8;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .ctrl-group {
+            margin-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 14px;
+        }
+        .ctrl-group:last-child {
+            margin-bottom: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+        }
+
+        /* Technical Info Callout Cards */
+        .spec-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 11px;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+        }
+        .spec-label {
+            color: #94a3b8;
+        }
+        .spec-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: #38bdf8;
+        }
+
+        /* 3D Annotation Overlay Badges */
+        .anno-tag {
+            position: absolute;
+            z-index: 5;
+            background: rgba(15, 23, 42, 0.88);
+            border: 1px solid #38bdf8;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: #ffffff;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .anno-tag.show {
+            opacity: 1;
+        }
+        .anno-tag::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 5px solid #38bdf8;
+        }
+
+        /* Loading Screen */
+        #loader {
+            position: absolute;
+            inset: 0;
+            background: #0b1120;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            transition: opacity 0.6s ease;
+        }
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(56, 189, 248, 0.2);
+            border-top-color: #38bdf8;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .control-sidebar {
+                display: none;
+            }
+            .camera-presets {
+                width: calc(100% - 32px);
+                overflow-x: auto;
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Loading Screen -->
+    <div id="loader">
+        <div class="spinner"></div>
+        <div style="font-size: 14px; font-weight: 600; color: #e2e8f0; letter-spacing: 0.05em;">
+            MEMUAT MODEL 3D STRUKTUR ATAP AN NAHL...
+        </div>
+        <div style="font-size: 11px; color: #64748b;">Powered by Gemini 4 Argon & Three.js</div>
+    </div>
+
+    <!-- 3D Canvas -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- Top Bar -->
+    <header class="top-bar glass-panel">
+        <div class="brand-badge">
+            <div class="logo-box">
+                <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <div class="brand-text">
+                <h1>PROYEK ATAP LAPANGAN FUTSAL & BASKET</h1>
+                <p>An Nahl Islamic School • Model Arsitektur 3D Interaktif</p>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <button class="glass-btn" id="btn-screenshot" title="Ambil Gambar Tangkapan Layar HD">
+                <i class="fa-solid fa-camera"></i> Snapshot HD
+            </button>
+            <button class="glass-btn" id="btn-fullscreen" title="Layar Penuh">
+                <i class="fa-solid fa-expand"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Camera Presets Floating Dock -->
+    <div class="camera-presets glass-panel">
+        <button class="glass-btn active" data-view="drone">
+            <i class="fa-solid fa-drone"></i> Drone (Foto 1)
+        </button>
+        <button class="glass-btn" data-view="side">
+            <i class="fa-solid fa-camera"></i> Samping (Foto 2)
+        </button>
+        <button class="glass-btn" data-view="front">
+            <i class="fa-solid fa-door-open"></i> Gerbang Depan
+        </button>
+        <button class="glass-btn" data-view="player">
+            <i class="fa-solid fa-person-running"></i> Sudut Pemain
+        </button>
+        <button class="glass-btn" data-view="truss">
+            <i class="fa-solid fa-cubes"></i> Rangka Baja Truss
+        </button>
+        <button class="glass-btn" data-view="top">
+            <i class="fa-solid fa-map"></i> Denah Atas (Top)
+        </button>
+    </div>
+
+    <!-- Right Sidebar Control Panel -->
+    <aside class="control-sidebar glass-panel">
+        <!-- Visual Mode -->
+        <div class="ctrl-group">
+            <div class="section-title">
+                <i class="fa-solid fa-palette"></i> Lapisan Penutup Atap
+            </div>
+            <div class="grid-3">
+                <button class="glass-btn active" id="roof-solid">Solid</button>
+                <button class="glass-btn" id="roof-trans">Transparan</button>
+                <button class="glass-btn" id="roof-hidden">Rangka</button>
+            </div>
+        </div>
+
+        <!-- Pencahayaan / Mood -->
+        <div class="ctrl-group">
+            <div class="section-title">
+                <i class="fa-solid fa-sun"></i> Pencahayaan Suasana
+            </div>
+            <div class="grid-3">
+                <button class="glass-btn active" id="light-day">Siang</button>
+                <button class="glass-btn" id="light-sunset">Sore</button>
+                <button class="glass-btn" id="light-night">Malam LED</button>
+            </div>
+        </div>
+
+        <!-- Display Toggles -->
+        <div class="ctrl-group">
+            <div class="section-title">
+                <i class="fa-solid fa-sliders"></i> Opsi Tampilan
+            </div>
+            <div class="grid-2">
+                <button class="glass-btn" id="toggle-wire">
+                    <i class="fa-solid fa-border-all"></i> Wireframe
+                </button>
+                <button class="glass-btn active" id="toggle-dims">
+                    <i class="fa-solid fa-ruler-combined"></i> Dimensi
+                </button>
+            </div>
+            <div style="margin-top: 6px;">
+                <button class="glass-btn" id="toggle-rotate" style="width: 100%; justify-content: center;">
+                    <i class="fa-solid fa-rotate"></i> Auto-Rotate Kamera
+                </button>
+            </div>
+        </div>
+
+        <!-- Technical Specification -->
+        <div class="ctrl-group">
+            <div class="section-title">
+                <i class="fa-solid fa-circle-info"></i> Spesifikasi Teknis Lapangan
+            </div>
+            <div class="spec-item">
+                <span class="spec-label">Bentang Bersih Atap (Span)</span>
+                <span class="spec-val">19.50 m</span>
+            </div>
+            <div class="spec-item">
+                <span class="spec-label">Panjang Total Canopy</span>
+                <span class="spec-val">30.00 m</span>
+            </div>
+            <div class="spec-item">
+                <span class="spec-label">Tinggi Kaki Busur (Eaves)</span>
+                <span class="spec-val">6.20 m</span>
+            </div>
+            <div class="spec-item">
+                <span class="spec-label">Tinggi Puncak (Ridge Apex)</span>
+                <span class="spec-val">10.10 m</span>
+            </div>
+            <div class="spec-item">
+                <span class="spec-label">Ventilasi Punggung (Monitor)</span>
+                <span class="spec-val">+1.40 m (360° Open)</span>
+            </div>
+            <div class="spec-item">
+                <span class="spec-label">Struktur Utama</span>
+                <span class="spec-val">Pipa Baja CHS Ø 3"-4"</span>
+            </div>
+            <div class="spec-item">
+                <span class="spec-label">Lantai Lapangan</span>
+                <span class="spec-val">Silicon PU Futsal & Basket</span>
+            </div>
+            <div class="spec-item">
+                <span class="spec-label">Pagar Pembatas</span>
+                <span class="spec-val">Mesh Harmonika Putih T:6m</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 3D Dimension Callout Elements -->
+    <div id="dim-span" class="anno-tag show"><i class="fa-solid fa-arrows-left-right"></i> Bentang Atap: 19.5 m</div>
+    <div id="dim-apex" class="anno-tag show"><i class="fa-solid fa-arrow-up"></i> Puncak Atap: 10.1 m</div>
+    <div id="dim-length" class="anno-tag show"><i class="fa-solid fa-arrows-up-down"></i> Panjang Lapangan: 28.0 m</div>
+    <div id="dim-monitor" class="anno-tag show"><i class="fa-solid fa-wind"></i> Ventilasi Punggung (Stack Effect)</div>
+
+    <!-- Offline Three.js Fallback Scripts -->
+    <script src="js/three.min.js"></script>
+    <script src="js/OrbitControls.js"></script>
+
+    <script>
+        // ==========================================================
+        // 1. INISIALISASI ENGINE THREE.JS & ENVIRONMENT
+        // ==========================================================
+        const canvas = document.getElementById('webgl-canvas');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xdbeafe);
+        scene.fog = new THREE.FogExp2(0xdbeafe, 0.009);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({
+            canvas: canvas,
+            antialias: true,
+            preserveDrawingBuffer: true,
+            powerPreference: 'high-performance'
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.05;
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxPolarAngle = Math.PI / 2 - 0.02; // Tidak tembus tanah
+        controls.minDistance = 5;
+        controls.maxDistance = 120;
+        controls.target.set(0, 4.5, 0);
+
+        // Posisi Awal (Drone Aerial persis seperti foto input)
+        const VIEW_PRESETS = {
+            drone: { pos: [0, 24, 38], target: [0, 4, -1] },
+            side: { pos: [-28, 5.5, 14], target: [0, 4, 0] },
+            front: { pos: [0, 5, 26], target: [0, 4, 5] },
+            player: { pos: [0, 2.2, 8], target: [0, 2.8, -12] },
+            truss: { pos: [-8, 8.5, 6], target: [0, 8.5, 0] },
+            top: { pos: [0, 46, 0.1], target: [0, 0, 0] }
+        };
+
+        // Baca URL Query Parameter (Jika Ada)
+        const urlParams = new URLSearchParams(window.location.search);
+        const initView = urlParams.get('view') || 'drone';
+        const initRoof = urlParams.get('roof') || 'solid';
+        const initLight = urlParams.get('light') || 'day';
+
+        const activePreset = VIEW_PRESETS[initView] || VIEW_PRESETS.drone;
+        camera.position.set(...activePreset.pos);
+        controls.target.set(...activePreset.target);
+        controls.update();
+
+        // ==========================================================
+        // 2. SISTEM PENCAHAYAAN (DAYLIGHT / SUNSET / NIGHT LED)
+        // ==========================================================
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+        scene.add(ambientLight);
+
+        const hemiLight = new THREE.HemisphereLight(0xe0f2fe, 0x64748b, 0.6);
+        scene.add(hemiLight);
+
+        const sunLight = new THREE.DirectionalLight(0xfffbeb, 1.4);
+        sunLight.position.set(28, 45, 20); // Menyinari dari kanan-atas seperti foto asli
+        sunLight.castShadow = true;
+        sunLight.shadow.mapSize.width = 4096;
+        sunLight.shadow.mapSize.height = 4096;
+        sunLight.shadow.camera.near = 10;
+        sunLight.shadow.camera.far = 120;
+        const d = 32;
+        sunLight.shadow.camera.left = -d;
+        sunLight.shadow.camera.right = d;
+        sunLight.shadow.camera.top = d;
+        sunLight.shadow.camera.bottom = -d;
+        sunLight.shadow.bias = -0.0003;
+        scene.add(sunLight);
+
+        // Lampu Sorot Lapangan LED (untuk Night Match Mode)
+        const floodlights = [];
+        const floodlightGroup = new THREE.Group();
+        const floodlightPositions = [
+            [-9.5, 7.5, -9], [-9.5, 7.5, 0], [-9.5, 7.5, 9],
+            [9.5, 7.5, -9],  [9.5, 7.5, 0],  [9.5, 7.5, 9]
+        ];
+        floodlightPositions.forEach(p => {
+            const spot = new THREE.SpotLight(0xf8fafc, 0, 28, Math.PI / 3, 0.4, 1.2);
+            spot.position.set(p[0], p[1], p[2]);
+            spot.target.position.set(p[0] * 0.2, 0, p[2] * 0.8);
+            scene.add(spot.target);
+            spot.castShadow = true;
+            spot.shadow.mapSize.width = 1024;
+            spot.shadow.mapSize.height = 1024;
+            spot.shadow.bias = -0.001;
+            floodlightGroup.add(spot);
+            floodlights.push(spot);
+        });
+        scene.add(floodlightGroup);
+
+        // ==========================================================
+        // 3. MATERIAL REUSABLE
+        // ==========================================================
+        const matSteelWhite = new THREE.MeshStandardMaterial({
+            color: 0xf8fafc,
+            roughness: 0.25,
+            metalness: 0.25
+        });
+
+        const matRoofWhite = new THREE.MeshStandardMaterial({
+            color: 0xf1f5f9,
+            roughness: 0.35,
+            metalness: 0.1,
+            side: THREE.DoubleSide
+        });
+
+        const matConcretePaving = new THREE.MeshStandardMaterial({
+            color: 0xe2e8f0,
+            roughness: 0.85,
+            metalness: 0.05
+        });
+
+        const matParapet = new THREE.MeshStandardMaterial({
+            color: 0x7da887, // Hijau Sage Lembut (Soft Mint/Sage Green seperti Foto Asli)
+            roughness: 0.65
+        });
+
+        const matPedestal = new THREE.MeshStandardMaterial({
+            color: 0x94a3b8,
+            roughness: 0.8
+        });
+
+        // ==========================================================
+        // 4. PEMBUATAN TEKSTUR LANTAI OLAHRAGA (SILICON PU DUAL TONE)
+        // ==========================================================
+        function createCourtTexture() {
+            const c = document.createElement('canvas');
+            c.width = 2048;
+            c.height = 4096;
+            const ctx = c.getContext('2d');
+
+            const w = c.width;
+            const h = c.height;
+
+            // 1. Background Luar: Oranye Menyala (Outfield)
+            ctx.fillStyle = '#ea580c';
+            ctx.fillRect(0, 0, w, h);
+
+            // 2. Lapangan Utama: Royal Blue (Infield)
+            const courtX = w * 0.1;
+            const courtY = h * 0.08;
+            const courtW = w * 0.8;
+            const courtH = h * 0.84;
+
+            ctx.fillStyle = '#1d4ed8';
+            ctx.fillRect(courtX, courtY, courtW, courtH);
+
+            // Garis Marka Putih Tebal
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 14;
+
+            // Garis Batas Luar Lapangan
+            ctx.strokeRect(courtX, courtY, courtW, courtH);
+
+            // Garis Tengah (Half-court Line)
+            const midY = h / 2;
+            ctx.beginPath();
+            ctx.moveTo(courtX, midY);
+            ctx.lineTo(courtX + courtW, midY);
+            ctx.stroke();
+
+            // Lingkaran Tengah Futsal (Solid Oranye di dalam)
+            const midX = w / 2;
+            const centerR = w * 0.14;
+            ctx.beginPath();
+            ctx.arc(midX, midY, centerR, 0, Math.PI * 2);
+            ctx.fillStyle = '#ea580c';
+            ctx.fill();
+            ctx.stroke();
+
+            // Titik Tengah (Center Spot)
+            ctx.beginPath();
+            ctx.arc(midX, midY, 12, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+
+            // Gambar Kotak Penalti Futsal & Basket (Kedua Sisi)
+            [courtY, courtY + courtH].forEach((baseY, idx) => {
+                const dir = idx === 0 ? 1 : -1;
+
+                // Futsal D-Box (Area Penalti Lengkung)
+                ctx.beginPath();
+                ctx.arc(midX, baseY, w * 0.22, idx === 0 ? 0 : Math.PI, idx === 0 ? Math.PI : Math.PI * 2);
+                ctx.stroke();
+
+                // Titik Penalti 1 & 2
+                ctx.beginPath();
+                ctx.arc(midX, baseY + dir * (h * 0.14), 10, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+
+                // Garis 3-Point Basket (Three-point arc)
+                ctx.beginPath();
+                ctx.arc(midX, baseY, w * 0.32, idx === 0 ? 0.25 * Math.PI : 1.25 * Math.PI, idx === 0 ? 0.75 * Math.PI : 1.75 * Math.PI);
+                ctx.stroke();
+
+                // Key Area Basket (Free throw box)
+                const keyW = w * 0.24;
+                const keyH = h * 0.15;
+                ctx.strokeRect(midX - keyW / 2, idx === 0 ? baseY : baseY - keyH, keyW, keyH);
+
+                // Free throw semi circle
+                ctx.beginPath();
+                ctx.arc(midX, baseY + dir * keyH, keyW / 2, idx === 0 ? 0 : Math.PI, idx === 0 ? Math.PI : Math.PI * 2);
+                ctx.stroke();
+            });
+
+            const tex = new THREE.CanvasTexture(c);
+            tex.anisotropy = 8;
+            return tex;
+        }
+
+        // ==========================================================
+        // 5. TEKSTUR MURAL DINDING BELAKANG ("SAVE OUR NATURE")
+        // ==========================================================
+        function createMuralTexture() {
+            const c = document.createElement('canvas');
+            c.width = 2048;
+            c.height = 1024;
+            const ctx = c.getContext('2d');
+
+            // Background Gradasi Hangat
+            const grad = ctx.createLinearGradient(0, 0, 2048, 1024);
+            grad.addColorStop(0, '#f97316');
+            grad.addColorStop(0.4, '#fbbf24');
+            grad.addColorStop(0.8, '#38bdf8');
+            grad.addColorStop(1, '#0284c7');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 2048, 1024);
+
+            // Ombak Air Biru di Bawah
+            ctx.fillStyle = '#0369a1';
+            ctx.beginPath();
+            ctx.moveTo(0, 1024);
+            ctx.lineTo(0, 750);
+            for (let x = 0; x <= 2048; x += 50) {
+                ctx.lineTo(x, 750 + Math.sin(x * 0.01) * 45);
+            }
+            ctx.lineTo(2048, 1024);
+            ctx.closePath();
+            ctx.fill();
+
+            // Daun Tropis Hijau
+            ctx.fillStyle = '#15803d';
+            for (let i = 0; i < 12; i++) {
+                ctx.beginPath();
+                ctx.ellipse(200 + i * 160, 800 + (i % 2) * 50, 90, 40, (i * 0.4), 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Ilustrasi Bumi (Globe di Kanan)
+            ctx.beginPath();
+            ctx.arc(1650, 480, 220, 0, Math.PI * 2);
+            ctx.fillStyle = '#0ea5e9';
+            ctx.fill();
+            ctx.lineWidth = 10;
+            ctx.strokeStyle = '#ffffff';
+            ctx.stroke();
+            // Benua Hijau
+            ctx.fillStyle = '#22c55e';
+            ctx.beginPath();
+            ctx.arc(1620, 450, 90, 0, Math.PI * 1.5);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(1730, 520, 70, 0, Math.PI * 1.8);
+            ctx.fill();
+
+            // Tulisan Grafiti Besar: "SAVE OUR..."
+            ctx.save();
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+            ctx.shadowBlur = 15;
+            ctx.shadowOffsetX = 8;
+            ctx.shadowOffsetY = 8;
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 150px "Plus Jakarta Sans", sans-serif';
+            ctx.fillText('SAVE OUR', 220, 360);
+            ctx.fillStyle = '#ea580c';
+            ctx.fillText('NATURE', 220, 520);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '600 48px "Plus Jakarta Sans", sans-serif';
+            ctx.fillText('AN NAHL GREEN ECO-CAMPUS', 230, 610);
+            ctx.restore();
+
+            const tex = new THREE.CanvasTexture(c);
+            tex.anisotropy = 8;
+            return tex;
+        }
+
+        // ==========================================================
+        // 6. MEMBANGUN OBJEK STRUKTUR 3D LENGKAP
+        // ==========================================================
+        const courtGroup = new THREE.Group();
+        scene.add(courtGroup);
+
+        // A. Halaman Plasa & Rumput
+        const groundGeo = new THREE.PlaneGeometry(80, 90);
+        const groundMesh = new THREE.Mesh(groundGeo, matConcretePaving);
+        groundMesh.rotation.x = -Math.PI / 2;
+        groundMesh.receiveShadow = true;
+        scene.add(groundMesh);
+
+        // Rumput Hijau di Sekitar
+        const grassMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.9 });
+        const leftGrass = new THREE.Mesh(new THREE.PlaneGeometry(24, 70), grassMat);
+        leftGrass.rotation.x = -Math.PI / 2;
+        leftGrass.position.set(-26, 0.01, 0);
+        leftGrass.receiveShadow = true;
+        scene.add(leftGrass);
+
+        const rightGrass = new THREE.Mesh(new THREE.PlaneGeometry(24, 70), grassMat);
+        rightGrass.rotation.x = -Math.PI / 2;
+        rightGrass.position.set(26, 0.01, 0);
+        rightGrass.receiveShadow = true;
+        scene.add(rightGrass);
+
+        // B. Lantai Lapangan Berwarna
+        const courtMat = new THREE.MeshStandardMaterial({
+            map: createCourtTexture(),
+            roughness: 0.45,
+            metalness: 0.05
+        });
+        const courtMesh = new THREE.Mesh(new THREE.BoxGeometry(18, 0.1, 28), courtMat);
+        courtMesh.position.set(0, 0.05, 0);
+        courtMesh.receiveShadow = true;
+        courtGroup.add(courtMesh);
+
+        // C. Parapet Beton Bawah Lapangan (+0.7m)
+        const wallMat = matParapet;
+        const pThick = 0.25;
+        const pH = 0.7;
+        const courtW = 18;
+        const courtL = 28;
+
+        // Dinding Kiri & Kanan
+        const wallSideGeo = new THREE.BoxGeometry(pThick, pH, courtL);
+        const leftWall = new THREE.Mesh(wallSideGeo, wallMat);
+        leftWall.position.set(-courtW / 2 - pThick / 2, pH / 2, 0);
+        leftWall.castShadow = true; leftWall.receiveShadow = true;
+        courtGroup.add(leftWall);
+
+        const rightWall = new THREE.Mesh(wallSideGeo, wallMat);
+        rightWall.position.set(courtW / 2 + pThick / 2, pH / 2, 0);
+        rightWall.castShadow = true; rightWall.receiveShadow = true;
+        courtGroup.add(rightWall);
+
+        // Dinding Depan dengan Celah Gerbang Pintu Masuk
+        const frontWallW = (courtW - 2.4) / 2;
+        const wallFrontGeo = new THREE.BoxGeometry(frontWallW, pH, pThick);
+        const fWallL = new THREE.Mesh(wallFrontGeo, wallMat);
+        fWallL.position.set(-courtW / 2 + frontWallW / 2, pH / 2, courtL / 2 + pThick / 2);
+        courtGroup.add(fWallL);
+
+        const fWallR = new THREE.Mesh(wallFrontGeo, wallMat);
+        fWallR.position.set(courtW / 2 - frontWallW / 2, pH / 2, courtL / 2 + pThick / 2);
+        courtGroup.add(fWallR);
+
+        // D. Dinding Belakang dengan Mural Seni
+        const rearWallGeo = new THREE.BoxGeometry(courtW + 0.5, 4.2, 0.35);
+        const rearMuralMat = [
+            matParapet, matParapet, matParapet, matParapet,
+            new THREE.MeshStandardMaterial({ map: createMuralTexture(), roughness: 0.4 }), // Front face
+            matParapet
+        ];
+        const rearWall = new THREE.Mesh(rearWallGeo, rearMuralMat);
+        rearWall.position.set(0, 2.1, -courtL / 2 - 0.17);
+        rearWall.castShadow = true;
+        rearWall.receiveShadow = true;
+        courtGroup.add(rearWall);
+
+        // ==========================================================
+        // 7. STRUKTUR RANGKA KUDA-KUDA BUSUR BAJA (ARCH TRUSS)
+        // ==========================================================
+        const trussGroup = new THREE.Group();
+        const roofSheetsGroup = new THREE.Group();
+        courtGroup.add(trussGroup);
+        courtGroup.add(roofSheetsGroup);
+
+        const bayZ = [-14.0, -9.33, -4.67, 0, 4.67, 9.33, 14.0]; // Tepat 7 Portal Kolom Utama (6 Bentang Bay Samping)
+        const span = 19.5;
+        const halfSpan = span / 2;
+        const eavH = 6.2;
+        const apexH = 10.1;
+        const rise = apexH - eavH;
+        const trussDepth = 0.7;
+
+        function getArchPoint(x, isTop = true) {
+            // Persamaan Kurva Busur Parabola Mulus
+            const normX = x / halfSpan;
+            let y = eavH + rise * (1 - normX * normX);
+            if (!isTop) y -= trussDepth;
+            return y;
+        }
+
+        // Buat Kuda-kuda untuk setiap Bay
+        bayZ.forEach(z => {
+            // 1. Kolom Pipa Ganda Lattice (Kiri & Kanan)
+            [-halfSpan, halfSpan].forEach(colX => {
+                // Pedestal Beton
+                const pedMesh = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 0.7), matPedestal);
+                pedMesh.position.set(colX, 0.35, z);
+                pedMesh.castShadow = true;
+                trussGroup.add(pedMesh);
+
+                // Baseplate
+                const bpMesh = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.04, 0.8), matSteelWhite);
+                bpMesh.position.set(colX, 0.72, z);
+                trussGroup.add(bpMesh);
+
+                // Cincin Molding Dudukan Kolom (Base Collar Ring Trim)
+                const collarGeo = new THREE.CylinderGeometry(0.18, 0.22, 0.12, 16);
+                const collarMesh = new THREE.Mesh(collarGeo, matSteelWhite);
+                collarMesh.position.set(colX, 0.80, z);
+                collarMesh.castShadow = true;
+                trussGroup.add(collarMesh);
+
+                // Kolom Pipa Vertikal Ganda
+                const colH = eavH - 0.74;
+                [-0.2, 0.2].forEach(offsetZ => {
+                    const pipeGeo = new THREE.CylinderGeometry(0.06, 0.06, colH, 16);
+                    const pipeMesh = new THREE.Mesh(pipeGeo, matSteelWhite);
+                    pipeMesh.position.set(colX, 0.74 + colH / 2, z + offsetZ);
+                    pipeMesh.castShadow = true;
+                    trussGroup.add(pipeMesh);
+                });
+
+                // Kisi-kisi horizontal kolom
+                for (let h = 1.4; h < eavH; h += 0.8) {
+                    const laceGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.4, 12);
+                    const laceMesh = new THREE.Mesh(laceGeo, matSteelWhite);
+                    laceMesh.rotation.x = Math.PI / 2;
+                    laceMesh.position.set(colX, h, z);
+                    trussGroup.add(laceMesh);
+                }
+            });
+
+            // 2. Busur Top Chord & Bottom Chord (Pipa Melengkung)
+            const segCount = 40;
+            const topPoints = [];
+            const botPoints = [];
+
+            for (let i = 0; i <= segCount; i++) {
+                const x = -halfSpan + (i / segCount) * span;
+                topPoints.push(new THREE.Vector3(x, getArchPoint(x, true), z));
+                botPoints.push(new THREE.Vector3(x, getArchPoint(x, false), z));
+            }
+
+            const topCurve = new THREE.CatmullRomCurve3(topPoints);
+            const botCurve = new THREE.CatmullRomCurve3(botPoints);
+
+            const topTube = new THREE.Mesh(new THREE.TubeGeometry(topCurve, 40, 0.055, 12, false), matSteelWhite);
+            topTube.castShadow = true;
+            trussGroup.add(topTube);
+
+            const botTube = new THREE.Mesh(new THREE.TubeGeometry(botCurve, 40, 0.045, 12, false), matSteelWhite);
+            botTube.castShadow = true;
+            trussGroup.add(botTube);
+
+            // 3. Batang Diagonal & Vertikal Pengisi Truss (Web Members)
+            for (let i = 0; i < segCount; i += 2) {
+                const pTop1 = topPoints[i];
+                const pBot1 = botPoints[i];
+                const pTop2 = topPoints[Math.min(i + 2, segCount)];
+                const pBot2 = botPoints[Math.min(i + 2, segCount)];
+
+                // Batang Vertikal
+                const vLen = pTop1.distanceTo(pBot1);
+                const vGeo = new THREE.CylinderGeometry(0.03, 0.03, vLen, 8);
+                const vMesh = new THREE.Mesh(vGeo, matSteelWhite);
+                vMesh.position.copy(pTop1).add(pBot1).multiplyScalar(0.5);
+                vMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), pTop1.clone().sub(pBot1).normalize());
+                trussGroup.add(vMesh);
+
+                // Batang Diagonal Zig-zag
+                const dLen = pBot1.distanceTo(pTop2);
+                const dGeo = new THREE.CylinderGeometry(0.03, 0.03, dLen, 8);
+                const dMesh = new THREE.Mesh(dGeo, matSteelWhite);
+                dMesh.position.copy(pBot1).add(pTop2).multiplyScalar(0.5);
+                dMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), pTop2.clone().sub(pBot1).normalize());
+                trussGroup.add(dMesh);
+            }
+        });
+
+        // 4. Balok Purlin (Gording Pipa Memanjang)
+        const purlinCount = 13;
+        for (let i = 0; i < purlinCount; i++) {
+            const x = -halfSpan + (i / (purlinCount - 1)) * span;
+            const y = getArchPoint(x, true) + 0.05;
+            const purlinGeo = new THREE.CylinderGeometry(0.04, 0.04, 30, 12);
+            const purlinMesh = new THREE.Mesh(purlinGeo, matSteelWhite);
+            purlinMesh.rotation.x = Math.PI / 2;
+            purlinMesh.position.set(x, y, 0);
+            purlinMesh.castShadow = true;
+            trussGroup.add(purlinMesh);
+        }
+
+        // ==========================================================
+        // 8. VENTILASI PUNGGUNG ATAP (RAISED MONITOR / JACK ROOF)
+        // ==========================================================
+        const monW = 4.4;
+        const monHalfW = monW / 2;
+        const monL = 18.0;
+        const monRise = 1.35;
+
+        // Struktur Rangka Ventilasi
+        [-monHalfW, monHalfW].forEach(mx => {
+            const beamGeo = new THREE.CylinderGeometry(0.04, 0.04, monL, 12);
+            const beamMesh = new THREE.Mesh(beamGeo, matSteelWhite);
+            beamMesh.rotation.x = Math.PI / 2;
+            beamMesh.position.set(mx, apexH + monRise, 0);
+            beamMesh.castShadow = true;
+            trussGroup.add(beamMesh);
+
+            // Tiang Penyangga Vertikal & X-Bracing
+            for (let z = -monL / 2; z <= monL / 2; z += 3.6) {
+                const baseArchY = getArchPoint(mx, true);
+                const postH = (apexH + monRise) - baseArchY;
+                const postGeo = new THREE.CylinderGeometry(0.035, 0.035, postH, 8);
+                const postMesh = new THREE.Mesh(postGeo, matSteelWhite);
+                postMesh.position.set(mx, baseArchY + postH / 2, z);
+                postMesh.castShadow = true;
+                trussGroup.add(postMesh);
+            }
+        });
+
+        // Busur Atap Kecil Ventilasi Monitor
+        const monRidgeCurve = [];
+        for (let i = 0; i <= 20; i++) {
+            const x = -monHalfW + (i / 20) * monW;
+            const y = (apexH + monRise) + 0.5 * (1 - (x / monHalfW) * (x / monHalfW));
+            monRidgeCurve.push(new THREE.Vector3(x, y, 0));
+        }
+        for (let z = -monL / 2; z <= monL / 2; z += 3.6) {
+            const archPts = monRidgeCurve.map(p => new THREE.Vector3(p.x, p.y, z));
+            const archGeo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(archPts), 20, 0.035, 8, false);
+            const mArch = new THREE.Mesh(archGeo, matSteelWhite);
+            trussGroup.add(mArch);
+        }
+
+        // ==========================================================
+        // 9. LEMBARAN PENUTUP ATAP LENGKUNG SPANDEK (ROOF SHEETING)
+        // ==========================================================
+        function createCurvedRoofGeometry(w, len, yFunc, openCenter = true) {
+            const uSegments = 50;
+            const vSegments = 40;
+            const geo = new THREE.BufferGeometry();
+            const positions = [];
+            const indices = [];
+            const normals = [];
+            const uvs = [];
+
+            for (let j = 0; j <= vSegments; j++) {
+                const z = -len / 2 + (j / vSegments) * len;
+                for (let i = 0; i <= uSegments; i++) {
+                    const x = -w / 2 + (i / uSegments) * w;
+
+                    // Buat lubang di tengah untuk ventilasi monitor
+                    let y = yFunc(x) + 0.08;
+
+                    positions.push(x, y, z);
+                    normals.push(0, 1, 0);
+                    uvs.push(i / uSegments, j / vSegments);
+                }
+            }
+
+            for (let j = 0; j < vSegments; j++) {
+                for (let i = 0; i < uSegments; i++) {
+                    const a = i + (uSegments + 1) * j;
+                    const b = i + (uSegments + 1) * (j + 1);
+                    const c = (i + 1) + (uSegments + 1) * (j + 1);
+                    const d = (i + 1) + (uSegments + 1) * j;
+
+                    const xCenter = -w / 2 + ((i + 0.5) / uSegments) * w;
+                    const zCenter = -len / 2 + ((j + 0.5) / vSegments) * len;
+
+                    // Lubang bukaan jika masuk area monitor
+                    if (openCenter && Math.abs(xCenter) < (monHalfW - 0.2) && Math.abs(zCenter) < (monL / 2 - 0.2)) {
+                        continue; // Biarkan bolong untuk aliran udara
+                    }
+
+                    indices.push(a, b, d);
+                    indices.push(b, c, d);
+                }
+            }
+
+            geo.setIndex(indices);
+            geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            geo.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+            geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+            geo.computeVertexNormals();
+            return geo;
+        }
+
+        // Atap Utama
+        const mainRoofGeo = createCurvedRoofGeometry(span + 0.8, 30.4, x => getArchPoint(x, true), true);
+        const mainRoofMesh = new THREE.Mesh(mainRoofGeo, matRoofWhite);
+        mainRoofMesh.castShadow = true;
+        mainRoofMesh.receiveShadow = true;
+        roofSheetsGroup.add(mainRoofMesh);
+
+        // Atap Penutup Monitor Atas
+        const monRoofGeo = createCurvedRoofGeometry(monW + 0.6, monL + 0.8, x => (apexH + monRise) + 0.5 * (1 - (x / (monHalfW + 0.3)) ** 2), false);
+        const monRoofMesh = new THREE.Mesh(monRoofGeo, matRoofWhite);
+        monRoofMesh.castShadow = true;
+        monRoofMesh.receiveShadow = true;
+        roofSheetsGroup.add(monRoofMesh);
+
+        // ==========================================================
+        // 10. PAGAR JARING KELILING PUTIH (CHAIN-LINK MESH FENCE)
+        // ==========================================================
+        const fenceGroup = new THREE.Group();
+        courtGroup.add(fenceGroup);
+
+        const fenceMat = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            roughness: 0.4,
+            wireframe: false,
+            transparent: true,
+            opacity: 0.35,
+            side: THREE.DoubleSide
+        });
+
+        // Panel Jaring Kiri & Kanan (Dari Y=0.7 ke Y=3.5m - Sisakan celah bukaan sirkulasi udara di atasnya)
+        const fenceH = 2.8;
+        const fPlaneGeoSide = new THREE.PlaneGeometry(courtL, fenceH);
+        
+        const fMeshLeft = new THREE.Mesh(fPlaneGeoSide, fenceMat);
+        fMeshLeft.rotation.y = Math.PI / 2;
+        fMeshLeft.position.set(-courtW / 2, pH + fenceH / 2, 0);
+        fenceGroup.add(fMeshLeft);
+
+        const fMeshRight = new THREE.Mesh(fPlaneGeoSide, fenceMat);
+        fMeshRight.rotation.y = -Math.PI / 2;
+        fMeshRight.position.set(courtW / 2, pH + fenceH / 2, 0);
+        fenceGroup.add(fMeshRight);
+
+        // Pipa Rel Atas Pagar Pembatas (Top Rail Pipe)
+        [-courtW / 2, courtW / 2].forEach(rx => {
+            const railGeo = new THREE.CylinderGeometry(0.035, 0.035, courtL, 12);
+            const railMesh = new THREE.Mesh(railGeo, matSteelWhite);
+            railMesh.rotation.x = Math.PI / 2;
+            railMesh.position.set(rx, pH + fenceH, 0);
+            fenceGroup.add(railMesh);
+        });
+
+        // Panel Jaring Depan (Menyisakan Celah Pintu Masuk 2.2m)
+        const fFrontW = (courtW - 2.4) / 2;
+        const fPlaneGeoFront = new THREE.PlaneGeometry(fFrontW, fenceH);
+
+        const fMeshFL = new THREE.Mesh(fPlaneGeoFront, fenceMat);
+        fMeshFL.position.set(-courtW / 2 + fFrontW / 2, pH + fenceH / 2, courtL / 2);
+        fenceGroup.add(fMeshFL);
+
+        const fMeshFR = new THREE.Mesh(fPlaneGeoFront, fenceMat);
+        fMeshFR.position.set(courtW / 2 - fFrontW / 2, pH + fenceH / 2, courtL / 2);
+        fenceGroup.add(fMeshFR);
+
+        // Gerbang Masuk Depan (Double Swing Gate)
+        const gatePostGeo = new THREE.CylinderGeometry(0.05, 0.05, 2.4, 12);
+        [-1.2, 1.2].forEach(gx => {
+            const gp = new THREE.Mesh(gatePostGeo, matSteelWhite);
+            gp.position.set(gx, 1.2, courtL / 2 + 0.1);
+            fenceGroup.add(gp);
+        });
+
+        // ==========================================================
+        // 11. GAWANG FUTSAL & RING BASKET
+        // ==========================================================
+        function createGoalAndHoop(zPos, isRear = false) {
+            const g = new THREE.Group();
+            g.position.set(0, 0, zPos);
+            if (isRear) g.rotation.y = Math.PI;
+
+            // Gawang Futsal (3.0m x 2.0m x 1.0m)
+            const postR = 0.045;
+            const gW = 3.0;
+            const gH = 2.0;
+
+            const gPipeMat = matSteelWhite;
+            // Tiang Kiri & Kanan
+            [-gW / 2, gW / 2].forEach(x => {
+                const p = new THREE.Mesh(new THREE.CylinderGeometry(postR, postR, gH, 12), gPipeMat);
+                p.position.set(x, gH / 2, 0);
+                p.castShadow = true;
+                g.add(p);
+            });
+            // Palang Atas
+            const crossbar = new THREE.Mesh(new THREE.CylinderGeometry(postR, postR, gW, 12), gPipeMat);
+            crossbar.rotation.z = Math.PI / 2;
+            crossbar.position.set(0, gH, 0);
+            crossbar.castShadow = true;
+            g.add(crossbar);
+
+            // Jaring Gawang (Net Kotak)
+            const netMat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.5 });
+            const netBox = new THREE.Mesh(new THREE.BoxGeometry(gW - 0.05, gH - 0.05, 0.8), netMat);
+            netBox.position.set(0, gH / 2, -0.4);
+            g.add(netBox);
+
+            // Unit Ring Basket (Tinggi 3.05m di atas Lantai)
+            const hoopY = 3.05;
+            // Papan Pantul Akrilik (1.8m x 1.05m)
+            const boardMat = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                roughness: 0.1,
+                metalness: 0.1,
+                transparent: true,
+                opacity: 0.75
+            });
+            const backboard = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.05, 0.04), boardMat);
+            backboard.position.set(0, hoopY + 0.3, -0.2);
+            g.add(backboard);
+
+            // Bingkai Persegi Target di Papan
+            const targetLine = new THREE.Mesh(new THREE.BoxGeometry(0.59, 0.45, 0.05), new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true }));
+            targetLine.position.set(0, hoopY + 0.25, -0.19);
+            g.add(targetLine);
+
+            // Lingkaran Ring Oranye
+            const ringGeo = new THREE.TorusGeometry(0.225, 0.015, 8, 24);
+            const ringMat = new THREE.MeshStandardMaterial({ color: 0xea580c, roughness: 0.3 });
+            const hoopRing = new THREE.Mesh(ringGeo, ringMat);
+            hoopRing.rotation.x = Math.PI / 2;
+            hoopRing.position.set(0, hoopY, 0.1);
+            g.add(hoopRing);
+
+            return g;
+        }
+
+        courtGroup.add(createGoalAndHoop(-courtL / 2 + 0.6, false));
+        courtGroup.add(createGoalAndHoop(courtL / 2 - 0.6, true));
+
+        // ==========================================================
+        // 12. LINGKUNGAN KAMPUS (GEDUNG SAYAP & POHON PENEDUH)
+        // ==========================================================
+        const buildingMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, roughness: 0.8 }); // Dinding Krem
+        const roofTileMat = new THREE.MeshStandardMaterial({ color: 0xb91c1c, roughness: 0.6 }); // Genteng Merah
+
+        function createCampusWing(xPos, isLeft = true) {
+            const b = new THREE.Group();
+            b.position.set(xPos, 0, 0);
+
+            // Badan Gedung 2 Lantai
+            const body = new THREE.Mesh(new THREE.BoxGeometry(12, 8, 48), buildingMat);
+            body.position.set(0, 4, 0);
+            body.castShadow = true;
+            body.receiveShadow = true;
+            b.add(body);
+
+            // Atap Limasan / Pelana Genteng Merah
+            const roofGeo = new THREE.ConeGeometry(9.5, 4.5, 4);
+            roofGeo.rotateY(Math.PI / 4);
+            roofGeo.scale(1.2, 1, 3.8);
+            const roof = new THREE.Mesh(roofGeo, roofTileMat);
+            roof.position.set(0, 10, 0);
+            roof.castShadow = true;
+            b.add(roof);
+
+            // Deretan Jendela Kaca
+            const winMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.2, metalness: 0.5 });
+            for (let f = 2; f <= 6; f += 3.5) {
+                for (let wz = -20; wz <= 20; wz += 4) {
+                    const win = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.8), winMat);
+                    win.rotation.y = isLeft ? Math.PI / 2 : -Math.PI / 2;
+                    win.position.set(isLeft ? 6.05 : -6.05, f, wz);
+                    b.add(win);
+                }
+            }
+
+            return b;
+        }
+
+        scene.add(createCampusWing(-24, true));
+        scene.add(createCampusWing(24, false));
+
+        // 2 Pohon Peneduh di Plasa Depan dalam Planter Box (Seperti Foto Asli)
+        function createTree(x, z) {
+            const t = new THREE.Group();
+            t.position.set(x, 0, z);
+
+            // Planter Box Persegi
+            const box = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.45, 2.4), matPedestal);
+            box.position.set(0, 0.22, 0);
+            t.add(box);
+
+            // Tanah Hitam
+            const soil = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.2), new THREE.MeshStandardMaterial({ color: 0x3f2e21 }));
+            soil.rotation.x = -Math.PI / 2;
+            soil.position.set(0, 0.46, 0);
+            t.add(soil);
+
+            // Batang Pohon
+            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 3.2, 8), new THREE.MeshStandardMaterial({ color: 0x78350f }));
+            trunk.position.set(0, 1.8, 0);
+            trunk.castShadow = true;
+            t.add(trunk);
+
+            // Tajuk Daun Hijau
+            const leafMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.8 });
+            const crown1 = new THREE.Mesh(new THREE.DodecahedronGeometry(1.4, 1), leafMat);
+            crown1.position.set(0, 3.8, 0);
+            crown1.castShadow = true;
+            t.add(crown1);
+
+            const crown2 = new THREE.Mesh(new THREE.DodecahedronGeometry(1.1, 1), leafMat);
+            crown2.position.set(0.3, 4.8, 0.2);
+            crown2.castShadow = true;
+            t.add(crown2);
+
+            return t;
+        }
+
+        scene.add(createTree(-6.5, 20));
+        scene.add(createTree(6.5, 20));
+
+        // Hilangkan Layar Loader Begitu Selesai Render Awal
+        const loader = document.getElementById('loader');
+        if (loader) {
+            loader.style.display = 'none';
+        }
+
+        // ==========================================================
+        // 13. UI EVENT LISTENERS & LOGIKA INTERAKTIF
+        // ==========================================================
+
+        // Preset Sudut Pandang Kamera
+        document.querySelectorAll('.camera-presets button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.camera-presets button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const viewKey = btn.dataset.view;
+                const v = VIEW_PRESETS[viewKey];
+                if (v) {
+                    gsapAnimateCamera(v.pos, v.target);
+                }
+            });
+        });
+
+        // Animasi Mulus Kamera
+        function gsapAnimateCamera(targetPos, targetLook) {
+            const startPos = camera.position.clone();
+            const startLook = controls.target.clone();
+            const endPos = new THREE.Vector3(...targetPos);
+            const endLook = new THREE.Vector3(...targetLook);
+
+            let progress = 0;
+            const startTime = performance.now();
+            const duration = 1000;
+
+            function step(now) {
+                const elapsed = now - startTime;
+                progress = Math.min(elapsed / duration, 1);
+                // Ease In Out Cubic
+                const ease = progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+                camera.position.lerpVectors(startPos, endPos, ease);
+                controls.target.lerpVectors(startLook, endLook, ease);
+                controls.update();
+
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                }
+            }
+            requestAnimationFrame(step);
+        }
+
+        // Mode Penutup Atap
+        const roofSolidBtn = document.getElementById('roof-solid');
+        const roofTransBtn = document.getElementById('roof-trans');
+        const roofHiddenBtn = document.getElementById('roof-hidden');
+
+        function setRoofMode(mode) {
+            [roofSolidBtn, roofTransBtn, roofHiddenBtn].forEach(b => b.classList.remove('active'));
+            if (mode === 'solid') {
+                roofSolidBtn.classList.add('active');
+                roofSheetsGroup.visible = true;
+                matRoofWhite.transparent = false;
+                matRoofWhite.opacity = 1.0;
+            } else if (mode === 'trans') {
+                roofTransBtn.classList.add('active');
+                roofSheetsGroup.visible = true;
+                matRoofWhite.transparent = true;
+                matRoofWhite.opacity = 0.35;
+            } else if (mode === 'hidden') {
+                roofHiddenBtn.classList.add('active');
+                roofSheetsGroup.visible = false;
+            }
+        }
+        roofSolidBtn.addEventListener('click', () => setRoofMode('solid'));
+        roofTransBtn.addEventListener('click', () => setRoofMode('trans'));
+        roofHiddenBtn.addEventListener('click', () => setRoofMode('hidden'));
+        if (initRoof !== 'solid') setRoofMode(initRoof);
+
+        // Mode Pencahayaan
+        const lightDayBtn = document.getElementById('light-day');
+        const lightSunsetBtn = document.getElementById('light-sunset');
+        const lightNightBtn = document.getElementById('light-night');
+
+        function setLighting(mode) {
+            [lightDayBtn, lightSunsetBtn, lightNightBtn].forEach(b => b.classList.remove('active'));
+            if (mode === 'day') {
+                lightDayBtn.classList.add('active');
+                scene.background.setHex(0xdbeafe);
+                scene.fog.color.setHex(0xdbeafe);
+                ambientLight.intensity = 0.4;
+                hemiLight.intensity = 0.6;
+                sunLight.intensity = 1.4;
+                sunLight.color.setHex(0xfffbeb);
+                floodlights.forEach(s => s.intensity = 0);
+            } else if (mode === 'sunset') {
+                lightSunsetBtn.classList.add('active');
+                scene.background.setHex(0x7c2d12);
+                scene.fog.color.setHex(0x9a3412);
+                ambientLight.intensity = 0.3;
+                hemiLight.intensity = 0.4;
+                sunLight.intensity = 1.2;
+                sunLight.color.setHex(0xf97316);
+                floodlights.forEach(s => s.intensity = 0.3);
+            } else if (mode === 'night') {
+                lightNightBtn.classList.add('active');
+                scene.background.setHex(0x020617);
+                scene.fog.color.setHex(0x0f172a);
+                ambientLight.intensity = 0.15;
+                hemiLight.intensity = 0.2;
+                sunLight.intensity = 0.05;
+                floodlights.forEach(s => s.intensity = 2.4);
+            }
+        }
+        lightDayBtn.addEventListener('click', () => setLighting('day'));
+        lightSunsetBtn.addEventListener('click', () => setLighting('sunset'));
+        lightNightBtn.addEventListener('click', () => setLighting('night'));
+
+        // Toggle Wireframe
+        let isWire = false;
+        const toggleWireBtn = document.getElementById('toggle-wire');
+        toggleWireBtn.addEventListener('click', () => {
+            isWire = !isWire;
+            toggleWireBtn.classList.toggle('active', isWire);
+            matRoofWhite.wireframe = isWire;
+            matSteelWhite.wireframe = isWire;
+        });
+
+        // Toggle Dimensi
+        let showDims = true;
+        const toggleDimsBtn = document.getElementById('toggle-dims');
+        const dimEls = document.querySelectorAll('.anno-tag');
+        toggleDimsBtn.addEventListener('click', () => {
+            showDims = !showDims;
+            toggleDimsBtn.classList.toggle('active', showDims);
+            dimEls.forEach(el => el.classList.toggle('show', showDims));
+        });
+
+        // Toggle Auto-Rotate
+        let autoRotate = false;
+        const toggleRotateBtn = document.getElementById('toggle-rotate');
+        toggleRotateBtn.addEventListener('click', () => {
+            autoRotate = !autoRotate;
+            toggleRotateBtn.classList.toggle('active', autoRotate);
+            controls.autoRotate = autoRotate;
+            controls.autoRotateSpeed = 1.2;
+        });
+
+        // Screenshot Export HD
+        document.getElementById('btn-screenshot').addEventListener('click', () => {
+            renderer.render(scene, camera);
+            const dataUrl = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = 'Model-3D-Atap-Futsal-AnNahl.png';
+            link.href = dataUrl;
+            link.click();
+        });
+
+        // Fullscreen
+        document.getElementById('btn-fullscreen').addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        // Update Posisi 3D Dimensi Callouts di Layar
+        const dimSpanPos = new THREE.Vector3(0, eavH + 0.3, 14);
+        const dimApexPos = new THREE.Vector3(0, apexH + 0.3, 0);
+        const dimLengthPos = new THREE.Vector3(halfSpan + 1.2, 0.4, 0);
+        const dimMonitorPos = new THREE.Vector3(0, apexH + monRise + 0.4, 0);
+
+        function updateAnnotationPositions() {
+            if (!showDims) return;
+            const wHalf = window.innerWidth / 2;
+            const hHalf = window.innerHeight / 2;
+
+            function toScreen(pos3D, elId) {
+                const el = document.getElementById(elId);
+                if (!el) return;
+                const v = pos3D.clone().project(camera);
+                if (v.z > 1) { // Di belakang kamera
+                    el.style.display = 'none';
+                    return;
+                }
+                el.style.display = 'flex';
+                el.style.left = (v.x * wHalf + wHalf) + 'px';
+                el.style.top = (-(v.y * hHalf) + hHalf) + 'px';
+            }
+
+            toScreen(dimSpanPos, 'dim-span');
+            toScreen(dimApexPos, 'dim-apex');
+            toScreen(dimLengthPos, 'dim-length');
+            toScreen(dimMonitorPos, 'dim-monitor');
+        }
+
+        // Window Resize Handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // ==========================================================
+        // 14. ANIMATION LOOP
+        // ==========================================================
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            updateAnnotationPositions();
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+</html>
