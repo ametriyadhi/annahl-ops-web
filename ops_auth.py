@@ -230,16 +230,66 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def parse_roles_list(role_code_val):
+    if not role_code_val:
+        return []
+    if isinstance(role_code_val, list):
+        return [str(r).strip() for r in role_code_val if str(r).strip()]
+    if isinstance(role_code_val, str):
+        if role_code_val.startswith('[') and role_code_val.endswith(']'):
+            try:
+                parsed = json.loads(role_code_val)
+                if isinstance(parsed, list):
+                    return [str(r).strip() for r in parsed if str(r).strip()]
+            except Exception:
+                pass
+        return [r.strip() for r in role_code_val.split(',') if r.strip()]
+    return []
+
+def get_permissions_for_roles(roles_list, con=None):
+    if not roles_list:
+        return [], []
+    close_con = False
+    if con is None:
+        con = get_ops_db()
+        close_con = True
+    
+    placeholders = ','.join(['?'] * len(roles_list))
+    rows = con.execute(f'SELECT role_code, role_name, permissions FROM ops_roles WHERE role_code IN ({placeholders})', roles_list).fetchall()
+    
+    combined_perms = set()
+    role_names = []
+    for r in rows:
+        role_names.append(r['role_name'])
+        try:
+            p_list = json.loads(r['permissions'])
+            if isinstance(p_list, list):
+                combined_perms.update(p_list)
+        except Exception:
+            pass
+            
+    if 'manager' in roles_list:
+        combined_perms.add('all')
+        
+    if close_con:
+        con.close()
+        
+    return list(combined_perms), role_names
+
 def role_required(allowed_roles):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if 'ops_user_id' not in session:
                 return redirect(url_for('ops_auth.login'))
-            user_role = session.get('ops_role_code', '')
-            if user_role not in allowed_roles and user_role != 'manager':
-                return jsonify({"error": "Akses ditolak. Anda tidak memiliki izin."}), 403
-            return f(*args, **kwargs)
+            user_roles = session.get('ops_roles', [session.get('ops_role_code', '')])
+            if isinstance(user_roles, str):
+                user_roles = parse_roles_list(user_roles)
+            if 'manager' in user_roles or session.get('ops_role_code') == 'manager':
+                return f(*args, **kwargs)
+            if any(r in allowed_roles for r in user_roles):
+                return f(*args, **kwargs)
+            return jsonify({"error": "Akses ditolak. Anda tidak memiliki izin."}), 403
         return decorated_function
     return decorator
 
@@ -499,10 +549,8 @@ def login():
         else:
             con = get_ops_db()
             user = con.execute('''
-                SELECT u.*, r.role_name, r.permissions
-                FROM ops_users u
-                JOIN ops_roles r ON u.role_code = r.role_code
-                WHERE u.username = ? AND u.is_active = 1
+                SELECT * FROM ops_users
+                WHERE username = ? AND is_active = 1
             ''', (username,)).fetchone()
             
             if user and check_password_hash(user['password_hash'], password):
@@ -510,6 +558,12 @@ def login():
                 con.execute('UPDATE ops_users SET last_login = ? WHERE id = ?', 
                             (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), user['id']))
                 con.commit()
+
+                user_roles = parse_roles_list(user['role_code'])
+                if not user_roles:
+                    user_roles = ['koordinator_it']
+
+                perms, role_names = get_permissions_for_roles(user_roles, con)
                 con.close()
 
                 # Set session
@@ -517,11 +571,12 @@ def login():
                 session['ops_user_id'] = user['id']
                 session['ops_username'] = user['username']
                 session['ops_nama'] = user['nama_lengkap']
-                session['ops_role_code'] = user['role_code']
-                session['ops_role_name'] = user['role_name']
+                session['ops_roles'] = user_roles
+                session['ops_role_code'] = user_roles[0] if user_roles else 'koordinator_it'
+                session['ops_role_name'] = ' + '.join(role_names) if role_names else user['role_code']
                 session['ops_unit_code'] = user['unit_code']
                 session['ops_sub_scope'] = user['sub_scope']
-                session['ops_permissions'] = json.loads(user['permissions'])
+                session['ops_permissions'] = perms
 
                 return redirect(next_url)
             else:
@@ -535,6 +590,7 @@ def logout():
     session.pop('ops_user_id', None)
     session.pop('ops_username', None)
     session.pop('ops_nama', None)
+    session.pop('ops_roles', None)
     session.pop('ops_role_code', None)
     session.pop('ops_role_name', None)
     session.pop('ops_unit_code', None)
@@ -548,16 +604,28 @@ def logout():
 @role_required(['manager'])
 def api_get_users():
     con = get_ops_db()
-    rows = con.execute('''
-        SELECT u.id, u.username, u.nama_lengkap, u.role_code, u.unit_code,
-               u.sub_scope, u.no_wa, u.is_active, u.created_at, u.last_login,
-               r.role_name
-        FROM ops_users u
-        LEFT JOIN ops_roles r ON u.role_code = r.role_code
-        ORDER BY u.id ASC
+    users = con.execute('''
+        SELECT id, username, nama_lengkap, role_code, unit_code,
+               sub_scope, no_wa, is_active, created_at, last_login
+        FROM ops_users
+        ORDER BY id ASC
     ''').fetchall()
+    
+    roles = con.execute('SELECT role_code, role_name FROM ops_roles').fetchall()
     con.close()
-    return jsonify([dict(r) for r in rows])
+
+    roles_map = {r['role_code']: r['role_name'] for r in roles}
+    
+    res = []
+    for u in users:
+        u_dict = dict(u)
+        user_roles = parse_roles_list(u['role_code'])
+        u_dict['roles'] = user_roles
+        u_dict['role_names'] = [roles_map.get(r, r) for r in user_roles]
+        u_dict['role_name'] = ' + '.join(u_dict['role_names']) if u_dict['role_names'] else u['role_code']
+        res.append(u_dict)
+        
+    return jsonify(res)
 
 @ops_auth_bp.route('/api/ops/users', methods=['POST'])
 @login_required
@@ -567,13 +635,18 @@ def api_add_user():
     username = data.get('username', '').strip()
     password = data.get('password', '').strip()
     nama_lengkap = data.get('nama_lengkap', '').strip()
-    role_code = data.get('role_code', '').strip()
+    
+    # Mendukung multi-role: data.get('roles') atau data.get('role_code')
+    roles_input = data.get('roles') or data.get('role_code')
+    roles_list = parse_roles_list(roles_input)
+    role_code = ','.join(roles_list)
+    
     unit_code = data.get('unit_code', '').strip()
     sub_scope = data.get('sub_scope', '').strip() or None
     no_wa = data.get('no_wa', '').strip()
 
     if not username or not password or not nama_lengkap or not role_code or not unit_code:
-        return jsonify({"error": "Semua field bertanda * wajib diisi"}), 400
+        return jsonify({"error": "Semua field bertanda * wajib diisi, dan minimal 1 role harus dipilih"}), 400
 
     con = get_ops_db()
     existing = con.execute('SELECT id FROM ops_users WHERE username = ?', (username,)).fetchone()
@@ -599,13 +672,17 @@ def api_add_user():
 def api_edit_user(user_id):
     data = request.get_json() or {}
     nama_lengkap = data.get('nama_lengkap', '').strip()
-    role_code = data.get('role_code', '').strip()
+    
+    roles_input = data.get('roles') or data.get('role_code')
+    roles_list = parse_roles_list(roles_input)
+    role_code = ','.join(roles_list)
+    
     unit_code = data.get('unit_code', '').strip()
     sub_scope = data.get('sub_scope', '').strip() or None
     no_wa = data.get('no_wa', '').strip()
 
     if not nama_lengkap or not role_code or not unit_code:
-        return jsonify({"error": "Nama lengkap, role, dan unit wajib diisi"}), 400
+        return jsonify({"error": "Nama lengkap, unit, dan minimal 1 role wajib dipilih"}), 400
 
     con = get_ops_db()
     con.execute('''
@@ -762,8 +839,9 @@ def api_delete_role(role_code):
         return jsonify({"error": f"Role inti sistem '{role_code}' tidak dapat dihapus"}), 403
 
     con = get_ops_db()
-    # Cek apakah ada user yang masih menggunakan role ini
-    user_count = con.execute('SELECT COUNT(*) FROM ops_users WHERE role_code = ?', (role_code,)).fetchone()[0]
+    # Cek apakah ada user yang masih menggunakan role ini (mendukung multi-role)
+    users = con.execute('SELECT role_code FROM ops_users').fetchall()
+    user_count = sum(1 for u in users if role_code in parse_roles_list(u['role_code']))
     if user_count > 0:
         con.close()
         return jsonify({"error": f"Role tidak dapat dihapus karena masih digunakan oleh {user_count} pengguna aktif"}), 400

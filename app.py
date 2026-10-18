@@ -3291,56 +3291,102 @@ HTML_TEMPLATE = """
                             </div>
                         </div>
 
-                        <!-- 3 Categorized Permission Matrix Sections -->
-                        <div class="p-4 sm:p-6 space-y-6">
-                            <!-- KELOMPOK 1: MENU SIDEBAR & TAB DASHBOARD -->
-                            <div class="bg-white rounded-xl border border-slate-200/80 p-4 sm:p-5 shadow-2xs space-y-3.5">
-                                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">1</div>
-                                        <div>
-                                            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Akses Menu Sidebar & Tab Dashboard (Visibilitas Modul)</h4>
-                                            <p class="text-[11px] text-slate-500">Menu yang dicentang akan otomatis muncul di navigasi samping pengguna dengan role ini.</p>
-                                        </div>
-                                    </div>
-                                    <button type="button" onclick="toggleCategoryPerms('tab-')" class="text-[11px] text-emerald-700 hover:text-emerald-900 font-semibold cursor-pointer">Toggle Semua Menu</button>
+                        <!-- Filter & Quick Action Toolbar for Matrix Table -->
+                        <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="flex items-center gap-2 flex-1 max-w-md">
+                                <div class="relative w-full">
+                                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                    <input type="text" id="rbac-filter-search" oninput="filterRbacTable()" placeholder="Cari nama menu / modul sistem..." class="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:border-emerald-500">
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5" id="matrix-tabs-container">
-                                    <!-- Rendered by JS -->
-                                </div>
+                                <select id="rbac-filter-category" onchange="filterRbacTable()" class="py-1.5 px-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:border-emerald-500">
+                                    <option value="">Semua Kategori</option>
+                                    <option value="Utama">Utama</option>
+                                    <option value="Operasional">Operasional</option>
+                                    <option value="Lapangan">Lapangan</option>
+                                    <option value="Sarpras & Logistik">Sarpras & Logistik</option>
+                                    <option value="Penilaian">Penilaian</option>
+                                    <option value="Sivitas">Sivitas</option>
+                                    <option value="Sistem & IT">Sistem & IT</option>
+                                    <option value="Laporan">Laporan</option>
+                                    <option value="Administrasi">Administrasi</option>
+                                </select>
                             </div>
-
-                            <!-- KELOMPOK 2: HAK AKSI & OTORISASI OPERASIONAL -->
-                            <div class="bg-white rounded-xl border border-slate-200/80 p-4 sm:p-5 shadow-2xs space-y-3.5">
-                                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">2</div>
-                                        <div>
-                                            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Hak Aksi, Wewenang & Otorisasi Operasional</h4>
-                                            <p class="text-[11px] text-slate-500">Izin untuk mengeksekusi aksi penting seperti membuat tugas, approval belanja, input kas, dll.</p>
-                                        </div>
-                                    </div>
-                                    <button type="button" onclick="toggleCategoryPerms('act-')" class="text-[11px] text-amber-700 hover:text-amber-900 font-semibold cursor-pointer">Toggle Semua Aksi</button>
-                                </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5" id="matrix-actions-container">
-                                    <!-- Rendered by JS -->
-                                </div>
+                            <div class="text-[11px] text-slate-500 flex items-center gap-2">
+                                <span class="inline-flex items-center gap-1 font-semibold text-emerald-700"><i class="fa-solid fa-table-cells text-emerald-500"></i> Matriks Checklist Menu (CRUD)</span>
+                                <span>&bull;</span>
+                                <span id="rbac-matrix-summary">21 Modul</span>
                             </div>
+                        </div>
 
-                            <!-- KELOMPOK 3: CAKUPAN UNIT & LINGKUP KERJA -->
-                            <div class="bg-white rounded-xl border border-slate-200/80 p-4 sm:p-5 shadow-2xs space-y-3.5">
-                                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold">3</div>
-                                        <div>
-                                            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Cakupan Unit & Lingkup Penugasan (Unit Scoping)</h4>
-                                            <p class="text-[11px] text-slate-500">Menentukan apakah role ini memiliki akses ke seluruh unit (manager/superuser) atau terikat pada satu divisi.</p>
-                                        </div>
-                                    </div>
+                        <!-- THE RBAC CHECKLIST MATRIX TABLE -->
+                        <div class="overflow-x-auto bg-white">
+                            <table class="w-full text-left border-collapse text-xs" id="rbac-matrix-table">
+                                <thead>
+                                    <tr class="bg-slate-100/90 border-b border-slate-200 text-slate-700 font-bold uppercase text-[10px] tracking-wider select-none">
+                                        <th class="py-3 px-4 min-w-[220px]">Menu / Modul Sistem</th>
+                                        <th class="py-3 px-3 text-center min-w-[95px]">
+                                            <div class="flex flex-col items-center gap-1">
+                                                <span class="text-blue-700"><i class="fa-solid fa-eye mr-1"></i>Lihat (Read)</span>
+                                                <label class="inline-flex items-center gap-1 text-[10px] font-medium text-slate-500 hover:text-blue-700 cursor-pointer">
+                                                    <input type="checkbox" id="col-cb-view" onchange="toggleMatrixCol('view', this.checked)" class="w-3.5 h-3.5 text-blue-600 rounded border-slate-300"> Semua
+                                                </label>
+                                            </div>
+                                        </th>
+                                        <th class="py-3 px-3 text-center min-w-[95px]">
+                                            <div class="flex flex-col items-center gap-1">
+                                                <span class="text-emerald-700"><i class="fa-solid fa-plus mr-1"></i>Tambah (Create)</span>
+                                                <label class="inline-flex items-center gap-1 text-[10px] font-medium text-slate-500 hover:text-emerald-700 cursor-pointer">
+                                                    <input type="checkbox" id="col-cb-create" onchange="toggleMatrixCol('create', this.checked)" class="w-3.5 h-3.5 text-emerald-600 rounded border-slate-300"> Semua
+                                                </label>
+                                            </div>
+                                        </th>
+                                        <th class="py-3 px-3 text-center min-w-[95px]">
+                                            <div class="flex flex-col items-center gap-1">
+                                                <span class="text-amber-700"><i class="fa-solid fa-pen-to-square mr-1"></i>Edit (Update)</span>
+                                                <label class="inline-flex items-center gap-1 text-[10px] font-medium text-slate-500 hover:text-amber-700 cursor-pointer">
+                                                    <input type="checkbox" id="col-cb-edit" onchange="toggleMatrixCol('edit', this.checked)" class="w-3.5 h-3.5 text-amber-600 rounded border-slate-300"> Semua
+                                                </label>
+                                            </div>
+                                        </th>
+                                        <th class="py-3 px-3 text-center min-w-[95px]">
+                                            <div class="flex flex-col items-center gap-1">
+                                                <span class="text-rose-700"><i class="fa-solid fa-trash-can mr-1"></i>Hapus (Delete)</span>
+                                                <label class="inline-flex items-center gap-1 text-[10px] font-medium text-slate-500 hover:text-rose-700 cursor-pointer">
+                                                    <input type="checkbox" id="col-cb-delete" onchange="toggleMatrixCol('delete', this.checked)" class="w-3.5 h-3.5 text-rose-600 rounded border-slate-300"> Semua
+                                                </label>
+                                            </div>
+                                        </th>
+                                        <th class="py-3 px-3 text-center min-w-[140px]">
+                                            <div class="flex flex-col items-center gap-1">
+                                                <span class="text-purple-700"><i class="fa-solid fa-bolt mr-1"></i>Hak Aksi Khusus</span>
+                                                <span class="text-[9px] font-normal text-slate-400">Approval / Disposisi</span>
+                                            </div>
+                                        </th>
+                                        <th class="py-3 px-3 text-center min-w-[70px]">
+                                            <div class="flex flex-col items-center gap-1">
+                                                <span class="text-slate-600">Baris</span>
+                                                <span class="text-[9px] font-normal text-slate-400">1-Klik</span>
+                                            </div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 text-slate-700" id="rbac-matrix-tbody">
+                                    <!-- Rendered dynamically by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Cakupan Unit & Wilayah Kerja -->
+                        <div class="p-4 sm:p-5 bg-slate-50/80 border-t border-slate-200 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold"><i class="fa-solid fa-location-dot"></i></div>
+                                    <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Cakupan Wilayah & Penugasan Unit (Unit Scoping)</h4>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5" id="matrix-units-container">
-                                    <!-- Rendered by JS -->
-                                </div>
+                                <span class="text-[11px] text-slate-500">Tentukan apakah role ini mengawasi semua unit atau terikat unit khusus</span>
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5" id="matrix-units-container">
+                                <!-- Rendered dynamically by JS -->
                             </div>
                         </div>
 
@@ -3702,31 +3748,27 @@ HTML_TEMPLATE = """
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Lengkap Koordinator *</label>
                     <input type="text" id="add-user-nama" placeholder="Contoh: Aji Kurnia / Azril" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
                 </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Unit Kerja *</label>
-                        <select id="add-user-unit" onchange="toggleSubScopeField('add')" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
-                            <option value="IT">IT</option>
-                            <option value="OB">Office Boy</option>
-                            <option value="GARDENER">Gardener</option>
-                            <option value="SECURITY">Security</option>
-                            <option value="SARPRAS">SARPRAS (Perbaikan Fasilitas)</option>
-                            <option value="PENGADAAN">PENGADAAN (Logistik & Belanja)</option>
-                            <option value="ALL">ALL (Manajemen)</option>
-                        </select>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Unit Kerja Utama *</label>
+                    <select id="add-user-unit" onchange="toggleSubScopeField('add')" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+                        <option value="IT">IT</option>
+                        <option value="OB">Office Boy</option>
+                        <option value="GARDENER">Gardener</option>
+                        <option value="SECURITY">Security</option>
+                        <option value="SARPRAS">SARPRAS (Perbaikan Fasilitas)</option>
+                        <option value="PENGADAAN">PENGADAAN (Logistik & Belanja)</option>
+                        <option value="ALL">ALL (Manajemen)</option>
+                    </select>
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-xs font-semibold text-slate-700">Role Akses (Dapat Memilih Lebih Dari 1) <span class="text-rose-500">*</span></label>
+                        <span class="text-[10px] text-emerald-600 font-bold" id="add-user-role-count">0 Role Terpilih</span>
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Role Akses *</label>
-                        <select id="add-user-role" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
-                            <option value="koordinator_it">Koordinator IT</option>
-                            <option value="koordinator_ob">Koordinator OB</option>
-                            <option value="koordinator_gardener">Koordinator Gardener</option>
-                            <option value="koordinator_security">Koordinator Security</option>
-                            <option value="pic_sarpras">PIC Perbaikan Sarpras</option>
-                            <option value="pic_pengadaan">PIC Pengadaan</option>
-                            <option value="manager">Manager (Super Admin)</option>
-                        </select>
+                    <div id="add-user-roles-container" class="grid grid-cols-2 gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl max-h-40 overflow-y-auto">
+                        <!-- Populated dynamically by JS -->
                     </div>
+                    <span class="text-[10px] text-slate-400 mt-1 block">Beri centang pada satu atau lebih peran. Hak akses merupakan gabungan (union) seluruh role.</span>
                 </div>
                 <div id="add-user-subscope-container" class="hidden">
                     <label class="block text-xs font-semibold text-emerald-700 mb-1">Sub-Lingkup Gardener</label>
@@ -3769,31 +3811,27 @@ HTML_TEMPLATE = """
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Lengkap *</label>
                     <input type="text" id="edit-user-nama" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
                 </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Unit Kerja *</label>
-                        <select id="edit-user-unit" onchange="toggleSubScopeField('edit')" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
-                            <option value="IT">IT</option>
-                            <option value="OB">Office Boy</option>
-                            <option value="GARDENER">Gardener</option>
-                            <option value="SECURITY">Security</option>
-                            <option value="SARPRAS">SARPRAS (Perbaikan Fasilitas)</option>
-                            <option value="PENGADAAN">PENGADAAN (Logistik & Belanja)</option>
-                            <option value="ALL">ALL (Manajemen)</option>
-                        </select>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Unit Kerja Utama *</label>
+                    <select id="edit-user-unit" onchange="toggleSubScopeField('edit')" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
+                        <option value="IT">IT</option>
+                        <option value="OB">Office Boy</option>
+                        <option value="GARDENER">Gardener</option>
+                        <option value="SECURITY">Security</option>
+                        <option value="SARPRAS">SARPRAS (Perbaikan Fasilitas)</option>
+                        <option value="PENGADAAN">PENGADAAN (Logistik & Belanja)</option>
+                        <option value="ALL">ALL (Manajemen)</option>
+                    </select>
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-xs font-semibold text-slate-700">Role Akses (Dapat Memilih Lebih Dari 1) <span class="text-rose-500">*</span></label>
+                        <span class="text-[10px] text-blue-600 font-bold" id="edit-user-role-count">0 Role Terpilih</span>
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Role Akses *</label>
-                        <select id="edit-user-role" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
-                            <option value="koordinator_it">Koordinator IT</option>
-                            <option value="koordinator_ob">Koordinator OB</option>
-                            <option value="koordinator_gardener">Koordinator Gardener</option>
-                            <option value="koordinator_security">Koordinator Security</option>
-                            <option value="pic_sarpras">PIC Perbaikan Sarpras</option>
-                            <option value="pic_pengadaan">PIC Pengadaan</option>
-                            <option value="manager">Manager (Super Admin)</option>
-                        </select>
+                    <div id="edit-user-roles-container" class="grid grid-cols-2 gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl max-h-40 overflow-y-auto">
+                        <!-- Populated dynamically by JS -->
                     </div>
+                    <span class="text-[10px] text-slate-400 mt-1 block">Beri centang pada satu atau lebih peran. Hak akses merupakan gabungan (union) seluruh role.</span>
                 </div>
                 <div id="edit-user-subscope-container" class="hidden">
                     <label class="block text-xs font-semibold text-emerald-700 mb-1">Sub-Lingkup Gardener</label>
@@ -5667,6 +5705,51 @@ HTML_TEMPLATE = """
         }
 
         let cachedOpsUsers = [];
+        let G_ROLE_NAME_MAP = {};
+
+        function renderUserRoleCheckboxes(containerId, selectedRoles = []) {
+            const cont = document.getElementById(containerId);
+            if (!cont) return;
+            if (!G_OPS_ROLES || G_OPS_ROLES.length === 0) {
+                cont.innerHTML = '<div class="col-span-2 text-center text-slate-400 py-2 text-xs">Memuat daftar role...</div>';
+                return;
+            }
+            let html = '';
+            G_OPS_ROLES.forEach(r => {
+                const checked = selectedRoles.includes(r.role_code);
+                const isMgr = r.role_code === 'manager';
+                html += `
+                    <label class="flex items-center gap-2 p-2 bg-white rounded-lg border border-slate-200 hover:border-emerald-300 transition cursor-pointer text-xs group">
+                        <input type="checkbox" value="${r.role_code}" class="user-role-cb w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer" ${checked ? 'checked' : ''} onchange="updateUserRoleCount('${containerId}')">
+                        <div class="min-w-0 flex-1">
+                            <div class="font-bold text-slate-700 group-hover:text-emerald-800 line-clamp-1 flex items-center gap-1">
+                                <i class="fa-solid ${getRoleIcon(r.role_code)} text-[10px] ${isMgr ? 'text-purple-600' : 'text-slate-400'}"></i>
+                                <span>${r.role_name}</span>
+                            </div>
+                            <div class="text-[10px] text-slate-400 font-mono">${r.role_code}</div>
+                        </div>
+                    </label>
+                `;
+            });
+            cont.innerHTML = html;
+            updateUserRoleCount(containerId);
+        }
+
+        function updateUserRoleCount(containerId) {
+            const countEl = document.getElementById(containerId === 'add-user-roles-container' ? 'add-user-role-count' : 'edit-user-role-count');
+            const checkedBoxes = document.querySelectorAll(`#${containerId} .user-role-cb:checked`);
+            if (countEl) {
+                countEl.innerText = `${checkedBoxes.length} Role Terpilih`;
+            }
+        }
+
+        function openAddOpsUserModal() {
+            const form = document.querySelector('#modal-add-ops-user form');
+            if (form) form.reset();
+            renderUserRoleCheckboxes('add-user-roles-container', ['koordinator_ob']);
+            toggleSubScopeField('add');
+            toggleModal('modal-add-ops-user');
+        }
 
         function loadOpsUsers() {
             const tbody = document.getElementById('ops-users-tbody');
@@ -5679,25 +5762,27 @@ HTML_TEMPLATE = """
                     return r.json();
                 })
                 .then(users => {
-                    cachedOpsUsers = users;
+                    cachedOpsUsers = Array.isArray(users) ? users : [];
                     const elTotal = document.getElementById('ops-stat-total-users');
-                    if (elTotal) elTotal.innerText = users.length;
-                    const activeCount = users.filter(u => u.is_active === 1).length;
+                    if (elTotal) elTotal.innerText = cachedOpsUsers.length;
+                    const activeCount = cachedOpsUsers.filter(u => u.is_active === 1).length;
                     const elActive = document.getElementById('ops-stat-active-users');
                     if (elActive) elActive.innerText = activeCount;
 
-                    if (users.length === 0) {
+                    if (cachedOpsUsers.length === 0) {
                         tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400">Belum ada user koordinator terdaftar.</td></tr>';
                         return;
                     }
 
                     let html = '';
-                    users.forEach(u => {
+                    cachedOpsUsers.forEach(u => {
                         const unitBadgeColor = {
                             'IT': 'bg-blue-100 text-blue-800 border-blue-200',
                             'OB': 'bg-teal-100 text-teal-800 border-teal-200',
                             'GARDENER': 'bg-amber-100 text-amber-800 border-amber-200',
                             'SECURITY': 'bg-indigo-100 text-indigo-800 border-indigo-200',
+                            'SARPRAS': 'bg-slate-100 text-slate-800 border-slate-300',
+                            'PENGADAAN': 'bg-orange-100 text-orange-800 border-orange-200',
                             'ALL': 'bg-emerald-100 text-emerald-800 border-emerald-200'
                         }[u.unit_code] || 'bg-slate-100 text-slate-800 border-slate-200';
 
@@ -5717,6 +5802,20 @@ HTML_TEMPLATE = """
 
                         const lastLogin = u.last_login ? `<span class="text-xs text-slate-600">${u.last_login}</span>` : `<span class="text-xs text-slate-400 italic">Belum pernah</span>`;
 
+                        // Multi-Role Badges
+                        let rolesBadges = '';
+                        const userRoles = u.roles || (u.role_code ? u.role_code.split(',') : []);
+                        if (userRoles.length > 0) {
+                            rolesBadges = '<div class="flex flex-wrap gap-1">' + userRoles.map(r => {
+                                const cleanR = r.trim();
+                                const rName = G_ROLE_NAME_MAP[cleanR] || cleanR;
+                                const isMgr = cleanR === 'manager';
+                                return `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold ${isMgr ? 'bg-purple-100 text-purple-800 border border-purple-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}">${rName}</span>`;
+                            }).join('') + '</div>';
+                        } else {
+                            rolesBadges = `<span class="text-xs font-medium text-slate-700">${u.role_name || u.role_code}</span>`;
+                        }
+
                         html += `
                             <tr class="hover:bg-slate-50/80 transition">
                                 <td class="p-3.5">
@@ -5735,21 +5834,21 @@ HTML_TEMPLATE = """
                                     ${subScopeHtml}
                                 </td>
                                 <td class="p-3.5">
-                                    <span class="text-xs font-medium text-slate-700">${u.role_name || u.role_code}</span>
+                                    ${rolesBadges}
                                 </td>
                                 <td class="p-3.5">${waLink}</td>
                                 <td class="p-3.5">${statusBadge}</td>
                                 <td class="p-3.5">${lastLogin}</td>
                                 <td class="p-3.5 text-center">
                                     <div class="flex items-center justify-center space-x-1.5">
-                                        <button onclick="openEditOpsUser(${u.id})" title="Edit User" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                                        <button onclick="openEditOpsUser(${u.id})" title="Edit User" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer">
                                             <i class="fa-solid fa-pen-to-square text-xs"></i>
                                         </button>
-                                        <button onclick="openResetOpsPassword(${u.id}, '${u.username}')" title="Reset Password" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition">
+                                        <button onclick="openResetOpsPassword(${u.id}, '${u.username}')" title="Reset Password" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition cursor-pointer">
                                             <i class="fa-solid fa-key text-xs"></i>
                                         </button>
                                         ${u.username !== 'admin' ? `
-                                            <button onclick="toggleOpsUserStatus(${u.id})" title="${u.is_active === 1 ? 'Nonaktifkan' : 'Aktifkan'}" class="p-1.5 ${u.is_active === 1 ? 'text-rose-600 hover:bg-rose-50' : 'text-emerald-600 hover:bg-emerald-50'} rounded-lg transition">
+                                            <button onclick="toggleOpsUserStatus(${u.id})" title="${u.is_active === 1 ? 'Nonaktifkan' : 'Aktifkan'}" class="p-1.5 ${u.is_active === 1 ? 'text-rose-600 hover:bg-rose-50' : 'text-emerald-600 hover:bg-emerald-50'} rounded-lg transition cursor-pointer">
                                                 <i class="fa-solid ${u.is_active === 1 ? 'fa-user-slash' : 'fa-user-check'} text-xs"></i>
                                             </button>
                                         ` : ''}
@@ -5767,12 +5866,19 @@ HTML_TEMPLATE = """
 
         function submitAddOpsUser(e) {
             e.preventDefault();
+            const checkedRoles = Array.from(document.querySelectorAll('#add-user-roles-container .user-role-cb:checked')).map(cb => cb.value);
+            if (checkedRoles.length === 0) {
+                alert('Pilih minimal 1 role akses untuk koordinator ini!');
+                return;
+            }
+
             const payload = {
                 username: document.getElementById('add-user-username').value.trim(),
                 password: document.getElementById('add-user-password').value.trim(),
                 nama_lengkap: document.getElementById('add-user-nama').value.trim(),
                 unit_code: document.getElementById('add-user-unit').value,
-                role_code: document.getElementById('add-user-role').value,
+                roles: checkedRoles,
+                role_code: checkedRoles.join(','),
                 sub_scope: document.getElementById('add-user-unit').value === 'GARDENER' ? document.getElementById('add-user-subscope').value : '',
                 no_wa: document.getElementById('add-user-wa').value.trim()
             };
@@ -5803,7 +5909,10 @@ HTML_TEMPLATE = """
             document.getElementById('edit-user-username').value = user.username;
             document.getElementById('edit-user-nama').value = user.nama_lengkap;
             document.getElementById('edit-user-unit').value = user.unit_code;
-            document.getElementById('edit-user-role').value = user.role_code;
+            
+            const userRoles = user.roles || (user.role_code ? user.role_code.split(',') : []);
+            renderUserRoleCheckboxes('edit-user-roles-container', userRoles);
+            
             document.getElementById('edit-user-wa').value = user.no_wa || '';
             toggleSubScopeField('edit');
             if (user.sub_scope) {
@@ -5815,10 +5924,17 @@ HTML_TEMPLATE = """
         function submitEditOpsUser(e) {
             e.preventDefault();
             const userId = document.getElementById('edit-user-id').value;
+            const checkedRoles = Array.from(document.querySelectorAll('#edit-user-roles-container .user-role-cb:checked')).map(cb => cb.value);
+            if (checkedRoles.length === 0) {
+                alert('Pilih minimal 1 role akses untuk koordinator ini!');
+                return;
+            }
+
             const payload = {
                 nama_lengkap: document.getElementById('edit-user-nama').value.trim(),
                 unit_code: document.getElementById('edit-user-unit').value,
-                role_code: document.getElementById('edit-user-role').value,
+                roles: checkedRoles,
+                role_code: checkedRoles.join(','),
                 sub_scope: document.getElementById('edit-user-unit').value === 'GARDENER' ? document.getElementById('edit-user-subscope').value : '',
                 no_wa: document.getElementById('edit-user-wa').value.trim()
             };
@@ -5888,56 +6004,293 @@ HTML_TEMPLATE = """
         let G_CURRENT_ROLE_CODE = 'manager';
         let G_OPS_USER_COUNTS = {};
 
-        const PERM_CATALOG = {
-            tabs: [
-                { id: 'tab-dashboard', label: 'Dashboard Utama', desc: 'Ringkasan operasional harian, quick stats, dan status', icon: 'fa-gauge', color: 'text-emerald-600' },
-                { id: 'tab-tasks', label: 'Tiket & Pendelegasian', desc: 'Daftar penugasan koordinator dan status progres tiket', icon: 'fa-clipboard-list', color: 'text-slate-600' },
-                { id: 'tab-todo', label: 'To-Do List Agenda', desc: 'Agenda kerja harian per unit', icon: 'fa-square-check', color: 'text-emerald-600' },
-                { id: 'tab-journal', label: 'Jurnal Kegiatan Harian', desc: 'Catatan aktivitas harian unit & supervisi pimpinan', icon: 'fa-book', color: 'text-amber-600' },
-                { id: 'tab-standby', label: 'Kesiagaan Pos Standby', desc: 'Radar pos siaga, validasi lokasi GPS & presensi QR', icon: 'fa-satellite-dish', color: 'text-sky-500' },
-                { id: 'tab-checklist', label: 'Checklist OB & Green Ops', desc: 'Inspeksi kebersihan toilet, kelas, taman & tiket sarpras', icon: 'fa-clipboard-check', color: 'text-emerald-600' },
-                { id: 'tab-mutabaah', label: 'Log Mutabaah WA', desc: 'Rekap ibadah yaumiyah petugas dari WhatsApp', icon: 'fa-hands-praying', color: 'text-teal-600' },
-                { id: 'tab-kebersihan', label: 'Log Kebersihan & Foto', desc: 'Riwayat foto bukti kebersihan OB & area sekolah', icon: 'fa-broom', color: 'text-teal-600' },
-                { id: 'tab-pengadaan', label: 'Pengadaan Barang & Sarpras', desc: 'Pengajuan material, approval biaya, dan nota belanja', icon: 'fa-cart-shopping', color: 'text-amber-500' },
-                { id: 'tab-keuangan', label: 'Keuangan & FKP GA', desc: 'Buku kas belanja umum, analitik 4 chart, dan plafon', icon: 'fa-file-invoice-dollar', color: 'text-emerald-600' },
-                { id: 'tab-keuangan-ecopark', label: 'Keuangan Ecopark', desc: 'Arus kas masuk omset, belanja budidaya & peternakan', icon: 'fa-tree', color: 'text-emerald-600' },
-                { id: 'tab-pemeliharaan', label: 'Pemeliharaan Sarpras (PM)', desc: 'Jadwal servis preventif, aset, dan riwayat maintenance', icon: 'fa-screwdriver-wrench', color: 'text-teal-600' },
-                { id: 'tab-evaluasi', label: 'Rapor & Evaluasi Personil', desc: 'Penilaian SLA, skor kepatuhan, dan rekap kinerja tim', icon: 'fa-clipboard-user', color: 'text-indigo-600' },
-                { id: 'tab-sapaais', label: 'Sapa Ais / LaporPak', desc: 'Laporan keluhan sarpras civitas & tindak lanjut tiket', icon: 'fa-bullhorn', color: 'text-emerald-600' },
-                { id: 'tab-mutubaah', label: 'Mutabaah Diri Civitas', desc: 'Peningkatan kualitas ibadah & dzikir pimpinan/civitas', icon: 'fa-book-open', color: 'text-teal-600' },
-                { id: 'tab-server', label: 'Monitor Server VPS', desc: 'Spesifikasi VPS, memory, CPU, dan storage disk', icon: 'fa-server', color: 'text-blue-600' },
-                { id: 'tab-kuma', label: 'Uptime Kuma Monitor', desc: 'Pinger real-time server, gateway AI, dan CCTV', icon: 'fa-tower-broadcast', color: 'text-rose-600' },
-                { id: 'tab-analytics', label: 'Grafik & Analitik Tren', desc: 'Tren 7 hari tiket terselesaikan & kepatuhan standby', icon: 'fa-chart-pie', color: 'text-indigo-600' },
-                { id: 'tab-report', label: 'Cetak Laporan Harian', desc: 'Ekspor laporan teks harian siap cetak pimpinan', icon: 'fa-print', color: 'text-slate-600' },
-                { id: 'tab-users', label: 'Manajemen User', desc: 'Kelola akun login koordinator dan status aktif', icon: 'fa-users-gear', color: 'text-emerald-600' },
-                { id: 'tab-roles', label: 'Pengaturan Role Akses', desc: 'Konfigurasi matriks wewenang RBAC sistem', icon: 'fa-shield-halved', color: 'text-teal-600' }
-            ],
-            actions: [
-                { id: 'delegate_tasks', label: 'Delegasikan Tugas Baru', desc: 'Membuat tiket penugasan untuk koordinator lain', icon: 'fa-paper-plane', color: 'text-amber-600' },
-                { id: 'verify_tasks', label: 'Verifikasi & Selesaikan Tiket', desc: 'Menandai pekerjaan lapangan telah tuntas dan valid', icon: 'fa-circle-check', color: 'text-emerald-600' },
-                { id: 'manage_journals', label: 'Kelola Jurnal Kerja', desc: 'Menambah dan mengedit jurnal aktivitas harian unit', icon: 'fa-pen-to-square', color: 'text-blue-600' },
-                { id: 'feedback_journals', label: 'Supervisi & Catatan Pimpinan', desc: 'Memberikan feedback evaluasi pada jurnal staf', icon: 'fa-comment-dots', color: 'text-purple-600' },
-                { id: 'manage_procurements', label: 'Ajukan Pengadaan Barang', desc: 'Mengajukan permohonan material atau suku cadang', icon: 'fa-cart-plus', color: 'text-amber-600' },
-                { id: 'approve_procurements', label: 'Approval Pengadaan Pimpinan', desc: 'Menyetujui atau menolak permohonan belanja dana', icon: 'fa-stamp', color: 'text-rose-600' },
-                { id: 'purchase_procurements', label: 'Eksekusi Pembelian Logistik', desc: 'Mencatat nota toko & proses beli barang (PIC Pengadaan)', icon: 'fa-basket-shopping', color: 'text-teal-600' },
-                { id: 'manage_finance_ga', label: 'Kelola Belanja Keuangan GA', desc: 'Tambah, edit, dan hapus data transaksi kas keluar GA', icon: 'fa-receipt', color: 'text-emerald-600' },
-                { id: 'manage_finance_eco', label: 'Kelola Kas Keuangan Ecopark', desc: 'Catat omset kas masuk dan belanja budidaya Ecopark', icon: 'fa-hand-holding-dollar', color: 'text-emerald-600' },
-                { id: 'export_data', label: 'Ekspor Excel (.xlsx) & CSV', desc: 'Mengunduh rekap spreadsheet ke komputer', icon: 'fa-file-excel', color: 'text-emerald-600' },
-                { id: 'manage_users', label: 'Kelola Akun Pengguna', desc: 'Membuat akun koordinator & reset kata sandi', icon: 'fa-user-gear', color: 'text-indigo-600' },
-                { id: 'manage_roles', label: 'Konfigurasi Hak Akses Role', desc: 'Mengubah wewenang izin per role di RBAC', icon: 'fa-lock-open', color: 'text-rose-600' }
-            ],
-            units: [
-                { id: 'all', label: 'Akses Semua Unit (Global)', desc: 'Dapat memonitor seluruh unit tanpa filter batasan', icon: 'fa-globe', color: 'text-emerald-600' },
-                { id: 'unit_it', label: 'Khusus Unit IT', desc: 'Terikat pada infrastruktur & sistem digital', icon: 'fa-laptop-code', color: 'text-blue-600' },
-                { id: 'unit_ob', label: 'Khusus Unit Office Boy', desc: 'Terikat pada sanitasi & kebersihan indoor', icon: 'fa-broom', color: 'text-teal-600' },
-                { id: 'unit_gardener', label: 'Khusus Unit Gardener', desc: 'Terikat pada taman, budidaya & Ecopark', icon: 'fa-leaf', color: 'text-amber-600' },
-                { id: 'unit_security', label: 'Khusus Unit Security', desc: 'Terikat pada gerbang, pos & keamanan kampus', icon: 'fa-shield-halved', color: 'text-indigo-600' },
-                { id: 'unit_sarpras', label: 'Khusus Teknisi Sarpras', desc: 'Terikat pada pemeliharaan utilitas fisik sekolah', icon: 'fa-wrench', color: 'text-slate-600' },
-                { id: 'unit_pengadaan', label: 'Khusus Pengadaan & Logistik', desc: 'Terikat pada pembelian barang & nota belanja', icon: 'fa-truck-ramp-box', color: 'text-amber-600' }
-            ]
-        };
-
         const CORE_ROLES = ['manager', 'koordinator_it', 'koordinator_ob', 'koordinator_gardener', 'koordinator_security', 'pic_sarpras', 'pic_pengadaan'];
+
+        const RBAC_MODULES = [
+            {
+                id: 'dashboard',
+                category: 'Utama',
+                name: 'Dashboard Utama',
+                desc: 'Ringkasan operasional harian, quick stats, dan status host',
+                icon: 'fa-gauge',
+                color: 'text-emerald-600',
+                view: 'tab-dashboard',
+                create: null,
+                edit: null,
+                delete: null,
+                special: { id: 'view_all_units', label: 'Akses Lintas Unit' }
+            },
+            {
+                id: 'tasks',
+                category: 'Operasional',
+                name: 'Tiket & Pendelegasian Tugas',
+                desc: 'Disposisi penugasan antar-koordinator dan progres tiket',
+                icon: 'fa-clipboard-list',
+                color: 'text-slate-600',
+                view: 'tab-tasks',
+                create: 'delegate_tasks',
+                edit: 'edit_tasks',
+                delete: 'delete_tasks',
+                special: { id: 'verify_tasks', label: 'Verifikasi & Selesai' }
+            },
+            {
+                id: 'todo',
+                category: 'Operasional',
+                name: 'To-Do List Agenda Unit',
+                desc: 'Daftar rencana kerja harian mandiri per unit',
+                icon: 'fa-square-check',
+                color: 'text-emerald-600',
+                view: 'tab-todo',
+                create: 'create_todo',
+                edit: 'edit_todo',
+                delete: 'delete_todo',
+                special: null
+            },
+            {
+                id: 'journal',
+                category: 'Operasional',
+                name: 'Jurnal Kegiatan Harian',
+                desc: 'Dokumentasi aktivitas tim harian & catatan supervisi pimpinan',
+                icon: 'fa-book',
+                color: 'text-amber-600',
+                view: 'tab-journal',
+                create: 'manage_journals',
+                edit: 'edit_journals',
+                delete: 'delete_journals',
+                special: { id: 'feedback_journals', label: 'Supervisi Pimpinan' }
+            },
+            {
+                id: 'standby',
+                category: 'Lapangan',
+                name: 'Kesiagaan Pos Standby',
+                desc: 'Radar pos siaga, presensi QR akrilik & geotagging GPS',
+                icon: 'fa-satellite-dish',
+                color: 'text-sky-500',
+                view: 'tab-standby',
+                create: 'create_standby',
+                edit: 'edit_standby',
+                delete: 'delete_standby',
+                special: { id: 'view_radar_standby', label: 'Radar Live Pos' }
+            },
+            {
+                id: 'checklist',
+                category: 'Lapangan',
+                name: 'Checklist OB & Green Ops',
+                desc: 'Inspeksi toilet, kelas, taman via mobile QR & tiket sarpras',
+                icon: 'fa-clipboard-check',
+                color: 'text-emerald-600',
+                view: 'tab-checklist',
+                create: 'create_checklist',
+                edit: 'edit_checklist',
+                delete: 'delete_checklist',
+                special: { id: 'create_ticket_from_checklist', label: 'Terbitkan Tiket' }
+            },
+            {
+                id: 'mutabaah',
+                category: 'Lapangan',
+                name: 'Log Mutabaah WA Petugas',
+                desc: 'Rekap ibadah yaumiyah sholat, tilawah, dzikir dari bot WA',
+                icon: 'fa-hands-praying',
+                color: 'text-teal-600',
+                view: 'tab-mutabaah',
+                create: 'create_mutabaah',
+                edit: 'edit_mutabaah',
+                delete: 'delete_mutabaah',
+                special: { id: 'export_mutabaah', label: 'Ekspor Data' }
+            },
+            {
+                id: 'kebersihan',
+                category: 'Lapangan',
+                name: 'Log Kebersihan & Foto Sarpras',
+                desc: 'Riwayat laporan kebersihan OB, foto area & temuan anomali',
+                icon: 'fa-broom',
+                color: 'text-teal-600',
+                view: 'tab-kebersihan',
+                create: 'create_kebersihan',
+                edit: 'edit_kebersihan',
+                delete: 'delete_kebersihan',
+                special: { id: 'convert_kebersihan_ticket', label: 'Jadikan Tiket' }
+            },
+            {
+                id: 'pengadaan',
+                category: 'Sarpras & Logistik',
+                name: 'Pengadaan Barang & Sarpras',
+                desc: 'Siklus pengajuan material, approval pimpinan & nota belanja',
+                icon: 'fa-cart-shopping',
+                color: 'text-amber-500',
+                view: 'tab-pengadaan',
+                create: 'manage_procurements',
+                edit: 'purchase_procurements',
+                delete: 'delete_procurements',
+                special: { id: 'approve_procurements', label: 'Approval Biaya' }
+            },
+            {
+                id: 'keuangan',
+                category: 'Sarpras & Logistik',
+                name: 'Keuangan & FKP GA',
+                desc: 'Buku kas belanja umum, 175 transaksi, 4 chart analitik',
+                icon: 'fa-file-invoice-dollar',
+                color: 'text-emerald-600',
+                view: 'tab-keuangan',
+                create: 'manage_finance_ga',
+                edit: 'edit_finance_ga',
+                delete: 'delete_finance_ga',
+                special: { id: 'export_finance_ga', label: 'Ekspor Excel' }
+            },
+            {
+                id: 'keuangan_ecopark',
+                category: 'Sarpras & Logistik',
+                name: 'Keuangan Ciangsana Ecopark',
+                desc: 'Pencatatan omset kas masuk, belanja budidaya & peternakan',
+                icon: 'fa-tree',
+                color: 'text-emerald-600',
+                view: 'tab-keuangan-ecopark',
+                create: 'manage_finance_eco',
+                edit: 'edit_finance_eco',
+                delete: 'delete_finance_eco',
+                special: { id: 'export_finance_eco', label: 'Ekspor Excel' }
+            },
+            {
+                id: 'pemeliharaan',
+                category: 'Sarpras & Logistik',
+                name: 'Pemeliharaan Sarpras (PM)',
+                desc: 'Jadwal servis berkala AC, genset, plumbing, dan utilitas',
+                icon: 'fa-screwdriver-wrench',
+                color: 'text-teal-600',
+                view: 'tab-pemeliharaan',
+                create: 'create_pm',
+                edit: 'edit_pm',
+                delete: 'delete_pm',
+                special: null
+            },
+            {
+                id: 'evaluasi',
+                category: 'Penilaian',
+                name: 'Rapor & Evaluasi Personil',
+                desc: 'Skor SLA tiket, kepatuhan standby, dan performa tim',
+                icon: 'fa-clipboard-user',
+                color: 'text-indigo-600',
+                view: 'tab-evaluasi',
+                create: 'create_evaluasi',
+                edit: 'edit_evaluasi',
+                delete: 'delete_evaluasi',
+                special: { id: 'export_evaluasi', label: 'Ekspor Rapor' }
+            },
+            {
+                id: 'sapaais',
+                category: 'Sivitas',
+                name: 'Sapa Ais & Tiket LaporPak',
+                desc: 'Aspirasi & keluhan sarpras civitas sekolah',
+                icon: 'fa-bullhorn',
+                color: 'text-emerald-600',
+                view: 'tab-sapaais',
+                create: 'create_sapaais',
+                edit: 'edit_sapaais',
+                delete: 'delete_sapaais',
+                special: { id: 'delegate_sapaais', label: 'Disposisi' }
+            },
+            {
+                id: 'mutubaah_diri',
+                category: 'Sivitas',
+                name: 'Mutabaah Diri Civitas',
+                desc: 'Program peningkatan kualitas diri dan dzikir pimpinan/civitas',
+                icon: 'fa-book-open',
+                color: 'text-teal-600',
+                view: 'tab-mutubaah',
+                create: 'create_mutubaah',
+                edit: 'edit_mutubaah',
+                delete: 'delete_mutubaah',
+                special: null
+            },
+            {
+                id: 'server',
+                category: 'Sistem & IT',
+                name: 'Monitor Server VPS',
+                desc: 'Spesifikasi CPU, Memory, Disk, Uptime server',
+                icon: 'fa-server',
+                color: 'text-blue-600',
+                view: 'tab-server',
+                create: null,
+                edit: null,
+                delete: null,
+                special: { id: 'manage_server', label: 'Restart Service' }
+            },
+            {
+                id: 'kuma',
+                category: 'Sistem & IT',
+                name: 'Uptime Kuma Host Monitor',
+                desc: 'Pinger host, gateway AI, dan peringatan WA down/recovery',
+                icon: 'fa-tower-broadcast',
+                color: 'text-rose-600',
+                view: 'tab-kuma',
+                create: 'create_kuma_host',
+                edit: 'edit_kuma_host',
+                delete: 'delete_kuma_host',
+                special: { id: 'toggle_kuma_alert', label: 'Alert WA' }
+            },
+            {
+                id: 'analytics',
+                category: 'Laporan',
+                name: 'Grafik & Analitik Tren',
+                desc: 'Tren kinerja operasional mingguan & bulanan',
+                icon: 'fa-chart-pie',
+                color: 'text-indigo-600',
+                view: 'tab-analytics',
+                create: null,
+                edit: null,
+                delete: null,
+                special: { id: 'export_data', label: 'Ekspor Data' }
+            },
+            {
+                id: 'report',
+                category: 'Laporan',
+                name: 'Cetak Laporan Harian',
+                desc: 'Format cetak laporan ringkas harian',
+                icon: 'fa-print',
+                color: 'text-slate-600',
+                view: 'tab-report',
+                create: null,
+                edit: null,
+                delete: null,
+                special: { id: 'print_report', label: 'Cetak / PDF' }
+            },
+            {
+                id: 'users',
+                category: 'Administrasi',
+                name: 'Manajemen Pengguna (Users)',
+                desc: 'Kelola akun login koordinator dan penugasan multi-role',
+                icon: 'fa-users-gear',
+                color: 'text-emerald-600',
+                view: 'tab-users',
+                create: 'manage_users',
+                edit: 'edit_users',
+                delete: 'delete_users',
+                special: { id: 'reset_password', label: 'Reset Sandi' }
+            },
+            {
+                id: 'roles',
+                category: 'Administrasi',
+                name: 'Pengaturan Role Akses (RBAC)',
+                desc: 'Konfigurasi matriks wewenang menu, tambah, edit, delete',
+                icon: 'fa-shield-halved',
+                color: 'text-teal-600',
+                view: 'tab-roles',
+                create: 'create_roles',
+                edit: 'manage_roles',
+                delete: 'delete_roles',
+                special: { id: 'manage_all_rbac', label: 'Full RBAC Control' }
+            }
+        ];
+
+        const RBAC_UNITS = [
+            { id: 'all', label: 'Akses Semua Unit (Global)', desc: 'Dapat memonitor seluruh unit tanpa filter batasan', icon: 'fa-globe', color: 'text-emerald-600' },
+            { id: 'unit_it', label: 'Khusus Unit IT', desc: 'Terikat pada infrastruktur & sistem digital', icon: 'fa-laptop-code', color: 'text-blue-600' },
+            { id: 'unit_ob', label: 'Khusus Unit Office Boy', desc: 'Terikat pada sanitasi & kebersihan indoor', icon: 'fa-broom', color: 'text-teal-600' },
+            { id: 'unit_gardener', label: 'Khusus Unit Gardener', desc: 'Terikat pada taman, budidaya & Ecopark', icon: 'fa-leaf', color: 'text-amber-600' },
+            { id: 'unit_security', label: 'Khusus Unit Security', desc: 'Terikat pada gerbang, pos & keamanan kampus', icon: 'fa-shield-halved', color: 'text-indigo-600' },
+            { id: 'unit_sarpras', label: 'Khusus Teknisi Sarpras', desc: 'Terikat pada pemeliharaan utilitas fisik sekolah', icon: 'fa-wrench', color: 'text-slate-600' },
+            { id: 'unit_pengadaan', label: 'Khusus Pengadaan & Logistik', desc: 'Terikat pada pembelian barang & nota belanja', icon: 'fa-truck-ramp-box', color: 'text-amber-600' }
+        ];
 
         function getRoleIcon(roleCode) {
             switch(roleCode) {
@@ -5957,20 +6310,28 @@ HTML_TEMPLATE = """
             if (!container) return;
             container.innerHTML = '<div class="col-span-full p-6 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat konfigurasi role & hak akses...</div>';
             
-            // Ambil data users dan roles secara paralel
             Promise.all([
                 fetch('/api/ops/roles').then(r => r.json()),
-                fetch('/api/ops/users').then(r => r.json()).catch(() => ({ users: [] }))
+                fetch('/api/ops/users').then(r => r.json()).catch(() => [])
             ])
             .then(([roles, usersData]) => {
                 G_OPS_ROLES = Array.isArray(roles) ? roles : [];
+                G_ROLE_NAME_MAP = {};
+                G_OPS_ROLES.forEach(r => {
+                    G_ROLE_NAME_MAP[r.role_code] = r.role_name;
+                });
                 
-                // Hitung jumlah user per role
+                // Hitung jumlah user per role (mendukung multi-role)
                 G_OPS_USER_COUNTS = {};
-                const users = usersData.users || [];
+                const users = Array.isArray(usersData) ? usersData : (usersData.users || []);
                 users.forEach(u => {
-                    const r = u.role_code;
-                    G_OPS_USER_COUNTS[r] = (G_OPS_USER_COUNTS[r] || 0) + 1;
+                    const rList = u.roles || (u.role_code ? u.role_code.split(',') : []);
+                    rList.forEach(r => {
+                        const cleanR = r.trim();
+                        if (cleanR) {
+                            G_OPS_USER_COUNTS[cleanR] = (G_OPS_USER_COUNTS[cleanR] || 0) + 1;
+                        }
+                    });
                 });
 
                 // Update template dropdown di modal tambah role
@@ -5983,13 +6344,12 @@ HTML_TEMPLATE = """
                     templateSelect.innerHTML = opts;
                 }
 
-                // Render role cards selector
+                // Render role selector cards
                 renderRoleCards();
 
-                // Pilih role aktif (default manager atau yang terakhir dipilih)
-                const exists = G_OPS_ROLES.some(r => r.role_code === G_CURRENT_ROLE_CODE);
-                if (!exists && G_OPS_ROLES.length > 0) {
-                    G_CURRENT_ROLE_CODE = G_OPS_ROLES[0].role_code;
+                // Select default role
+                if (!G_CURRENT_ROLE_CODE || !G_OPS_ROLES.some(r => r.role_code === G_CURRENT_ROLE_CODE)) {
+                    G_CURRENT_ROLE_CODE = G_OPS_ROLES[0]?.role_code || 'manager';
                 }
                 selectOpsRole(G_CURRENT_ROLE_CODE);
             })
@@ -6024,8 +6384,8 @@ HTML_TEMPLATE = """
                                 <div class="flex items-center gap-1">
                                     <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${isSelected ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}">${permCount} Izin</span>
                                     ${!isCore ? `
-                                        <button type="button" onclick="event.stopPropagation(); openEditRoleModal('${r.role_code}')" class="p-1 text-slate-400 hover:text-blue-600 text-xs" title="Edit Role"><i class="fa-solid fa-pen"></i></button>
-                                        <button type="button" onclick="event.stopPropagation(); deleteCustomRole('${r.role_code}')" class="p-1 text-slate-400 hover:text-rose-600 text-xs" title="Hapus Role"><i class="fa-solid fa-trash-can"></i></button>
+                                        <button type="button" onclick="event.stopPropagation(); openEditRoleModal('${r.role_code}')" class="p-1 text-slate-400 hover:text-blue-600 text-xs cursor-pointer" title="Edit Role"><i class="fa-solid fa-pen"></i></button>
+                                        <button type="button" onclick="event.stopPropagation(); deleteCustomRole('${r.role_code}')" class="p-1 text-slate-400 hover:text-rose-600 text-xs cursor-pointer" title="Hapus Role"><i class="fa-solid fa-trash-can"></i></button>
                                     ` : ''}
                                 </div>
                             </div>
@@ -6050,7 +6410,6 @@ HTML_TEMPLATE = """
             const role = G_OPS_ROLES.find(r => r.role_code === roleCode);
             if (!role) return;
 
-            // Re-render selector cards to highlight active role
             renderRoleCards();
 
             // Set role banner header
@@ -6073,77 +6432,149 @@ HTML_TEMPLATE = """
                 }
             }
 
-            // Populate checkboxes
+            // Render the full checklist matrix table
+            renderMatrixTable(role);
+        }
+
+        function renderMatrixTable(role) {
+            const tbody = document.getElementById('rbac-matrix-tbody');
+            if (!tbody) return;
+
             const perms = Array.isArray(role.permissions) ? role.permissions : [];
             const isManager = role.role_code === 'manager';
 
-            // Kategori 1: Tabs
-            const tabsCont = document.getElementById('matrix-tabs-container');
-            if (tabsCont) {
-                let html = '';
-                PERM_CATALOG.tabs.forEach(t => {
-                    const checked = isManager || perms.includes(t.id) || perms.includes('all');
-                    html += `
-                        <label class="flex items-start gap-3 p-2.5 bg-slate-50/70 hover:bg-emerald-50/40 rounded-xl border border-slate-200/70 hover:border-emerald-300 transition cursor-pointer group">
-                            <input type="checkbox" data-perm="${t.id}" class="ops-perm-cb mt-0.5 w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer" ${checked ? 'checked' : ''} onchange="updatePermCountBadge()">
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-1.5">
-                                    <i class="fa-solid ${t.icon} ${t.color} text-xs w-4"></i>
-                                    <span class="text-xs font-bold text-slate-700 group-hover:text-emerald-900">${t.label}</span>
-                                </div>
-                                <p class="text-[10px] text-slate-500 mt-0.5 line-clamp-1 leading-tight">${t.desc}</p>
-                            </div>
-                        </label>
-                    `;
-                });
-                tabsCont.innerHTML = html;
-            }
+            let html = '';
+            RBAC_MODULES.forEach((m, idx) => {
+                const hasView = m.view ? (isManager || perms.includes(m.view) || perms.includes('all')) : false;
+                const hasCreate = m.create ? (isManager || perms.includes(m.create) || perms.includes('all')) : false;
+                const hasEdit = m.edit ? (isManager || perms.includes(m.edit) || perms.includes('all')) : false;
+                const hasDelete = m.delete ? (isManager || perms.includes(m.delete) || perms.includes('all')) : false;
+                const hasSpecial = m.special ? (isManager || perms.includes(m.special.id) || perms.includes('all')) : false;
 
-            // Kategori 2: Actions
-            const actsCont = document.getElementById('matrix-actions-container');
-            if (actsCont) {
-                let html = '';
-                PERM_CATALOG.actions.forEach(a => {
-                    const checked = isManager || perms.includes(a.id) || perms.includes('all');
-                    html += `
-                        <label class="flex items-start gap-3 p-2.5 bg-slate-50/70 hover:bg-amber-50/40 rounded-xl border border-slate-200/70 hover:border-amber-300 transition cursor-pointer group">
-                            <input type="checkbox" data-perm="${a.id}" class="ops-perm-cb mt-0.5 w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500 cursor-pointer" ${checked ? 'checked' : ''} onchange="updatePermCountBadge()">
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-1.5">
-                                    <i class="fa-solid ${a.icon} ${a.color} text-xs w-4"></i>
-                                    <span class="text-xs font-bold text-slate-700 group-hover:text-amber-900">${a.label}</span>
-                                </div>
-                                <p class="text-[10px] text-slate-500 mt-0.5 line-clamp-1 leading-tight">${a.desc}</p>
-                            </div>
-                        </label>
-                    `;
-                });
-                actsCont.innerHTML = html;
-            }
+                const viewCell = m.view ? `
+                    <label class="inline-flex items-center justify-center cursor-pointer p-1">
+                        <input type="checkbox" data-perm="${m.view}" data-col="view" data-module="${m.id}" class="ops-perm-cb w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer" ${hasView ? 'checked' : ''} onchange="updatePermCountBadge()">
+                    </label>
+                ` : `<span class="text-slate-300 font-mono">-</span>`;
 
-            // Kategori 3: Units
+                const createCell = m.create ? `
+                    <label class="inline-flex items-center justify-center cursor-pointer p-1">
+                        <input type="checkbox" data-perm="${m.create}" data-col="create" data-module="${m.id}" class="ops-perm-cb w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer" ${hasCreate ? 'checked' : ''} onchange="updatePermCountBadge()">
+                    </label>
+                ` : `<span class="text-slate-300 font-mono">-</span>`;
+
+                const editCell = m.edit ? `
+                    <label class="inline-flex items-center justify-center cursor-pointer p-1">
+                        <input type="checkbox" data-perm="${m.edit}" data-col="edit" data-module="${m.id}" class="ops-perm-cb w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500 cursor-pointer" ${hasEdit ? 'checked' : ''} onchange="updatePermCountBadge()">
+                    </label>
+                ` : `<span class="text-slate-300 font-mono">-</span>`;
+
+                const deleteCell = m.delete ? `
+                    <label class="inline-flex items-center justify-center cursor-pointer p-1">
+                        <input type="checkbox" data-perm="${m.delete}" data-col="delete" data-module="${m.id}" class="ops-perm-cb w-4 h-4 text-rose-600 rounded border-slate-300 focus:ring-rose-500 cursor-pointer" ${hasDelete ? 'checked' : ''} onchange="updatePermCountBadge()">
+                    </label>
+                ` : `<span class="text-slate-300 font-mono">-</span>`;
+
+                const specialCell = m.special ? `
+                    <label class="inline-flex items-center gap-1.5 px-2 py-1 bg-purple-50/70 hover:bg-purple-100/70 rounded-md border border-purple-200/60 cursor-pointer text-[10px] text-purple-900 group">
+                        <input type="checkbox" data-perm="${m.special.id}" data-col="special" data-module="${m.id}" class="ops-perm-cb w-3.5 h-3.5 text-purple-600 rounded border-purple-300 focus:ring-purple-500 cursor-pointer" ${hasSpecial ? 'checked' : ''} onchange="updatePermCountBadge()">
+                        <span class="font-medium group-hover:text-purple-950">${m.special.label}</span>
+                    </label>
+                ` : `<span class="text-slate-300 font-mono">-</span>`;
+
+                html += `
+                    <tr class="hover:bg-slate-50 transition matrix-row" data-category="${m.category}" data-search="${m.name.toLowerCase()} ${m.desc.toLowerCase()} ${m.category.toLowerCase()}">
+                        <td class="py-2.5 px-4">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-xs shrink-0">
+                                    <i class="fa-solid ${m.icon} ${m.color}"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="font-bold text-xs text-slate-800 line-clamp-1">${m.name}</span>
+                                        <span class="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-slate-100 text-slate-600">${m.category}</span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-500 line-clamp-1 leading-tight mt-0.5">${m.desc}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-2 px-3 text-center">${viewCell}</td>
+                        <td class="py-2 px-3 text-center">${createCell}</td>
+                        <td class="py-2 px-3 text-center">${editCell}</td>
+                        <td class="py-2 px-3 text-center">${deleteCell}</td>
+                        <td class="py-2 px-3 text-center">${specialCell}</td>
+                        <td class="py-2 px-3 text-center">
+                            <button type="button" onclick="toggleMatrixRow('${m.id}')" title="Centang/Batal Semua di Baris Ini" class="p-1 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded transition cursor-pointer text-xs">
+                                <i class="fa-solid fa-arrows-left-right-to-line"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+
+            // Render Unit Scoping
             const unitsCont = document.getElementById('matrix-units-container');
             if (unitsCont) {
-                let html = '';
-                PERM_CATALOG.units.forEach(u => {
+                let unitHtml = '';
+                RBAC_UNITS.forEach(u => {
                     const checked = isManager || perms.includes(u.id) || perms.includes('all');
-                    html += `
-                        <label class="flex items-start gap-3 p-2.5 bg-slate-50/70 hover:bg-indigo-50/40 rounded-xl border border-slate-200/70 hover:border-indigo-300 transition cursor-pointer group">
-                            <input type="checkbox" data-perm="${u.id}" class="ops-perm-cb mt-0.5 w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer" ${checked ? 'checked' : ''} onchange="updatePermCountBadge()">
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-1.5">
-                                    <i class="fa-solid ${u.icon} ${u.color} text-xs w-4"></i>
-                                    <span class="text-xs font-bold text-slate-700 group-hover:text-indigo-900">${u.label}</span>
+                    unitHtml += `
+                        <label class="flex items-center gap-2 p-2 bg-white hover:bg-indigo-50/50 rounded-xl border border-slate-200/90 hover:border-indigo-300 transition cursor-pointer group text-xs">
+                            <input type="checkbox" data-perm="${u.id}" data-col="unit" class="ops-perm-cb w-3.5 h-3.5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer" ${checked ? 'checked' : ''} onchange="updatePermCountBadge()">
+                            <div class="min-w-0 flex-1">
+                                <div class="font-bold text-slate-700 group-hover:text-indigo-900 line-clamp-1 flex items-center gap-1">
+                                    <i class="fa-solid ${u.icon} ${u.color} text-[10px]"></i>
+                                    <span>${u.label}</span>
                                 </div>
-                                <p class="text-[10px] text-slate-500 mt-0.5 line-clamp-1 leading-tight">${u.desc}</p>
                             </div>
                         </label>
                     `;
                 });
-                unitsCont.innerHTML = html;
+                unitsCont.innerHTML = unitHtml;
             }
 
             updatePermCountBadge();
+        }
+
+        function toggleMatrixCol(colType, checked) {
+            const boxes = document.querySelectorAll(`#rbac-matrix-tbody input[data-col="${colType}"]`);
+            boxes.forEach(cb => cb.checked = checked);
+            updatePermCountBadge();
+        }
+
+        function toggleMatrixRow(moduleId) {
+            const boxes = document.querySelectorAll(`#rbac-matrix-tbody input[data-module="${moduleId}"]`);
+            if (boxes.length === 0) return;
+            const anyUnchecked = Array.from(boxes).some(b => !b.checked);
+            boxes.forEach(b => b.checked = anyUnchecked);
+            updatePermCountBadge();
+        }
+
+        function filterRbacTable() {
+            const query = (document.getElementById('rbac-filter-search')?.value || '').toLowerCase().trim();
+            const category = document.getElementById('rbac-filter-category')?.value || '';
+            const rows = document.querySelectorAll('#rbac-matrix-tbody .matrix-row');
+            
+            let visibleCount = 0;
+            rows.forEach(r => {
+                const rowCat = r.getAttribute('data-category') || '';
+                const rowSearch = r.getAttribute('data-search') || '';
+                const matchQuery = !query || rowSearch.includes(query);
+                const matchCat = !category || rowCat === category;
+
+                if (matchQuery && matchCat) {
+                    r.style.display = '';
+                    visibleCount++;
+                } else {
+                    r.style.display = 'none';
+                }
+            });
+
+            const summaryEl = document.getElementById('rbac-matrix-summary');
+            if (summaryEl) {
+                summaryEl.innerText = `${visibleCount} dari ${RBAC_MODULES.length} Modul`;
+            }
         }
 
         function updatePermCountBadge() {
@@ -6152,6 +6583,37 @@ HTML_TEMPLATE = """
             if (badge) {
                 badge.innerText = `${checkedBoxes.length} Izin Aktif`;
             }
+        }
+
+        function selectAllRolePerms() {
+            const boxes = document.querySelectorAll('.ops-perm-cb');
+            boxes.forEach(cb => cb.checked = true);
+            ['col-cb-view', 'col-cb-create', 'col-cb-edit', 'col-cb-delete'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.checked = true;
+            });
+            updatePermCountBadge();
+        }
+
+        function selectReadOnlyRolePerms() {
+            const boxes = document.querySelectorAll('.ops-perm-cb');
+            boxes.forEach(cb => {
+                const col = cb.getAttribute('data-col');
+                cb.checked = (col === 'view');
+            });
+            const colView = document.getElementById('col-cb-view');
+            if (colView) colView.checked = true;
+            ['col-cb-create', 'col-cb-edit', 'col-cb-delete'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.checked = false;
+            });
+            updatePermCountBadge();
+        }
+
+        function resetCurrentRolePerms() {
+            const role = G_OPS_ROLES.find(r => r.role_code === G_CURRENT_ROLE_CODE);
+            if (!role) return;
+            selectOpsRole(role.role_code);
         }
 
         function saveOpsRolePermissions() {
@@ -6180,55 +6642,16 @@ HTML_TEMPLATE = """
                 if (res.error) {
                     alert('Gagal menyimpan izin: ' + res.error);
                 } else {
-                    // Update cache lokal
                     const role = G_OPS_ROLES.find(r => r.role_code === G_CURRENT_ROLE_CODE);
                     if (role) {
                         role.permissions = selectedPerms;
                     }
                     renderRoleCards();
                     updatePermCountBadge();
-                    alert(`✅ Berhasil! Hak akses untuk role '${G_CURRENT_ROLE_CODE}' berhasil diperbarui (${selectedPerms.length} izin aktif).`);
+                    alert(`✅ Berhasil! Hak akses untuk role '${G_CURRENT_ROLE_CODE}' berhasil disimpan (${selectedPerms.length} izin aktif).`);
                 }
             })
             .catch(err => alert('Terjadi kesalahan koneksi: ' + err.message));
-        }
-
-        function selectAllRolePerms() {
-            const boxes = document.querySelectorAll('.ops-perm-cb');
-            boxes.forEach(cb => cb.checked = true);
-            updatePermCountBadge();
-        }
-
-        function selectReadOnlyRolePerms() {
-            const boxes = document.querySelectorAll('.ops-perm-cb');
-            boxes.forEach(cb => {
-                const perm = cb.getAttribute('data-perm') || '';
-                // Hanya centang yang berawalan tab- dan uncheck aksi/edit
-                cb.checked = perm.startsWith('tab-') && !perm.includes('users') && !perm.includes('roles');
-            });
-            updatePermCountBadge();
-        }
-
-        function resetCurrentRolePerms() {
-            const role = G_OPS_ROLES.find(r => r.role_code === G_CURRENT_ROLE_CODE);
-            if (!role) return;
-            selectOpsRole(role.role_code);
-        }
-
-        function toggleCategoryPerms(prefix) {
-            let selector = '';
-            if (prefix === 'tab-') {
-                selector = '#matrix-tabs-container .ops-perm-cb';
-            } else if (prefix === 'act-') {
-                selector = '#matrix-actions-container .ops-perm-cb';
-            }
-            if (!selector) return;
-
-            const boxes = document.querySelectorAll(selector);
-            if (boxes.length === 0) return;
-            const anyUnchecked = Array.from(boxes).some(b => !b.checked);
-            boxes.forEach(b => b.checked = anyUnchecked);
-            updatePermCountBadge();
         }
 
         // ============ MODAL TAMBAH & EDIT ROLE ============
