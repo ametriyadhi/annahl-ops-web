@@ -1,15 +1,16 @@
 import sqlite3
 import datetime
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 
 mutubaah_bp = Blueprint('mutubaah', __name__)
 
 DB_PATH = '/home/ametriyadhi/sas-annahl/database.sqlite'
 
 def get_db():
-    con = sqlite3.connect(DB_PATH)
-    con.row_factory = sqlite3.Row
-    return con
+    conn = sqlite3.connect(DB_PATH, timeout=30.0)
+    conn.execute("PRAGMA busy_timeout = 30000")
+    conn.row_factory = sqlite3.Row
+    return conn
 
 def init_db():
     con = get_db()
@@ -115,21 +116,73 @@ def get_laporan():
         to_date = request.args.get("to")
         user_id = request.args.get("user_id")
 
+        ops_role = session.get('ops_role_code', '')
+        ops_roles = session.get('ops_roles', [ops_role])
+        ops_perms = session.get('ops_permissions', [])
+        ops_user_id = session.get('ops_user_id')
+        ops_user_nama = (session.get('ops_nama') or '').strip()
+
+        # Manager atau pengguna dengan hak akses global ('all' atau 'view_all_units') dapat melihat semua
+        is_manager = ('manager' in ops_roles) or ('all' in ops_perms) or ('view_all_units' in ops_perms)
+
         query = "SELECT * FROM mutubaah_laporan WHERE 1=1"
         params = []
 
-        if nama and nama.strip() and nama != "all":
-            query += " AND nama LIKE ?"
-            params.append(f"%{nama.strip()}%")
+        if not is_manager:
+            # PENTING: Untuk PIC / koordinator / non-manager, batasi HANYA laporan dirinya sendiri!
+            user_wa = ""
+            if ops_user_id:
+                try:
+                    con_u = get_db()
+                    u_row = con_u.execute("SELECT no_wa, nama_lengkap FROM ops_users WHERE id = ?", (ops_user_id,)).fetchone()
+                    con_u.close()
+                    if u_row:
+                        user_wa = u_row['no_wa'] or ""
+                        if not ops_user_nama:
+                            ops_user_nama = (u_row['nama_lengkap'] or '').strip()
+                except Exception:
+                    pass
 
-        if unit and unit.strip() and unit != "all":
-            query += " AND (unit = ? OR unit LIKE ?)"
-            params.append(unit.strip())
-            params.append(f"%{unit.strip()}%")
+            clean_wa = "".join([c for c in user_wa if c.isdigit()])
+            if clean_wa.startswith('0'):
+                clean_wa = '62' + clean_wa[1:]
 
-        if user_id:
-            query += " AND user_id = ?"
-            params.append(user_id)
+            conds = []
+            c_params = []
+            if ops_user_id:
+                conds.append("user_id = ?")
+                c_params.append(ops_user_id)
+            if ops_user_nama:
+                first_name = ops_user_nama.split()[0].lower() if ops_user_nama else ''
+                conds.append("LOWER(TRIM(nama)) = ?")
+                c_params.append(ops_user_nama.lower())
+                conds.append("LOWER(nama) LIKE ?")
+                c_params.append(f"%{ops_user_nama.lower()}%")
+                if len(first_name) >= 3:
+                    conds.append("LOWER(nama) LIKE ?")
+                    c_params.append(f"%{first_name}%")
+            if clean_wa and len(clean_wa) >= 8:
+                conds.append("no_wa LIKE ?")
+                c_params.append(f"%{clean_wa[-8:]}%")
+
+            if conds:
+                query += f" AND ({' OR '.join(conds)})"
+                params.extend(c_params)
+            else:
+                query += " AND 1=0"
+        else:
+            if nama and nama.strip() and nama != "all":
+                query += " AND nama LIKE ?"
+                params.append(f"%{nama.strip()}%")
+
+            if unit and unit.strip() and unit != "all":
+                query += " AND (unit = ? OR unit LIKE ?)"
+                params.append(unit.strip())
+                params.append(f"%{unit.strip()}%")
+
+            if user_id:
+                query += " AND user_id = ?"
+                params.append(user_id)
 
         if from_date:
             query += " AND tanggal >= ?"
@@ -159,6 +212,20 @@ def add_laporan():
         no_wa = data.get("no_wa")
         user_id = data.get("user_id")
         tanggal = data.get("tanggal") or datetime.date.today().isoformat()
+
+        # Proteksi: Jika PIC/non-manager yang login mengisi via web, ikat ke profilnya sendiri
+        ops_role = session.get('ops_role_code', '')
+        ops_roles = session.get('ops_roles', [ops_role])
+        ops_perms = session.get('ops_permissions', [])
+        ops_user_id = session.get('ops_user_id')
+        ops_user_nama = (session.get('ops_nama') or '').strip()
+
+        is_manager = ('manager' in ops_roles) or ('all' in ops_perms) or ('view_all_units' in ops_perms)
+
+        if not is_manager and ops_user_id and ops_user_nama:
+            nama = ops_user_nama
+            user_id = ops_user_id
+            unit = session.get('ops_unit_code', unit or 'UMUM')
 
         # Lookup jika unit atau jabatan belum terisi
         if not unit or not jabatan:
@@ -206,6 +273,25 @@ def add_laporan():
 @mutubaah_bp.route("/api/mutubaah/peserta", methods=["GET"])
 def get_peserta():
     try:
+        ops_role = session.get('ops_role_code', '')
+        ops_roles = session.get('ops_roles', [ops_role])
+        ops_perms = session.get('ops_permissions', [])
+        ops_user_id = session.get('ops_user_id')
+        ops_user_nama = (session.get('ops_nama') or '').strip()
+
+        is_manager = ('manager' in ops_roles) or ('all' in ops_perms) or ('view_all_units' in ops_perms)
+
+        if not is_manager and ops_user_nama:
+            return jsonify([{
+                "id": ops_user_id,
+                "nama": ops_user_nama,
+                "unit": session.get('ops_unit_code', 'UMUM'),
+                "jabatan": "PIC / Koordinator",
+                "no_wa": "-",
+                "is_active": 1,
+                "remind_1730": 0
+            }])
+
         con = get_db()
         rows = con.execute('''
             SELECT id, nama, unit, jabatan, no_wa, is_active, remind_1730, remind_tilawah_all
@@ -241,8 +327,30 @@ def get_peserta():
 def get_stats():
     try:
         today = datetime.date.today().isoformat()
+        ops_role = session.get('ops_role_code', '')
+        ops_roles = session.get('ops_roles', [ops_role])
+        ops_perms = session.get('ops_permissions', [])
+        ops_user_id = session.get('ops_user_id')
+        ops_user_nama = (session.get('ops_nama') or '').strip()
+
+        is_manager = ('manager' in ops_roles) or ('all' in ops_perms) or ('view_all_units' in ops_perms)
+
         con = get_db()
-        
+
+        if not is_manager and (ops_user_id or ops_user_nama):
+            # Scope stats ke diri sendiri
+            today_count = con.execute("SELECT COUNT(*) FROM mutubaah_laporan WHERE tanggal = ? AND (user_id = ? OR LOWER(TRIM(nama)) = ?)", (today, ops_user_id, ops_user_nama.lower())).fetchone()[0]
+            total_dzikir = con.execute("SELECT COALESCE(SUM(total_dzikir), 0) FROM mutubaah_laporan WHERE user_id = ? OR LOWER(TRIM(nama)) = ?", (ops_user_id, ops_user_nama.lower())).fetchone()[0]
+            con.close()
+            return jsonify({
+                "today": today,
+                "today_reports": today_count,
+                "total_dzikir": total_dzikir,
+                "total_peserta": 1,
+                "units_today": [],
+                "top_istiqomah": []
+            })
+
         # Laporan hari ini
         today_count = con.execute("SELECT COUNT(*) FROM mutubaah_laporan WHERE tanggal = ?", (today,)).fetchone()[0]
         

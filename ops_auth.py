@@ -77,7 +77,7 @@ def init_ops_auth_db():
             'Penanggung jawab infrastruktur jaringan, server, lab, CBT, AV, dan sistem digital.',
             json.dumps([
                 "unit_it", "tab-dashboard", "tab-tasks", "tab-todo",
-                "tab-journal", "tab-sapaais", "tab-server", "tab-kuma", "tab-evaluasi"
+                "tab-journal", "tab-sapaais", "tab-server", "tab-kuma", "tab-evaluasi", "tab-mutubaah"
             ])
         ),
         (
@@ -86,7 +86,7 @@ def init_ops_auth_db():
             'Penanggung jawab kebersihan indoor, sanitasi toilet, kelas, kantor, dan logistik.',
             json.dumps([
                 "unit_ob", "tab-dashboard", "tab-tasks", "tab-todo",
-                "tab-journal", "tab-kebersihan", "tab-sapaais", "tab-mutabaah", "tab-evaluasi", "tab-pemeliharaan"
+                "tab-journal", "tab-kebersihan", "tab-sapaais", "tab-mutabaah", "tab-evaluasi", "tab-pemeliharaan", "tab-mutubaah"
             ])
         ),
         (
@@ -95,7 +95,7 @@ def init_ops_auth_db():
             'Penanggung jawab kebersihan taman/Ecopark, kebun buah, budidaya sayuran, dan ternak.',
             json.dumps([
                 "unit_gardener", "tab-dashboard", "tab-tasks", "tab-todo",
-                "tab-journal", "tab-kebersihan", "tab-evaluasi", "tab-pemeliharaan"
+                "tab-journal", "tab-kebersihan", "tab-evaluasi", "tab-pemeliharaan", "tab-mutubaah"
             ])
         ),
         (
@@ -104,7 +104,7 @@ def init_ops_auth_db():
             'Penanggung jawab keamanan gerbang, perimeter kampus, ketertiban lalu lintas, dan pos jaga.',
             json.dumps([
                 "unit_security", "tab-dashboard", "tab-tasks", "tab-todo",
-                "tab-journal", "tab-mutabaah", "tab-evaluasi"
+                "tab-journal", "tab-mutabaah", "tab-evaluasi", "tab-mutubaah"
             ])
         ),
         (
@@ -113,7 +113,7 @@ def init_ops_auth_db():
             'Teknisi sarana & prasarana (sipil, listrik, plumbing, AC, mebeler, dan perbaikan fisik fasilitas).',
             json.dumps([
                 "unit_sarpras", "tab-dashboard", "tab-tasks", "tab-todo",
-                "tab-journal", "tab-kebersihan", "tab-sapaais", "tab-pengadaan", "tab-evaluasi", "tab-pemeliharaan"
+                "tab-journal", "tab-kebersihan", "tab-sapaais", "tab-pengadaan", "tab-evaluasi", "tab-pemeliharaan", "tab-mutubaah"
             ])
         ),
         (
@@ -122,7 +122,7 @@ def init_ops_auth_db():
             'Pengadaan barang, sparepart/material teknis perbaikan, pencatatan nota, dan logistik sarpras.',
             json.dumps([
                 "unit_pengadaan", "tab-dashboard", "tab-pengadaan", "tab-tasks",
-                "tab-todo", "tab-journal", "tab-evaluasi"
+                "tab-todo", "tab-journal", "tab-evaluasi", "tab-mutubaah"
             ])
         )
     ]

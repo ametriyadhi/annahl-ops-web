@@ -2943,9 +2943,11 @@ HTML_TEMPLATE = """
                             <p class="text-xs text-slate-500 mt-1">Program peningkatan kualitas diri: tilawah Al-Qur'an, pemahaman bacaan sholat, dan target dzikir yaumiyah civitas An Nahl</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
+                            {% if user_role == 'manager' or 'all' in user_permissions or 'manage_users' in user_permissions %}
                             <a href="https://ais-survey.ametriyadhi.com/mutabaah/peserta" target="_blank" class="px-3.5 py-1.5 bg-teal-50 text-teal-800 border border-teal-200 text-xs font-semibold rounded-lg hover:bg-teal-100 transition shadow-xs flex items-center gap-1.5" title="Buka Pengaturan Peserta & WhatsApp di SAS">
                                 <i class="fa-solid fa-users-gear text-teal-600"></i> Kelola Peserta & WA
                             </a>
+                            {% endif %}
                             <button onclick="toggleModal('modal-add-mutubaah')" class="px-3.5 py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 transition shadow-xs flex items-center gap-1.5">
                                 <i class="fa-solid fa-plus"></i> Input Mutaba'ah
                             </button>
@@ -2961,6 +2963,7 @@ HTML_TEMPLATE = """
                     <!-- Filter Bar -->
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/80 flex flex-col md:flex-row gap-3 items-center justify-between">
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 w-full md:w-auto flex-1">
+                            {% if user_role == 'manager' or 'all' in user_permissions or 'view_all_units' in user_permissions %}
                             <div>
                                 <label class="block text-[11px] font-semibold text-slate-600 mb-1">Pilih Peserta:</label>
                                 <select id="mutubaah-filter-peserta" onchange="loadMutubaahData()" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-teal-500">
@@ -2985,6 +2988,17 @@ HTML_TEMPLATE = """
                                     <option value="PENGADAAN">Pengadaan Barang</option>
                                 </select>
                             </div>
+                            {% else %}
+                            <div class="sm:col-span-2">
+                                <label class="block text-[11px] font-semibold text-teal-700 mb-1"><i class="fa-solid fa-user-check mr-1"></i>Laporan Pribadi:</label>
+                                <div class="px-3 py-1.5 bg-teal-50 border border-teal-200 rounded-lg text-xs font-bold text-teal-900 flex items-center justify-between">
+                                    <span>{{ user_nama }}</span>
+                                    <span class="text-[10px] px-2 py-0.5 bg-teal-200/80 text-teal-800 rounded font-semibold">{{ user_role_name }}</span>
+                                </div>
+                                <input type="hidden" id="mutubaah-filter-peserta" value="{{ user_nama }}">
+                                <input type="hidden" id="mutubaah-filter-unit" value="all">
+                            </div>
+                            {% endif %}
                             <div>
                                 <label class="block text-[11px] font-semibold text-slate-600 mb-1">Dari Tanggal:</label>
                                 <input type="date" id="mutubaah-filter-from" onchange="loadMutubaahData()" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-teal-500">
@@ -3076,23 +3090,27 @@ HTML_TEMPLATE = """
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block font-semibold text-slate-700 mb-1">Nama Peserta *</label>
+                                {% if user_role != 'manager' and 'all' not in user_permissions and 'manage_users' not in user_permissions %}
+                                <input type="text" id="mut-input-nama" required value="{{ user_nama }}" readonly class="w-full border border-slate-200 bg-slate-100 text-slate-700 rounded-lg p-2 text-xs font-semibold cursor-not-allowed">
+                                {% else %}
                                 <input type="text" id="mut-input-nama" required placeholder="Contoh: Ust. Japar Siddiq" class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-1 focus:ring-teal-500">
+                                {% endif %}
                             </div>
                             <div>
                                 <label class="block font-semibold text-slate-700 mb-1">Unit Kerja *</label>
                                 <select id="mut-input-unit" required class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-1 focus:ring-teal-500">
-                                    <option value="SMA">SMA Islam An Nahl</option>
-                                    <option value="SMP">SMP Islam An Nahl</option>
-                                    <option value="SD">SD Islam An Nahl</option>
-                                    <option value="PGTK">PG-TK Islam An Nahl</option>
-                                    <option value="UMUM & ECOPARK" selected>Umum & Ecopark</option>
-                                    <option value="IT">IT & Sistem</option>
-                                    <option value="OB">Office Boy (OB)</option>
-                                    <option value="GARDENER">Gardener</option>
-                                    <option value="SECURITY">Security</option>
-                                    <option value="SDM">SDM & Kepegawaian</option>
-                                    <option value="SARPRAS">Sarpras</option>
-                                    <option value="PENGADAAN">Pengadaan</option>
+                                    <option value="SMA" {% if user_unit == 'SMA' %}selected{% endif %}>SMA Islam An Nahl</option>
+                                    <option value="SMP" {% if user_unit == 'SMP' %}selected{% endif %}>SMP Islam An Nahl</option>
+                                    <option value="SD" {% if user_unit == 'SD' %}selected{% endif %}>SD Islam An Nahl</option>
+                                    <option value="PGTK" {% if user_unit == 'PGTK' %}selected{% endif %}>PG-TK Islam An Nahl</option>
+                                    <option value="UMUM & ECOPARK" {% if user_unit in ['UMUM', 'UMUM_ECOPARK', 'ALL'] %}selected{% endif %}>Umum & Ecopark</option>
+                                    <option value="IT" {% if user_unit == 'IT' %}selected{% endif %}>IT & Sistem</option>
+                                    <option value="OB" {% if user_unit == 'OB' %}selected{% endif %}>Office Boy (OB)</option>
+                                    <option value="GARDENER" {% if user_unit == 'GARDENER' %}selected{% endif %}>Gardener</option>
+                                    <option value="SECURITY" {% if user_unit == 'SECURITY' %}selected{% endif %}>Security</option>
+                                    <option value="SDM" {% if user_unit == 'SDM' %}selected{% endif %}>SDM & Kepegawaian</option>
+                                    <option value="SARPRAS" {% if user_unit == 'SARPRAS' %}selected{% endif %}>Sarpras</option>
+                                    <option value="PENGADAAN" {% if user_unit == 'PENGADAAN' %}selected{% endif %}>Pengadaan</option>
                                 </select>
                             </div>
                         </div>
@@ -6843,7 +6861,7 @@ HTML_TEMPLATE = """
                 .then(r => r.json())
                 .then(data => {
                     if (!Array.isArray(data) || data.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-slate-400">Tidak ada laporan mutabaah yang sesuai filter.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-slate-400">Belum ada laporan mutabaah yang tercatat sesuai filter.<br><span class="text-[11px] text-slate-400">Silakan kirim laporan harian via WhatsApp bot atau klik tombol <b>Input Mutaba\'ah</b> di atas.</span></td></tr>';
                         document.getElementById('mutubaah-tilawah-hari').innerText = '-';
                         document.getElementById('mutubaah-khatam').innerText = '-';
                         document.getElementById('mutubaah-sholat').innerText = '-%';
@@ -6851,7 +6869,7 @@ HTML_TEMPLATE = """
                         return;
                     }
 
-                    const isSingle = (peserta && peserta !== 'all');
+                    const isSingle = (peserta && peserta !== 'all') || (!document.getElementById('mutubaah-filter-unit') || document.getElementById('mutubaah-filter-unit').type === 'hidden');
                     const latest = data[0];
 
                     if (isSingle) {
