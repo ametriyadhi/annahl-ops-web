@@ -335,16 +335,105 @@ TAB_KEUANGAN_ECOPARK_HTML = """
 
     <!-- 7. TABEL DATA TRANSAKSI LENGKAP -->
     <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden">
-        <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <!-- Sub-Header Title & Live Stats -->
+        <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div>
                 <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-list-check text-slate-600"></i>
-                    Buku Jurnal Transaksi Keuangan Ecopark
+                    <i class="fa-solid fa-list-check text-emerald-600"></i>
+                    <span>Buku Jurnal Transaksi Keuangan Ecopark</span>
                 </h3>
-                <p class="text-xs text-slate-500 mt-0.5">Menampilkan <span id="lbl-table-count" class="font-bold text-emerald-700">0</span> transaksi aktif sesuai filter.</p>
+                <p class="text-xs text-slate-500 mt-0.5">
+                    Menampilkan <span id="lbl-table-count" class="font-bold text-emerald-700">0</span> transaksi | Total Nilai: <span id="lbl-table-total" class="font-bold text-slate-800">Rp 0</span>
+                </p>
             </div>
-            <div class="text-xs font-semibold text-slate-500">
-                Total Nilai Terfilter: <span id="lbl-table-total" class="font-bold text-slate-800">Rp 0</span>
+            <!-- Quick Table Search & Reset -->
+            <div class="flex items-center gap-2 flex-wrap">
+                <div class="relative w-full sm:w-64">
+                    <input type="text" id="eco-table-quick-search" oninput="onEcoTableFilterChange()" placeholder="Cari uraian, toko/pembeli, ID..." class="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                </div>
+                <button type="button" onclick="resetEcoTableFilters()" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1" title="Reset Filter Tabel">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>Reset</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- In-Table Multi-Filter Bar -->
+        <div class="bg-slate-50/70 p-3 sm:px-5 border-b border-slate-200/70 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- Filter Tipe Transaksi (Semua / Masuk / Keluar) -->
+                <div class="flex items-center gap-1">
+                    <span class="text-[11px] font-semibold text-slate-500">Tipe:</span>
+                    <select id="eco-table-filter-type" onchange="onEcoTableFilterChange()" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:outline-hidden">
+                        <option value="">Semua Tipe</option>
+                        <option value="INCOME">🟢 Kas Masuk (Omset)</option>
+                        <option value="EXPENSE">🔴 Kas Keluar (Belanja)</option>
+                    </select>
+                </div>
+
+                <!-- Filter Kategori / Klaster -->
+                <div class="flex items-center gap-1">
+                    <span class="text-[11px] font-semibold text-slate-500">Klaster / Pos:</span>
+                    <select id="eco-table-filter-cat" onchange="onEcoTableFilterChange()" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:outline-hidden">
+                        <option value="">Semua Klaster & Pos</option>
+                        <option value="Sewa Fasilitas">🏊‍♂️ Sewa Fasilitas (Kolam & Futsal)</option>
+                        <option value="Edukasi">🎓 Edukasi & Event</option>
+                        <option value="Panen Buah">🥭 Panen Buah</option>
+                        <option value="Panen Sayur">🥬 Panen Sayur</option>
+                        <option value="Ternak">🥚 Ternak & Telur</option>
+                        <option value="52111">52111 Budidaya</option>
+                        <option value="52121">52121 Peternakan</option>
+                        <option value="52131">52131 Pemeliharaan</option>
+                        <option value="52132">52132 Kunjungan</option>
+                        <option value="52133">52133 Marketing</option>
+                        <option value="52134">52134 Investasi</option>
+                    </select>
+                </div>
+
+                <!-- Filter Bukti Nota -->
+                <div class="flex items-center gap-1">
+                    <span class="text-[11px] font-semibold text-slate-500">Bukti:</span>
+                    <select id="eco-table-filter-proof" onchange="onEcoTableFilterChange()" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:outline-hidden">
+                        <option value="">Semua</option>
+                        <option value="with_proof">📸 Ada Bukti Drive</option>
+                        <option value="no_proof">Tanpa Bukti</option>
+                    </select>
+                </div>
+
+                <!-- Filter Nominal -->
+                <div class="flex items-center gap-1">
+                    <span class="text-[11px] font-semibold text-slate-500">Nominal:</span>
+                    <select id="eco-table-filter-nominal" onchange="onEcoTableFilterChange()" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:outline-hidden">
+                        <option value="">Semua Nominal</option>
+                        <option value="gt_1m">> Rp 1 Juta</option>
+                        <option value="100k_1m">Rp 100 Ribu s/d 1 Juta</option>
+                        <option value="lt_100k">< Rp 100 Ribu</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Sorting & Rows Per Page -->
+            <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1">
+                    <span class="text-[11px] font-semibold text-slate-500">Urutkan:</span>
+                    <select id="eco-table-sort" onchange="onEcoTableFilterChange()" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:outline-hidden">
+                        <option value="date_desc">Tanggal Terbaru</option>
+                        <option value="date_asc">Tanggal Terlama</option>
+                        <option value="amount_desc">Nominal Terbesar</option>
+                        <option value="amount_asc">Nominal Terkecil</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-1">
+                    <span class="text-[11px] font-semibold text-slate-500">Baris:</span>
+                    <select id="eco-table-pagesize" onchange="onEcoPageSizeChange()" class="px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:outline-hidden">
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="all">Semua</option>
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -371,6 +460,14 @@ TAB_KEUANGAN_ECOPARK_HTML = """
                     </tr>
                 </tbody>
             </table>
+        </div>
+
+        <!-- Table Pagination Footer -->
+        <div id="eco-table-pagination" class="p-3.5 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+            <div id="eco-pagination-info">Menampilkan 0 - 0 dari 0 transaksi</div>
+            <div class="flex items-center gap-1" id="eco-pagination-buttons">
+                <!-- Injected via JS -->
+            </div>
         </div>
     </div>
 
@@ -1233,47 +1330,121 @@ JS_KEUANGAN_ECOPARK_SCRIPTS = """
         }, 250);
     }
 
+    let G_ECO_PAGE = 1;
+    let G_ECO_PAGE_SIZE = 25;
+    let G_ECO_SORT = 'date_desc';
+    let G_ECO_FILTERED_CACHE = [];
+
+    function onEcoTableFilterChange() {
+        G_ECO_PAGE = 1;
+        filterEcoData();
+    }
+
+    function onEcoPageSizeChange() {
+        const ps = document.getElementById('eco-table-pagesize') ? document.getElementById('eco-table-pagesize').value : '25';
+        G_ECO_PAGE_SIZE = ps === 'all' ? 999999 : parseInt(ps, 10);
+        G_ECO_PAGE = 1;
+        filterEcoData();
+    }
+
+    function resetEcoTableFilters() {
+        if (document.getElementById('eco-table-quick-search')) document.getElementById('eco-table-quick-search').value = '';
+        if (document.getElementById('eco-table-filter-type')) document.getElementById('eco-table-filter-type').value = '';
+        if (document.getElementById('eco-table-filter-cat')) document.getElementById('eco-table-filter-cat').value = '';
+        if (document.getElementById('eco-table-filter-proof')) document.getElementById('eco-table-filter-proof').value = '';
+        if (document.getElementById('eco-table-filter-nominal')) document.getElementById('eco-table-filter-nominal').value = '';
+        if (document.getElementById('eco-table-sort')) document.getElementById('eco-table-sort').value = 'date_desc';
+        if (document.getElementById('eco-table-pagesize')) document.getElementById('eco-table-pagesize').value = '25';
+        G_ECO_PAGE = 1;
+        G_ECO_PAGE_SIZE = 25;
+        G_ECO_SORT = 'date_desc';
+        filterEcoData();
+    }
+
+    function gotoEcoPage(pageNum) {
+        G_ECO_PAGE = pageNum;
+        renderEcoPaginatedTable();
+    }
+
     function filterEcoData() {
-        const cat = document.getElementById('filter-eco-category') ? document.getElementById('filter-eco-category').value.toLowerCase() : '';
-        const search = document.getElementById('search-eco-trx') ? document.getElementById('search-eco-trx').value.toLowerCase().trim() : '';
+        const topCat = document.getElementById('filter-eco-category') ? document.getElementById('filter-eco-category').value.toLowerCase().trim() : '';
+        const topSearch = document.getElementById('search-eco-trx') ? document.getElementById('search-eco-trx').value.toLowerCase().trim() : '';
+
+        const tblSearch = document.getElementById('eco-table-quick-search') ? document.getElementById('eco-table-quick-search').value.toLowerCase().trim() : '';
+        const tblType = document.getElementById('eco-table-filter-type') ? document.getElementById('eco-table-filter-type').value.trim() : '';
+        const tblCat = document.getElementById('eco-table-filter-cat') ? document.getElementById('eco-table-filter-cat').value.toLowerCase().trim() : '';
+        const tblProof = document.getElementById('eco-table-filter-proof') ? document.getElementById('eco-table-filter-proof').value.trim() : '';
+        const tblNominal = document.getElementById('eco-table-filter-nominal') ? document.getElementById('eco-table-filter-nominal').value.trim() : '';
+        const sortMode = document.getElementById('eco-table-sort') ? document.getElementById('eco-table-sort').value : 'date_desc';
+
+        const effectiveType = tblType || G_ECO_TYPE_FILTER;
 
         const filtered = G_ECO_DATA.filter(item => {
-            if (G_ECO_TYPE_FILTER && item.trx_type !== G_ECO_TYPE_FILTER) {
+            if (effectiveType && item.trx_type !== effectiveType) {
                 return false;
             }
-            if (cat) {
+
+            if (topCat) {
                 const itemCat = (item.main_category || '').toLowerCase();
                 const itemCoa = (item.coa_name || '').toLowerCase();
-                if (!itemCat.includes(cat) && !itemCoa.includes(cat)) {
+                if (!itemCat.includes(topCat) && !itemCoa.includes(topCat)) {
                     return false;
                 }
             }
-            if (search) {
-                const desc = (item.description || '').toLowerCase();
-                const pihak = (item.buyer_or_vendor || '').toLowerCase();
-                const coa = (item.coa_name || '').toLowerCase();
-                const id = (item.id || '').toLowerCase();
-                if (!desc.includes(search) && !pihak.includes(search) && !coa.includes(search) && !id.includes(search)) {
+
+            if (tblCat) {
+                const combCat = ((item.main_category || '') + ' ' + (item.coa_name || '') + ' ' + (item.coa_code || '')).toLowerCase();
+                if (!combCat.includes(tblCat)) {
                     return false;
                 }
             }
+
+            if (tblProof === 'with_proof' && !item.drive_file_url) return false;
+            if (tblProof === 'no_proof' && item.drive_file_url) return false;
+
+            const amt = item.amount || 0;
+            if (tblNominal === 'gt_1m' && amt <= 1000000) return false;
+            if (tblNominal === '100k_1m' && (amt < 100000 || amt > 1000000)) return false;
+            if (tblNominal === 'lt_100k' && amt >= 100000) return false;
+
+            const combined = [
+                item.description, item.buyer_or_vendor, item.coa_name, item.main_category, item.id
+            ].join(' ').toLowerCase();
+
+            if (topSearch && !combined.includes(topSearch)) return false;
+            if (tblSearch && !combined.includes(tblSearch)) return false;
+
             return true;
         });
 
-        renderEcoTable(filtered);
+        filtered.sort((a, b) => {
+            if (sortMode === 'date_asc') return (a.transaction_date || '').localeCompare(b.transaction_date || '');
+            if (sortMode === 'amount_desc') return (b.amount || 0) - (a.amount || 0);
+            if (sortMode === 'amount_asc') return (a.amount || 0) - (b.amount || 0);
+            return (b.transaction_date || '').localeCompare(a.transaction_date || '');
+        });
+
+        G_ECO_FILTERED_CACHE = filtered;
+        renderEcoPaginatedTable();
     }
 
-    function renderEcoTable(data) {
+    function renderEcoPaginatedTable() {
+        const data = G_ECO_FILTERED_CACHE;
         const tbody = document.getElementById('eco-table-body');
         const lblCount = document.getElementById('lbl-table-count');
         const lblTotal = document.getElementById('lbl-table-total');
         const lblCntAll = document.getElementById('lbl-cnt-all');
+        const paginationInfo = document.getElementById('eco-pagination-info');
+        const paginationBtns = document.getElementById('eco-pagination-buttons');
 
         if (lblCntAll) lblCntAll.innerText = G_ECO_DATA.length;
         if (lblCount) lblCount.innerText = data.length;
 
         let totalAmountFiltered = 0;
-        let html = '';
+        data.forEach(x => { totalAmountFiltered += (x.amount || 0); });
+        if (lblTotal) lblTotal.innerText = 'Rp ' + Math.round(totalAmountFiltered).toLocaleString('id-ID');
+
+        if (!tbody) return;
 
         if (data.length === 0) {
             tbody.innerHTML = `
@@ -1283,12 +1454,45 @@ JS_KEUANGAN_ECOPARK_SCRIPTS = """
                         <div>Tidak ada transaksi yang cocok dengan filter yang dipilih.</div>
                     </td>
                 </tr>`;
-            if (lblTotal) lblTotal.innerText = 'Rp 0';
+            if (paginationInfo) paginationInfo.innerText = 'Menampilkan 0 dari 0 transaksi';
+            if (paginationBtns) paginationBtns.innerHTML = '';
             return;
         }
 
-        data.forEach(item => {
-            totalAmountFiltered += (item.amount || 0);
+        const totalRows = data.length;
+        const pageSize = G_ECO_PAGE_SIZE;
+        const totalPages = Math.ceil(totalRows / pageSize) || 1;
+        if (G_ECO_PAGE > totalPages) G_ECO_PAGE = totalPages;
+        if (G_ECO_PAGE < 1) G_ECO_PAGE = 1;
+
+        const startIndex = (G_ECO_PAGE - 1) * pageSize;
+        const endIndex = Math.min(startIndex + pageSize, totalRows);
+        const pagedData = data.slice(startIndex, endIndex);
+
+        if (paginationInfo) {
+            paginationInfo.innerText = `Menampilkan ${startIndex + 1} - ${endIndex} dari ${totalRows} transaksi`;
+        }
+
+        if (paginationBtns) {
+            let btnsHtml = '';
+            if (G_ECO_PAGE > 1) {
+                btnsHtml += `<button type="button" onclick="gotoEcoPage(${G_ECO_PAGE - 1})" class="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 transition cursor-pointer flex items-center gap-1"><i class="fa-solid fa-chevron-left text-[10px]"></i> Sebelumnya</button>`;
+            } else {
+                btnsHtml += `<button type="button" disabled class="px-2.5 py-1 bg-slate-50 border border-slate-100 rounded-lg text-xs font-semibold text-slate-300 cursor-not-allowed">Sebelumnya</button>`;
+            }
+
+            btnsHtml += `<span class="px-3 py-1 font-bold text-xs text-slate-700 bg-white border border-slate-200 rounded-lg">${G_ECO_PAGE} / ${totalPages}</span>`;
+
+            if (G_ECO_PAGE < totalPages) {
+                btnsHtml += `<button type="button" onclick="gotoEcoPage(${G_ECO_PAGE + 1})" class="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 transition cursor-pointer flex items-center gap-1">Berikutnya <i class="fa-solid fa-chevron-right text-[10px]"></i></button>`;
+            } else {
+                btnsHtml += `<button type="button" disabled class="px-2.5 py-1 bg-slate-50 border border-slate-100 rounded-lg text-xs font-semibold text-slate-300 cursor-not-allowed">Berikutnya</button>`;
+            }
+            paginationBtns.innerHTML = btnsHtml;
+        }
+
+        let html = '';
+        pagedData.forEach(item => {
             const isInc = item.trx_type === 'INCOME';
 
             const badgeType = isInc
@@ -1352,7 +1556,6 @@ JS_KEUANGAN_ECOPARK_SCRIPTS = """
         });
 
         tbody.innerHTML = html;
-        if (lblTotal) lblTotal.innerText = 'Rp ' + Math.round(totalAmountFiltered).toLocaleString('id-ID');
     }
 
     function openCreateEcoModal(type) {

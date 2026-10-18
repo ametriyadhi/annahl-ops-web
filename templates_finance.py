@@ -321,17 +321,112 @@ TAB_KEUANGAN_HTML = """
 
     <!-- 7. DATA TABLE TRANSAKSI PENGELUARAN GA -->
     <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden">
-        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <i class="fa-solid fa-table-list text-slate-600"></i>
-                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Tabel Rincian Pengeluaran Bagian Umum (GA)</h3>
+        <!-- Sub-Header Title & Live Stats -->
+        <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div>
+                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-table-list text-emerald-600"></i>
+                    <span>Tabel Rincian Pengeluaran Bagian Umum (GA)</span>
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">
+                    Menampilkan <span id="ga-table-count" class="font-bold text-emerald-700">0</span> transaksi aktif | Total Belanja: <span id="ga-table-total-amount" class="font-bold text-rose-700">Rp 0</span>
+                </p>
             </div>
-            <span id="ga-table-count" class="text-xs text-slate-400 font-medium">0 baris transaksi</span>
+            <!-- Quick Table Search & Reset -->
+            <div class="flex items-center gap-2 flex-wrap">
+                <div class="relative w-full sm:w-64">
+                    <input type="text" id="ga-table-quick-search" oninput="onGATableFilterChange()" placeholder="Cari uraian, toko, no KB..." class="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                </div>
+                <button type="button" onclick="resetGATableFilters()" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1" title="Reset Filter Tabel">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>Reset</span>
+                </button>
+            </div>
         </div>
+
+        <!-- In-Table Multi-Filter Bar -->
+        <div class="bg-slate-50/70 p-3 sm:px-5 border-b border-slate-200/70 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- Filter Unit Target -->
+                <div class="flex items-center gap-1">
+                    <span class="text-[11px] font-semibold text-slate-500">Unit:</span>
+                    <select id="ga-table-filter-unit" onchange="onGATableFilterChange()" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:outline-hidden">
+                        <option value="">Semua Unit</option>
+                        <option value="SD">SD</option>
+                        <option value="SMP">SMP</option>
+                        <option value="SMA">SMA</option>
+                        <option value="TK">TK / PGTK</option>
+                        <option value="GA">GA / Umum</option>
+                        <option value="Kolam Renang">Kolam Renang</option>
+                        <option value="Futsal">Lapangan Futsal</option>
+                        <option value="Masjid">Masjid</option>
+                    </select>
+                </div>
+
+                <!-- Filter Pos Induk FKP GA -->
+                <div class="flex items-center gap-1">
+                    <span class="text-[11px] font-semibold text-slate-500">Pos:</span>
+                    <select id="ga-table-filter-cat" onchange="onGATableFilterChange()" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:outline-hidden">
+                        <option value="">Semua Pos (5 Induk FKP)</option>
+                        <option value="PEMELIHARAAN">51411 Pemeliharaan</option>
+                        <option value="ADMINISTRASI">51412 Administrasi</option>
+                        <option value="ENERGI">51413 Listrik & Net</option>
+                        <option value="PERLENGKAPAN">51414 Perlengkapan</option>
+                        <option value="INVESTASI">51415 Investasi Sarpras</option>
+                    </select>
+                </div>
+
+                <!-- Filter Nominal -->
+                <div class="flex items-center gap-1">
+                    <span class="text-[11px] font-semibold text-slate-500">Nominal:</span>
+                    <select id="ga-table-filter-nominal" onchange="onGATableFilterChange()" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:outline-hidden">
+                        <option value="">Semua Nominal</option>
+                        <option value="gt_10m">> Rp 10 Juta (Proyek Besar)</option>
+                        <option value="1m_10m">Rp 1 Juta s/d 10 Juta</option>
+                        <option value="lt_1m">< Rp 1 Juta (Operasional Kecil)</option>
+                    </select>
+                </div>
+
+                <!-- Filter Bukti Nota -->
+                <div class="flex items-center gap-1">
+                    <span class="text-[11px] font-semibold text-slate-500">Bukti:</span>
+                    <select id="ga-table-filter-proof" onchange="onGATableFilterChange()" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:outline-hidden">
+                        <option value="">Semua</option>
+                        <option value="with_proof">📸 Ada Bukti Drive</option>
+                        <option value="no_proof">Tanpa Bukti</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Sorting & Rows Per Page -->
+            <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1">
+                    <span class="text-[11px] font-semibold text-slate-500">Urutkan:</span>
+                    <select id="ga-table-sort" onchange="onGATableFilterChange()" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:outline-hidden">
+                        <option value="date_desc">Tanggal Terbaru</option>
+                        <option value="date_asc">Tanggal Terlama</option>
+                        <option value="amount_desc">Nominal Terbesar</option>
+                        <option value="amount_asc">Nominal Terkecil</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-1">
+                    <span class="text-[11px] font-semibold text-slate-500">Baris:</span>
+                    <select id="ga-table-pagesize" onchange="onGAPageSizeChange()" class="px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:outline-hidden">
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="all">Semua</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
         <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse text-xs">
+            <table class="w-full text-left border-collapse text-xs min-w-[900px]">
                 <thead>
-                    <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
+                    <tr class="bg-slate-50/90 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
                         <th class="py-3 px-4">Tanggal & No. KB</th>
                         <th class="py-3 px-4">Mata Anggaran (COA)</th>
                         <th class="py-3 px-4">Penerima / Toko</th>
@@ -355,8 +450,16 @@ TAB_KEUANGAN_HTML = """
         </div>
         <div id="finance-empty-state" class="hidden py-12 text-center text-slate-400">
             <i class="fa-regular fa-folder-open text-4xl text-slate-300 mb-3 block"></i>
-            <p class="font-medium text-slate-600">Belum ada pengeluaran yang tercatat pada filter ini.</p>
-            <p class="text-xs text-slate-400 mt-1">Bu Rinni atau Mr Slam cukup kirim foto bukti bayar/nota via WhatsApp Bot.</p>
+            <p class="font-medium text-slate-600">Belum ada pengeluaran yang cocok dengan filter tabel.</p>
+            <p class="text-xs text-slate-400 mt-1">Gunakan tombol reset filter tabel untuk menampilkan seluruh transaksi.</p>
+        </div>
+
+        <!-- Table Pagination Footer -->
+        <div id="ga-table-pagination" class="p-3.5 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+            <div id="ga-pagination-info">Menampilkan 0 - 0 dari 0 transaksi</div>
+            <div class="flex items-center gap-1" id="ga-pagination-buttons">
+                <!-- Injected via JS -->
+            </div>
         </div>
     </div>
 </div>
@@ -897,43 +1000,150 @@ JS_KEUANGAN_SCRIPTS = """
         }
     }
 
+    let G_GA_FILTERED_CACHE = [];
+    let G_GA_PAGE = 1;
+    let G_GA_PAGE_SIZE = 25;
+
+    function onGATableFilterChange() {
+        G_GA_PAGE = 1;
+        filterGAData();
+    }
+
+    function onGAPageSizeChange() {
+        const ps = document.getElementById('ga-table-pagesize') ? document.getElementById('ga-table-pagesize').value : '25';
+        G_GA_PAGE_SIZE = ps === 'all' ? 999999 : parseInt(ps, 10);
+        G_GA_PAGE = 1;
+        filterGAData();
+    }
+
+    function resetGATableFilters() {
+        if (document.getElementById('ga-table-quick-search')) document.getElementById('ga-table-quick-search').value = '';
+        if (document.getElementById('ga-table-filter-unit')) document.getElementById('ga-table-filter-unit').value = '';
+        if (document.getElementById('ga-table-filter-cat')) document.getElementById('ga-table-filter-cat').value = '';
+        if (document.getElementById('ga-table-filter-nominal')) document.getElementById('ga-table-filter-nominal').value = '';
+        if (document.getElementById('ga-table-filter-proof')) document.getElementById('ga-table-filter-proof').value = '';
+        if (document.getElementById('ga-table-sort')) document.getElementById('ga-table-sort').value = 'date_desc';
+        if (document.getElementById('ga-table-pagesize')) document.getElementById('ga-table-pagesize').value = '25';
+        G_GA_PAGE = 1;
+        G_GA_PAGE_SIZE = 25;
+        filterGAData();
+    }
+
+    function gotoGAPage(pageNum) {
+        G_GA_PAGE = pageNum;
+        renderGAPaginatedTable();
+    }
+
     function filterGAData() {
-        const catFilter = document.getElementById('filter-ga-category') ? document.getElementById('filter-ga-category').value.trim() : '';
-        const search = document.getElementById('filter-ga-search') ? document.getElementById('filter-ga-search').value.toLowerCase().trim() : '';
+        const topCatFilter = document.getElementById('filter-ga-category') ? document.getElementById('filter-ga-category').value.trim() : '';
+        const topSearch = document.getElementById('filter-ga-search') ? document.getElementById('filter-ga-search').value.toLowerCase().trim() : '';
+
+        const tblSearch = document.getElementById('ga-table-quick-search') ? document.getElementById('ga-table-quick-search').value.toLowerCase().trim() : '';
+        const tblUnit = document.getElementById('ga-table-filter-unit') ? document.getElementById('ga-table-filter-unit').value.trim() : '';
+        const tblCat = document.getElementById('ga-table-filter-cat') ? document.getElementById('ga-table-filter-cat').value.trim() : '';
+        const tblNominal = document.getElementById('ga-table-filter-nominal') ? document.getElementById('ga-table-filter-nominal').value.trim() : '';
+        const tblProof = document.getElementById('ga-table-filter-proof') ? document.getElementById('ga-table-filter-proof').value.trim() : '';
+        const sortMode = document.getElementById('ga-table-sort') ? document.getElementById('ga-table-sort').value : 'date_desc';
 
         const filtered = G_FINANCE_DATA.filter(item => {
-            if (catFilter && item.main_category !== catFilter) return false;
-            if (search) {
-                const combined = [
-                    item.description, item.vendor_name, item.coa_name,
-                    item.kb_code, item.reference_no, item.id
-                ].join(' ').toLowerCase();
-                if (!combined.includes(search)) return false;
+            if (topCatFilter && item.main_category !== topCatFilter) return false;
+            if (tblCat && !((item.main_category || '') + ' ' + (item.coa_name || '')).toUpperCase().includes(tblCat)) return false;
+
+            if (tblUnit) {
+                const u = (item.unit_target || '').toUpperCase();
+                if (tblUnit === 'TK' && !u.includes('TK') && !u.includes('PGTK')) return false;
+                else if (tblUnit !== 'TK' && !u.includes(tblUnit.toUpperCase())) return false;
             }
+
+            const amt = item.amount || 0;
+            if (tblNominal === 'gt_10m' && amt <= 10000000) return false;
+            if (tblNominal === '1m_10m' && (amt < 1000000 || amt > 10000000)) return false;
+            if (tblNominal === 'lt_1m' && amt >= 1000000) return false;
+
+            if (tblProof === 'with_proof' && !item.drive_file_url) return false;
+            if (tblProof === 'no_proof' && item.drive_file_url) return false;
+
+            const combinedText = [
+                item.description, item.vendor_name, item.coa_name,
+                item.kb_code, item.reference_no, item.id, item.unit_target
+            ].join(' ').toLowerCase();
+
+            if (topSearch && !combinedText.includes(topSearch)) return false;
+            if (tblSearch && !combinedText.includes(tblSearch)) return false;
+
             return true;
         });
 
-        renderGATable(filtered);
+        filtered.sort((a, b) => {
+            if (sortMode === 'date_asc') return (a.transaction_date || '').localeCompare(b.transaction_date || '');
+            if (sortMode === 'amount_desc') return (b.amount || 0) - (a.amount || 0);
+            if (sortMode === 'amount_asc') return (a.amount || 0) - (b.amount || 0);
+            return (b.transaction_date || '').localeCompare(a.transaction_date || '');
+        });
+
+        G_GA_FILTERED_CACHE = filtered;
+        renderGAPaginatedTable();
     }
 
-    function renderGATable(data) {
+    function renderGAPaginatedTable() {
+        const data = G_GA_FILTERED_CACHE;
         const tbody = document.getElementById('finance-table-tbody');
         const emptyState = document.getElementById('finance-empty-state');
         const countEl = document.getElementById('ga-table-count');
+        const totalAmountEl = document.getElementById('ga-table-total-amount');
+        const paginationInfo = document.getElementById('ga-pagination-info');
+        const paginationBtns = document.getElementById('ga-pagination-buttons');
+
         if (!tbody) return;
 
-        if (countEl) countEl.innerText = `${data.length} baris transaksi`;
+        const totalFilteredAmount = data.reduce((acc, x) => acc + (x.amount || 0), 0);
+        if (countEl) countEl.innerText = `${data.length}`;
+        if (totalAmountEl) totalAmountEl.innerText = `Rp ${totalFilteredAmount.toLocaleString('id-ID')}`;
 
         if (data.length === 0) {
             tbody.innerHTML = '';
-            emptyState.classList.remove('hidden');
+            if (emptyState) emptyState.classList.remove('hidden');
+            if (paginationInfo) paginationInfo.innerText = 'Menampilkan 0 dari 0 transaksi';
+            if (paginationBtns) paginationBtns.innerHTML = '';
             return;
         }
 
-        emptyState.classList.add('hidden');
-        let html = '';
+        if (emptyState) emptyState.classList.add('hidden');
 
-        data.forEach(item => {
+        const totalRows = data.length;
+        const pageSize = G_GA_PAGE_SIZE;
+        const totalPages = Math.ceil(totalRows / pageSize) || 1;
+        if (G_GA_PAGE > totalPages) G_GA_PAGE = totalPages;
+        if (G_GA_PAGE < 1) G_GA_PAGE = 1;
+
+        const startIndex = (G_GA_PAGE - 1) * pageSize;
+        const endIndex = Math.min(startIndex + pageSize, totalRows);
+        const pagedData = data.slice(startIndex, endIndex);
+
+        if (paginationInfo) {
+            paginationInfo.innerText = `Menampilkan ${startIndex + 1} - ${endIndex} dari ${totalRows} transaksi`;
+        }
+
+        if (paginationBtns) {
+            let btnsHtml = '';
+            if (G_GA_PAGE > 1) {
+                btnsHtml += `<button type="button" onclick="gotoGAPage(${G_GA_PAGE - 1})" class="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 transition cursor-pointer flex items-center gap-1"><i class="fa-solid fa-chevron-left text-[10px]"></i> Sebelumnya</button>`;
+            } else {
+                btnsHtml += `<button type="button" disabled class="px-2.5 py-1 bg-slate-50 border border-slate-100 rounded-lg text-xs font-semibold text-slate-300 cursor-not-allowed">Sebelumnya</button>`;
+            }
+
+            btnsHtml += `<span class="px-3 py-1 font-bold text-xs text-slate-700 bg-white border border-slate-200 rounded-lg">${G_GA_PAGE} / ${totalPages}</span>`;
+
+            if (G_GA_PAGE < totalPages) {
+                btnsHtml += `<button type="button" onclick="gotoGAPage(${G_GA_PAGE + 1})" class="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 transition cursor-pointer flex items-center gap-1">Berikutnya <i class="fa-solid fa-chevron-right text-[10px]"></i></button>`;
+            } else {
+                btnsHtml += `<button type="button" disabled class="px-2.5 py-1 bg-slate-50 border border-slate-100 rounded-lg text-xs font-semibold text-slate-300 cursor-not-allowed">Berikutnya</button>`;
+            }
+            paginationBtns.innerHTML = btnsHtml;
+        }
+
+        let html = '';
+        pagedData.forEach(item => {
             const nominal = item.amount || 0;
             const driveUrl = item.drive_file_url || '';
             const driveBtn = driveUrl ? `
@@ -945,12 +1155,12 @@ JS_KEUANGAN_SCRIPTS = """
 
             html += `
             <tr class="hover:bg-slate-50/80 transition">
-                <td class="py-3 px-4">
+                <td class="py-3 px-4 font-mono">
                     <div class="font-bold text-slate-800">${item.transaction_date || '-'}</div>
                     <div class="text-[10px] text-slate-400 font-mono">${item.kb_code || item.id}</div>
                 </td>
                 <td class="py-3 px-4">
-                    <div class="font-semibold text-slate-700">${item.coa_name || '-'}</div>
+                    <div class="font-semibold text-slate-700 truncate max-w-[180px]" title="${item.coa_name || '-'}">${item.coa_name || '-'}</div>
                     <div class="text-[10px] text-emerald-600 font-mono">${item.coa_code || '-'}</div>
                 </td>
                 <td class="py-3 px-4">
