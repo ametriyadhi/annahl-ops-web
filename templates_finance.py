@@ -42,20 +42,22 @@ TAB_KEUANGAN_HTML = """
         </div>
     </div>
 
-    <!-- 2. KONTROL FILTER DINAMIS (DI ATAS CARD METRIK) -->
-    <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5 space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-                <i class="fa-solid fa-sliders text-emerald-600"></i>
-                <span>Filter Periode Tanggal, Kategori Pos & Pencarian GA</span>
-            </h3>
-            <span class="text-[11px] text-slate-400">Pilih tanggal spesifik atau gunakan shortcut cepat</span>
-        </div>
+    <!-- 2. KONTROL FILTER PERIODE GLOBAL (DI ATAS CARD METRIK) -->
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm border border-emerald-200/60 shrink-0">
+                    <i class="fa-solid fa-calendar-days"></i>
+                </div>
+                <div>
+                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Periode Analisis Keuangan GA</h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Ubah rentang tanggal atau gunakan shortcut untuk menggerakkan kartu metrik dan grafik analitik.</p>
+                </div>
+            </div>
 
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 flex-wrap">
-            <!-- Filter Tanggal Murni & Rentang Dinamis -->
-            <div class="flex items-center gap-2 flex-wrap flex-1">
-                <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 gap-2">
+            <!-- Date Range Picker & Shortcuts -->
+            <div class="flex items-center gap-2 flex-wrap">
+                <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 gap-2 shadow-2xs">
                     <div class="flex items-center gap-1 text-slate-500 text-xs font-medium">
                         <i class="fa-regular fa-calendar text-emerald-600 text-xs"></i>
                         <span>Dari:</span>
@@ -78,22 +80,6 @@ TAB_KEUANGAN_HTML = """
                     <button type="button" onclick="setGADateShortcut('this_month')" class="px-2.5 py-1.5 rounded-lg hover:bg-white hover:text-slate-800 transition cursor-pointer">Bulan Ini</button>
                     <button type="button" onclick="setGADateShortcut('all')" class="px-2.5 py-1.5 rounded-lg bg-white text-emerald-700 font-bold shadow-2xs transition cursor-pointer">Semua</button>
                 </div>
-
-                <!-- Filter Kategori Pos FKP GA -->
-                <select id="filter-ga-category" onchange="filterGAData()" class="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
-                    <option value="">Semua Kategori Pos (5 Pos FKP GA)</option>
-                    <option value="PEMELIHARAAN & PERBAIKAN">Pemeliharaan & Perbaikan (51411)</option>
-                    <option value="ADMINISTRASI DAN UMUM">Administrasi & Umum / Kas Kecil (51412)</option>
-                    <option value="ENERGI & KOMUNIKASI">Energi & Komunikasi / Listrik (51413)</option>
-                    <option value="PERLENGKAPAN">Perlengkapan & Sanitasi (51414)</option>
-                    <option value="INVESTASI">Investasi Sarpras (51415)</option>
-                </select>
-            </div>
-
-            <!-- Search Input Box -->
-            <div class="relative w-full sm:w-64">
-                <input type="text" id="filter-ga-search" oninput="filterGAData()" placeholder="Cari toko, uraian, ref, kb..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
             </div>
         </div>
     </div>

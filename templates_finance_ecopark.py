@@ -51,80 +51,47 @@ TAB_KEUANGAN_ECOPARK_HTML = """
         </div>
     </div>
 
-    <!-- 2. KONTROL FILTER DINAMIS (POSISI DI ATAS CARD METRIK) -->
-    <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5 space-y-3.5">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-            <div class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Kontrol Filter Dinamis & Periode</span>
-                <span id="eco-stat-period-tag" class="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800">Semua Periode (Juli 2026 s/d Kini)</span>
-            </div>
-            <span class="text-[11px] text-slate-400">Ubah rentang tanggal atau kategori untuk memperbarui grafik analitik secara instan</span>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
-            <!-- Date Range Pickers (Cols 5) -->
-            <div class="md:col-span-5 flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl text-xs text-slate-700 shadow-2xs">
-                <i class="fa-regular fa-calendar-days text-emerald-600 text-sm"></i>
-                <input type="date" id="filter-eco-start-date" onchange="onEcoDateChange()" class="bg-transparent text-slate-700 text-xs font-semibold focus:outline-hidden cursor-pointer" title="Tanggal Mulai (YYYY-MM-DD)" />
-                <span class="text-slate-400 font-bold text-[11px]">s/d</span>
-                <input type="date" id="filter-eco-end-date" onchange="onEcoDateChange()" class="bg-transparent text-slate-700 text-xs font-semibold focus:outline-hidden cursor-pointer" title="Tanggal Selesai (YYYY-MM-DD)" />
-                <button type="button" onclick="clearEcoDateFilter()" id="btn-eco-clear-date" class="text-slate-400 hover:text-rose-600 transition ml-auto cursor-pointer" title="Reset Rentang Tanggal">
-                    <i class="fa-solid fa-circle-xmark"></i>
-                </button>
+    <!-- 2. KONTROL FILTER PERIODE GLOBAL (DI ATAS CARD METRIK) -->
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm border border-emerald-200/60 shrink-0">
+                    <i class="fa-solid fa-calendar-days"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Periode Analisis Finansial Ecopark</h3>
+                        <span id="eco-stat-period-tag" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800">Semua Periode Kumulatif</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Ubah rentang tanggal atau gunakan shortcut untuk menggerakkan kartu metrik dan grafik analitik.</p>
+                </div>
             </div>
 
-            <!-- Shortcut Presets (Cols 4) -->
-            <div class="md:col-span-4 inline-flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs justify-between sm:justify-start">
-                <button type="button" onclick="setEcoQuickDate('today')" class="flex-1 sm:flex-initial px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-white text-slate-700 hover:text-emerald-700 shadow-2xs transition">Hari Ini</button>
-                <button type="button" onclick="setEcoQuickDate('7days')" class="flex-1 sm:flex-initial px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-white text-slate-700 hover:text-emerald-700 shadow-2xs transition">7 Hari</button>
-                <button type="button" onclick="setEcoQuickDate('this_month')" class="flex-1 sm:flex-initial px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-white text-slate-700 hover:text-emerald-700 shadow-2xs transition">Bulan Ini</button>
-                <button type="button" onclick="setEcoQuickDate('all')" class="flex-1 sm:flex-initial px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-white text-slate-700 hover:text-emerald-700 shadow-2xs transition">Semua</button>
-            </div>
+            <!-- Date Range Pickers & Shortcuts -->
+            <div class="flex items-center gap-2 flex-wrap">
+                <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 gap-2 shadow-2xs">
+                    <div class="flex items-center gap-1 text-slate-500 text-xs font-medium">
+                        <i class="fa-regular fa-calendar text-emerald-600 text-xs"></i>
+                        <span>Dari:</span>
+                    </div>
+                    <input type="date" id="filter-eco-start-date" onchange="onEcoDateChange()" class="bg-transparent text-slate-700 text-xs font-semibold focus:outline-hidden cursor-pointer" title="Tanggal Mulai">
+                    <span class="text-slate-300">|</span>
+                    <div class="flex items-center gap-1 text-slate-500 text-xs font-medium">
+                        <span>S/d:</span>
+                    </div>
+                    <input type="date" id="filter-eco-end-date" onchange="onEcoDateChange()" class="bg-transparent text-slate-700 text-xs font-semibold focus:outline-hidden cursor-pointer" title="Tanggal Selesai">
+                    <button type="button" onclick="clearEcoDateFilter()" id="btn-eco-clear-date" class="text-slate-400 hover:text-rose-600 text-xs px-1 cursor-pointer transition" title="Reset Rentang Tanggal">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </button>
+                </div>
 
-            <!-- Kategori Dropdown (Cols 3) -->
-            <div class="md:col-span-3">
-                <select id="filter-eco-category" onchange="filterEcoData()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-medium">
-                    <option value="">Semua Kategori / Pos</option>
-                    <optgroup label="Pengeluaran (FKP ECO)">
-                        <option value="OPERASIONAL BUDIDAYA">52111 Operasional Budidaya</option>
-                        <option value="OPERASIONAL PETERNAKAN">52121 Operasional Peternakan</option>
-                        <option value="PEMELIHARAAN">52131 Pemeliharaan</option>
-                        <option value="OPERASIONAL KUNJUNGAN & EDUKASI">52132 Kunjungan & Edukasi</option>
-                        <option value="MARKETING">52133 Marketing</option>
-                        <option value="INVESTASI">52134 Investasi</option>
-                    </optgroup>
-                    <optgroup label="Pendapatan (Omset)">
-                        <option value="Sewa Fasilitas">Sewa Fasilitas (Kolam/Lapangan/ISBI)</option>
-                        <option value="Sayuran">Hasil Sayuran</option>
-                        <option value="Telur">Hasil Telur</option>
-                        <option value="Buah">Hasil Buah Sunnah & Lokal</option>
-                        <option value="Kunjungan Edukasi">Kunjungan Edukasi & Outbound</option>
-                        <option value="Kelas Edukasi">Kelas Edukasi</option>
-                    </optgroup>
-                </select>
-            </div>
-        </div>
-
-        <!-- Baris Sub-Filter: Switcher Tipe Kas & Pencarian -->
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1 border-t border-slate-100">
-            <!-- Tipe Kas Switcher -->
-            <div class="inline-flex p-1 bg-slate-100 rounded-xl gap-1 text-xs font-semibold self-start sm:self-auto">
-                <button type="button" onclick="setEcoTypeFilter('')" id="btn-eco-type-all" class="px-3 py-1.5 rounded-lg bg-white text-slate-800 shadow-xs transition">Semua (<span id="lbl-cnt-all">892</span>)</button>
-                <button type="button" onclick="setEcoTypeFilter('INCOME')" id="btn-eco-type-income" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-emerald-700 transition flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    <span>Kas Masuk (Omset)</span>
-                </button>
-                <button type="button" onclick="setEcoTypeFilter('EXPENSE')" id="btn-eco-type-expense" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-rose-700 transition flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                    <span>Kas Keluar (Belanja)</span>
-                </button>
-            </div>
-
-            <!-- Search Box -->
-            <div class="relative flex-1 sm:max-w-xs">
-                <input type="text" id="search-eco-trx" onkeyup="debounceEcoSearch()" placeholder="Cari uraian, pembeli, toko..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                <!-- Shortcut Presets -->
+                <div class="inline-flex items-center bg-slate-100/80 p-0.5 rounded-xl text-[11px] font-semibold text-slate-600">
+                    <button type="button" onclick="setEcoQuickDate('today')" class="px-2.5 py-1.5 rounded-lg hover:bg-white hover:text-slate-800 transition cursor-pointer">Hari Ini</button>
+                    <button type="button" onclick="setEcoQuickDate('7days')" class="px-2.5 py-1.5 rounded-lg hover:bg-white hover:text-slate-800 transition cursor-pointer">7 Hari</button>
+                    <button type="button" onclick="setEcoQuickDate('this_month')" class="px-2.5 py-1.5 rounded-lg hover:bg-white hover:text-slate-800 transition cursor-pointer">Bulan Ini</button>
+                    <button type="button" onclick="setEcoQuickDate('all')" class="px-2.5 py-1.5 rounded-lg bg-white text-emerald-700 font-bold shadow-2xs transition cursor-pointer">Semua</button>
+                </div>
             </div>
         </div>
     </div>
