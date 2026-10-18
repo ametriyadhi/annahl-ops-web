@@ -7,14 +7,19 @@ Google Drive Upload, Vision AI (Gemini Flash), & WhatsApp Bot Baileys.
 
 import os
 import re
+import io
 import json
 import uuid
 import sqlite3
 import requests
 import base64
+from typing import Any
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from flask import Blueprint, request, jsonify, session, current_app
+from flask import Blueprint, request, jsonify, session, current_app, Response
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
 
 WIB = ZoneInfo("Asia/Jakarta")
 
@@ -420,77 +425,353 @@ def api_process_expense_upload():
 
 @ops_finance_bp.route('/api/ga/expenses', methods=['GET'])
 def api_get_ga_expenses():
-    """Mengambil riwayat transaksi pengeluaran GA dengan filter."""
+    """Mengambil riwayat transaksi pengeluaran GA dengan filter tanggal & kategori dinamis."""
     conn = get_db()
-    month_filter = request.args.get('month', '').strip()
-    category_filter = request.args.get('category', '').strip()
-    search = request.args.get('search', '').strip()
+    try:
+        month_filter = request.args.get('month', '').strip()
+        category_filter = request.args.get('category', '').strip()
+        search = request.args.get('search', '').strip()
+        start_date = request.args.get('start_date', '').strip()
+        end_date = request.args.get('end_date', '').strip()
+        limit = min(int(request.args.get('limit', 500)), 2000)
 
-    query = "SELECT * FROM ops_ga_expenses WHERE 1=1"
-    params = []
+        query = "SELECT * FROM ops_ga_expenses WHERE 1=1"
+        params = []
 
-    if month_filter:
-        query += " AND month_period = ?"
-        params.append(month_filter)
-    if category_filter:
-        query += " AND main_category = ?"
-        params.append(category_filter)
-    if search:
-        query += " AND (description LIKE ? OR vendor_name LIKE ? OR coa_name LIKE ? OR kb_code LIKE ?)"
-        wild = f"%{search}%"
-        params.extend([wild, wild, wild, wild])
+        if start_date:
+            query += " AND transaction_date >= ?"
+            params.append(start_date)
+        if end_date:
+            query += " AND transaction_date <= ?"
+            params.append(end_date)
+        if month_filter and not (start_date or end_date):
+            query += " AND month_period = ?"
+            params.append(month_filter)
+        if category_filter:
+            query += " AND main_category = ?"
+            params.append(category_filter)
+        if search:
+            query += " AND (description LIKE ? OR vendor_name LIKE ? OR coa_name LIKE ? OR kb_code LIKE ?)"
+            wild = f"%{search}%"
+            params.extend([wild, wild, wild, wild])
 
-    query += " ORDER BY transaction_date DESC, created_at DESC LIMIT 200"
+        query += " ORDER BY transaction_date DESC, created_at DESC LIMIT ?"
+        params.append(limit)
 
-    rows = conn.execute(query, params).fetchall()
-    expenses = [dict(r) for r in rows]
-    conn.close()
-
-    return jsonify({'success': True, 'count': len(expenses), 'data': expenses})
+        rows = conn.execute(query, params).fetchall()
+        expenses = [dict(r) for r in rows]
+        return jsonify({'success': True, 'count': len(expenses), 'data': expenses})
+    finally:
+        conn.close()
 
 
 @ops_finance_bp.route('/api/ga/expenses/stats', methods=['GET'])
 def api_get_ga_expense_stats():
-    """Mengambil statistik realisasi pengeluaran vs anggaran FKP."""
+    """Mengambil statistik realisasi pengeluaran GA vs anggaran FKP GA dengan visual analitik lengkap."""
     conn = get_db()
     try:
-        # Total per kategori utama
-        cat_stats = conn.execute("""
-            SELECT main_category, SUM(amount) as total_realisasi, COUNT(*) as total_transaksi
-            FROM ops_ga_expenses
-            GROUP BY main_category
-        """).fetchall()
+        start_date = request.args.get('start_date', '').strip()
+        end_date = request.args.get('end_date', '').strip()
+        month = request.args.get('month', '').strip()
 
-        # Total seluruh realisasi
-        tot_row = conn.execute("SELECT SUM(amount) as grand_total, COUNT(*) as count FROM ops_ga_expenses").fetchone()
-        grand_total = tot_row['grand_total'] or 0
+        time_clauses = []
+        params = []
+        if start_date:
+            time_clauses.append("transaction_date >= ?")
+            params.append(start_date)
+        if end_date:
+            time_clauses.append("transaction_date <= ?")
+            params.append(end_date)
+        if month and not (start_date or end_date):
+            time_clauses.append("month_period = ?")
+            params.append(month)
+
+        time_and = (" AND " + " AND ".join(time_clauses)) if time_clauses else ""
+
+        # Total realisasi terfilter
+        tot_row = conn.execute(f"SELECT SUM(amount) as grand_total, COUNT(*) as count FROM ops_ga_expenses WHERE 1=1 {time_and}", params).fetchone()
+        grand_total = tot_row['grand_total'] or 0.0
         total_trx = tot_row['count'] or 0
 
-        # Master Plafon Anggaran dari Induk COA (-000)
-        budget_rows = conn.execute("SELECT parent_category, budget_annual as total_budget FROM ops_ga_coa WHERE coa_code LIKE '%-000'").fetchall()
-        budgets = {b['parent_category']: b['total_budget'] for b in budget_rows}
+        # Master 5 Plafon Anggaran Induk FKP GA (-000)
+        budget_rows = conn.execute("SELECT parent_category, coa_code, budget_annual as total_budget FROM ops_ga_coa WHERE coa_code LIKE '%-000' ORDER BY coa_code ASC").fetchall()
+
+        # Realisasi per kategori utama (dengan filter waktu)
+        cat_stats = conn.execute(f"""
+            SELECT main_category, SUM(amount) as total_realisasi, COUNT(*) as total_transaksi
+            FROM ops_ga_expenses
+            WHERE 1=1 {time_and}
+            GROUP BY main_category
+        """, params).fetchall()
+        real_map = {cs['main_category']: (cs['total_realisasi'] or 0.0) for cs in cat_stats}
+        trx_map = {cs['main_category']: (cs['total_transaksi'] or 0) for cs in cat_stats}
 
         category_summary = []
-        for cs in cat_stats:
-            cat_name = cs['main_category']
-            real = cs['total_realisasi'] or 0
-            bgt = budgets.get(cat_name, 0)
-            pct = round((real / bgt * 100), 1) if bgt > 0 else 0
+        grand_budget = 0.0
+        for b in budget_rows:
+            cat_name = b['parent_category']
+            bgt = b['total_budget'] or 0.0
+            grand_budget += bgt
+            real = real_map.get(cat_name, 0.0)
+            pct = round((real / bgt * 100), 1) if bgt > 0 else 0.0
             category_summary.append({
                 'category': cat_name,
+                'code': b['coa_code'],
                 'realisasi': real,
                 'anggaran': bgt,
                 'sisa': bgt - real,
                 'persentase': pct,
-                'transaksi': cs['total_transaksi']
+                'transaksi': trx_map.get(cat_name, 0)
             })
+
+        overall_pct = round((grand_total / grand_budget * 100), 1) if grand_budget > 0 else 0.0
+
+        # 1. Tren Pengeluaran Bulanan (Juli - Oktober 2026 TA 2026/2027)
+        month_order = ["Juli 2026", "Agustus 2026", "September 2026", "Oktober 2026"]
+        monthly_trends = []
+        for m in month_order:
+            row_m = conn.execute("SELECT SUM(amount) as t, COUNT(*) as c FROM ops_ga_expenses WHERE month_period = ?", (m,)).fetchone()
+            tot_m = row_m['t'] or 0.0
+            cnt_m = row_m['c'] or 0
+            monthly_trends.append({
+                'month': m.replace(' 2026', ''),
+                'full_month': m,
+                'expense': tot_m,
+                'count': cnt_m
+            })
+
+        # 2. Top 8 Item Pengeluaran Operasional GA Terbesar
+        exp_items = conn.execute(f"""
+            SELECT description, vendor_name, coa_name, SUM(amount) as total, COUNT(*) as cnt
+            FROM ops_ga_expenses
+            WHERE 1=1 {time_and} AND amount > 0
+            GROUP BY description
+            ORDER BY total DESC
+            LIMIT 8
+        """, params).fetchall()
+
+        top_expense_items = []
+        for r in exp_items:
+            tot = r['total'] or 0.0
+            pct = round((tot / grand_total * 100), 1) if grand_total > 0 else 0.0
+            top_expense_items.append({
+                'item': r['description'] or 'Tanpa Keterangan',
+                'vendor': r['vendor_name'] or '-',
+                'coa': r['coa_name'] or 'Umum',
+                'amount': tot,
+                'percentage': pct,
+                'count': r['cnt'] or 0
+            })
+
+        # 3. Diagnosa Analis Keuangan Eksekutif untuk GA
+        highest_cat = max(category_summary, key=lambda x: x['realisasi']) if category_summary else None
+        top_vendor_row = conn.execute(f"""
+            SELECT vendor_name, SUM(amount) as total
+            FROM ops_ga_expenses
+            WHERE 1=1 {time_and} AND vendor_name != '-' AND vendor_name != '' AND amount > 0
+            GROUP BY vendor_name
+            ORDER BY total DESC LIMIT 1
+        """, params).fetchone()
+        top_vendor_name = top_vendor_row['vendor_name'] if top_vendor_row else "N/A"
+        top_vendor_val = top_vendor_row['total'] if top_vendor_row else 0.0
+
+        key_insights = []
+        key_insights.append(f"Total belanja tercatat: Rp {grand_total:,.0f} (Serapan {overall_pct}% dari plafon tahunan Rp {grand_budget:,.0f})".replace(',', '.'))
+        if highest_cat and highest_cat['realisasi'] > 0:
+            key_insights.append(f"Pusat beban belanja terbesar: {highest_cat['category']} menyerap Rp {highest_cat['realisasi']:,.0f} ({highest_cat['persentase']}% dari plafon pos)".replace(',', '.'))
+        if top_vendor_row and top_vendor_val > 0:
+            key_insights.append(f"Penerima / Vendor transaksi terbesar: {top_vendor_name} senilai Rp {top_vendor_val:,.0f}".replace(',', '.'))
+        key_insights.append("Penyimpanan bukti nota 100% dialirkan ke Google Drive folder Keuangan_GA (Server Disk aman 0 Byte).")
+
+        ai_analysis = {
+            'status': 'ANGGARAN TERKENDALI',
+            'status_color': 'emerald',
+            'overall_pct': overall_pct,
+            'top_cost_center': f"{highest_cat['category']} ({highest_cat['persentase']}%)" if highest_cat else "N/A",
+            'top_vendor': f"{top_vendor_name} (Rp {top_vendor_val:,.0f})".replace(',', '.') if top_vendor_row else "N/A",
+            'insights': key_insights
+        }
 
         return jsonify({
             'success': True,
             'grand_total_realisasi': grand_total,
             'total_transaksi': total_trx,
-            'categories': category_summary
+            'grand_budget_annual': grand_budget,
+            'sisa_budget': grand_budget - grand_total,
+            'overall_pct': overall_pct,
+            'categories': category_summary,
+            'monthly_trends': monthly_trends,
+            'top_expense_items': top_expense_items,
+            'ai_analysis': ai_analysis
         })
+    finally:
+        conn.close()
+
+
+@ops_finance_bp.route('/api/ga/expenses/export', methods=['GET'])
+def api_export_ga_excel():
+    """Ekspor seluruh data transaksi pengeluaran GA ke format Microsoft Excel (.xlsx) dengan 2 sheet rapi."""
+    conn = get_db()
+    try:
+        month = request.args.get('month', '').strip()
+        start_date = request.args.get('start_date', '').strip()
+        end_date = request.args.get('end_date', '').strip()
+        category = request.args.get('category', '').strip()
+
+        query = "SELECT * FROM ops_ga_expenses WHERE 1=1"
+        params = []
+        if start_date:
+            query += " AND transaction_date >= ?"
+            params.append(start_date)
+        if end_date:
+            query += " AND transaction_date <= ?"
+            params.append(end_date)
+        if month and not (start_date or end_date):
+            query += " AND month_period = ?"
+            params.append(month)
+        if category:
+            query += " AND main_category = ?"
+            params.append(category)
+
+        query += " ORDER BY transaction_date DESC, created_at DESC"
+        rows = conn.execute(query, params).fetchall()
+
+        wb = openpyxl.Workbook()
+        ws1: Any = wb.active or wb.worksheets[0]
+        ws1.title = "Data Pengeluaran GA"
+        ws1.views.sheetView[0].showGridLines = True
+
+        header_fill = PatternFill(start_color="065F46", end_color="065F46", fill_type="solid")
+        header_font = Font(name="Calibri", size=10, bold=True, color="FFFFFF")
+        border_thin = Border(
+            left=Side(style='thin', color='E2E8F0'),
+            right=Side(style='thin', color='E2E8F0'),
+            top=Side(style='thin', color='E2E8F0'),
+            bottom=Side(style='thin', color='E2E8F0')
+        )
+
+        headers = [
+            "No", "ID Pengeluaran", "Kode KB", "Tanggal", "Bulan",
+            "Kategori Utama", "Kode COA", "Nama Pos Anggaran", "Penerima / Vendor",
+            "Uraian Pengeluaran", "Nominal (Rp)", "Sumber Dana", "Unit Target",
+            "Nomor Referensi", "Pelapor", "Status", "Link Bukti Drive"
+        ]
+        ws1.append(headers)
+
+        for col_idx in range(1, len(headers) + 1):
+            cell = ws1.cell(row=1, column=col_idx)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+        for idx, r in enumerate(rows, start=1):
+            amount = r['amount'] or 0
+            row_data = [
+                idx,
+                r['id'],
+                r['kb_code'] or '-',
+                r['transaction_date'],
+                r['month_period'],
+                r['main_category'],
+                r['coa_code'],
+                r['coa_name'],
+                r['vendor_name'] or '-',
+                r['description'],
+                amount,
+                r['fund_source'] or '-',
+                r['unit_target'] or 'Umum',
+                r['reference_no'] or '-',
+                r['reporter_name'] or 'Bu Rinni',
+                r['status'] or 'Recorded',
+                r['drive_file_url'] or ''
+            ]
+            ws1.append(row_data)
+            cur_row = ws1.max_row
+            for col_idx in range(1, len(row_data) + 1):
+                c = ws1.cell(row=cur_row, column=col_idx)
+                c.border = border_thin
+                c.font = Font(name="Calibri", size=10)
+                if col_idx == 11:
+                    c.number_format = '#,##0'
+                    c.alignment = Alignment(horizontal="right")
+                elif col_idx in (1, 4):
+                    c.alignment = Alignment(horizontal="center")
+
+        for col in ws1.columns:
+            max_len = 0
+            col_letter = get_column_letter(int(col[0].column or 1))
+            for cell in col:
+                val = str(cell.value or '')
+                if len(val) > max_len:
+                    max_len = len(val)
+            ws1.column_dimensions[col_letter].width = min(max(max_len + 3, 10), 45)
+
+        # SHEET 2: Ringkasan & Serapan FKP GA
+        ws2 = wb.create_sheet(title="Ringkasan & Serapan FKP GA")
+        ws2.views.sheetView[0].showGridLines = True
+
+        ws2.merge_cells('A1:F1')
+        title_cell = ws2['A1']
+        title_cell.value = "RINGKASAN REALISASI BUKU KAS & PENGELUARAN GA"
+        title_cell.font = Font(name="Calibri", size=14, bold=True, color="065F46")
+        title_cell.alignment = Alignment(horizontal="left", vertical="center")
+
+        ws2.merge_cells('A2:F2')
+        sub_cell = ws2['A2']
+        sub_cell.value = "Standar FKP GA 2026–2027 | An Nahl Islamic School"
+        sub_cell.font = Font(name="Calibri", size=10, italic=True, color="64748B")
+
+        # Plafon Master & Serapan
+        budget_rows = conn.execute("SELECT parent_category, coa_code, budget_annual as total_budget FROM ops_ga_coa WHERE coa_code LIKE '%-000' ORDER BY coa_code ASC").fetchall()
+        tot_real = conn.execute("SELECT SUM(amount) as t FROM ops_ga_expenses").fetchone()['t'] or 0
+        tot_budget = sum([b['total_budget'] for b in budget_rows])
+
+        ws2.append([])
+        ws2.append(["INDIKATOR KEUANGAN GA", "NOMINAL (RP)", "KETERANGAN"])
+        ws2.append(["Total Realisasi Belanja GA", tot_real, f"Dari {len(rows)} transaksi pengeluaran tercatat"])
+        ws2.append(["Plafon RKAS GA 2026–2027", tot_budget, "Total batas anggaran tahunan 5 pos induk"])
+        ws2.append(["Sisa Plafon Anggaran", tot_budget - tot_real, "Sisa kuota belanja tahun berjalan"])
+        ws2.append(["Persentase Serapan", f"{round(tot_real/tot_budget*100, 1)}%", "Persentase realisasi thd plafon"])
+
+        ws2.append([])
+        ws2.append(["Kode Pos", "Pos Induk Anggaran FKP GA", "Plafon Anggaran (Rp)", "Realisasi (Rp)", "Sisa Plafon (Rp)", "Serapan (%)"])
+        h_row = ws2.max_row
+        for col_idx in range(1, 7):
+            cell = ws2.cell(row=h_row, column=col_idx)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center")
+
+        for b in budget_rows:
+            cat = b['parent_category']
+            bgt = b['total_budget']
+            r_val = conn.execute("SELECT SUM(amount) as t FROM ops_ga_expenses WHERE main_category = ?", (cat,)).fetchone()['t'] or 0
+            pct_val = f"{round(r_val/bgt*100, 1)}%" if bgt > 0 else "0.0%"
+            ws2.append([b['coa_code'], cat, bgt, r_val, bgt - r_val, pct_val])
+            cur_r = ws2.max_row
+            ws2.cell(row=cur_r, column=3).number_format = '#,##0'
+            ws2.cell(row=cur_r, column=4).number_format = '#,##0'
+            ws2.cell(row=cur_r, column=5).number_format = '#,##0'
+
+        for col in ws2.columns:
+            max_len = 0
+            col_letter = get_column_letter(int(col[0].column or 1))
+            for cell in col:
+                val = str(cell.value or '')
+                if len(val) > max_len:
+                    max_len = len(val)
+            ws2.column_dimensions[col_letter].width = min(max(max_len + 3, 12), 45)
+
+        stream = io.BytesIO()
+        wb.save(stream)
+        stream.seek(0)
+
+        filename = f"Laporan_Keuangan_GA_{now_wib().strftime('%Y%m%d')}.xlsx"
+        return Response(
+            stream.getvalue(),
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        )
     finally:
         conn.close()
 

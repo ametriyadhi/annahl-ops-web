@@ -2,123 +2,332 @@
 """
 templates_finance.py - Komponen Tampilan HTML & JavaScript untuk Tab Keuangan & FKP GA
 An Nahl Islamic School - Dashboard Operasional note-umum
-Mendukung Fitur View, Edit Koreksi, Hapus, dan Filter Realisasi Anggaran.
+Mendukung Fitur View, Edit Koreksi, Hapus, Filter Tanggal Dinamis,
+4 Grafik Analitik Keuangan (Chart.js), AI Financial Analyst Briefing, dan Ekspor Excel.
 """
 
 TAB_KEUANGAN_HTML = """
 <!-- TAB KEUANGAN & FKP GA AN NAHL -->
 <div id="tab-keuangan" class="tab-content hidden space-y-6">
 
-    <!-- Header & Action Bar -->
+    <!-- 1. Header & Action Bar -->
     <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-6 space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 tracking-wider uppercase">Standar FKP GA 2026–2027</span>
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700">Vision AI & Google Drive</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800">Executive Financial Analytics</span>
                 </div>
                 <h2 class="text-base sm:text-xl font-bold text-slate-800 flex items-center gap-2 mt-1">
                     <i class="fa-solid fa-file-invoice-dollar text-emerald-600"></i>
                     Buku Kas & Pengeluaran Bagian Umum (General Affairs)
                 </h2>
-                <p class="text-xs text-slate-500 mt-0.5">Pencatatan otomatis bukti transfer m-banking & nota belanja via WhatsApp Bot Bu Rinni & Mr Slam, terintegrasi arsip Google Drive dan kontrol plafon anggaran FKP.</p>
+                <p class="text-xs text-slate-500 mt-0.5">Pencatatan otomatis bukti transfer m-banking & nota belanja via WhatsApp Bot Bu Rinni & Mr Slam, terintegrasi arsip Google Drive, analitik visual Chart.js, dan kontrol plafon anggaran FKP.</p>
             </div>
             <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
-                <button type="button" onclick="loadKeuanganGA()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 cursor-pointer">
+                <button type="button" onclick="loadKeuanganGA()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 cursor-pointer">
                     <i class="fa-solid fa-arrows-rotate"></i>
                     <span>Refresh</span>
                 </button>
-                <div class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-semibold">
+                <div class="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-semibold">
                     <i class="fa-brands fa-whatsapp text-emerald-500 text-sm"></i>
                     <span>Japri Bot: 0858-8229-6329</span>
                 </div>
-            </div>
-        </div>
-
-        <!-- 4 Summary Metric Cards -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pt-1">
-            <div class="bg-slate-50/70 border border-slate-200/70 rounded-xl p-3.5">
-                <div class="flex items-center justify-between text-slate-500 text-xs font-medium">
-                    <span>Realisasi Belanja GA</span>
-                    <i class="fa-solid fa-money-bill-wave text-emerald-500"></i>
-                </div>
-                <div id="stat-grand-total" class="text-lg sm:text-2xl font-bold text-slate-800 mt-1">Rp 0</div>
-                <div class="text-[11px] text-slate-400 mt-0.5">Total pengeluaran tercatat</div>
-            </div>
-
-            <div class="bg-slate-50/70 border border-slate-200/70 rounded-xl p-3.5">
-                <div class="flex items-center justify-between text-slate-500 text-xs font-medium">
-                    <span>Bukti Transaksi</span>
-                    <i class="fa-solid fa-receipt text-blue-500"></i>
-                </div>
-                <div id="stat-total-trx" class="text-lg sm:text-2xl font-bold text-slate-800 mt-1">0 Transaksi</div>
-                <div class="text-[11px] text-slate-400 mt-0.5">Nota & transfer terurai AI</div>
-            </div>
-
-            <div class="bg-slate-50/70 border border-slate-200/70 rounded-xl p-3.5">
-                <div class="flex items-center justify-between text-slate-500 text-xs font-medium">
-                    <span>Plafon RKAS GA</span>
-                    <i class="fa-solid fa-chart-pie text-purple-500"></i>
-                </div>
-                <div class="text-lg sm:text-2xl font-bold text-slate-800 mt-1">Rp 1.507.851.796</div>
-                <div id="stat-pct-serapan" class="text-[11px] text-emerald-600 font-semibold mt-0.5">Serapan 0.0%</div>
-            </div>
-
-            <div class="bg-slate-50/70 border border-slate-200/70 rounded-xl p-3.5">
-                <div class="flex items-center justify-between text-slate-500 text-xs font-medium">
-                    <span>Status Penyimpanan</span>
-                    <i class="fa-brands fa-google-drive text-amber-500"></i>
-                </div>
-                <div class="text-lg sm:text-2xl font-bold text-slate-800 mt-1">Google Drive</div>
-                <div class="text-[11px] text-emerald-600 font-semibold mt-0.5">Server Disk: 0 Byte (Aman)</div>
+                <button type="button" onclick="exportGAExcel()" class="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Unduh Laporan Keuangan GA Format Microsoft Excel (.xlsx)">
+                    <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                    <span>Ekspor Excel (.xlsx)</span>
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- 5 Pos Mata Anggaran Utama FKP (Control Bars) -->
+    <!-- 2. KONTROL FILTER DINAMIS (DI ATAS CARD METRIK) -->
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-sliders text-emerald-600"></i>
+                <span>Filter Periode Tanggal, Kategori Pos & Pencarian GA</span>
+            </h3>
+            <span class="text-[11px] text-slate-400">Pilih tanggal spesifik atau gunakan shortcut cepat</span>
+        </div>
+
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 flex-wrap">
+            <!-- Filter Tanggal Murni & Rentang Dinamis -->
+            <div class="flex items-center gap-2 flex-wrap flex-1">
+                <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 gap-2">
+                    <div class="flex items-center gap-1 text-slate-500 text-xs font-medium">
+                        <i class="fa-regular fa-calendar text-emerald-600 text-xs"></i>
+                        <span>Dari:</span>
+                    </div>
+                    <input type="date" id="filter-ga-start-date" onchange="onGADateChange()" class="bg-transparent text-slate-700 text-xs font-medium focus:outline-hidden cursor-pointer" title="Tanggal Mulai">
+                    <span class="text-slate-300">|</span>
+                    <div class="flex items-center gap-1 text-slate-500 text-xs font-medium">
+                        <span>S/d:</span>
+                    </div>
+                    <input type="date" id="filter-ga-end-date" onchange="onGADateChange()" class="bg-transparent text-slate-700 text-xs font-medium focus:outline-hidden cursor-pointer" title="Tanggal Selesai">
+                    <button type="button" onclick="resetGADateFilter()" class="text-slate-400 hover:text-rose-500 text-xs px-1 cursor-pointer transition" title="Hapus Filter Tanggal">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Shortcut Tanggal Cepat -->
+                <div class="inline-flex items-center bg-slate-100/80 p-0.5 rounded-xl text-[11px] font-semibold text-slate-600">
+                    <button type="button" onclick="setGADateShortcut('today')" class="px-2.5 py-1.5 rounded-lg hover:bg-white hover:text-slate-800 transition cursor-pointer">Hari Ini</button>
+                    <button type="button" onclick="setGADateShortcut('7days')" class="px-2.5 py-1.5 rounded-lg hover:bg-white hover:text-slate-800 transition cursor-pointer">7 Hari</button>
+                    <button type="button" onclick="setGADateShortcut('this_month')" class="px-2.5 py-1.5 rounded-lg hover:bg-white hover:text-slate-800 transition cursor-pointer">Bulan Ini</button>
+                    <button type="button" onclick="setGADateShortcut('all')" class="px-2.5 py-1.5 rounded-lg bg-white text-emerald-700 font-bold shadow-2xs transition cursor-pointer">Semua</button>
+                </div>
+
+                <!-- Filter Kategori Pos FKP GA -->
+                <select id="filter-ga-category" onchange="filterGAData()" class="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
+                    <option value="">Semua Kategori Pos (5 Pos FKP GA)</option>
+                    <option value="PEMELIHARAAN & PERBAIKAN">Pemeliharaan & Perbaikan (51411)</option>
+                    <option value="ADMINISTRASI DAN UMUM">Administrasi & Umum / Kas Kecil (51412)</option>
+                    <option value="ENERGI & KOMUNIKASI">Energi & Komunikasi / Listrik (51413)</option>
+                    <option value="PERLENGKAPAN">Perlengkapan & Sanitasi (51414)</option>
+                    <option value="INVESTASI">Investasi Sarpras (51415)</option>
+                </select>
+            </div>
+
+            <!-- Search Input Box -->
+            <div class="relative w-full sm:w-64">
+                <input type="text" id="filter-ga-search" oninput="filterGAData()" placeholder="Cari toko, uraian, ref, kb..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. 4 KARTU METRIK DINAMIS (UPDATE REAL-TIME SESUAI FILTER DI ATAS) -->
+    <div class="space-y-2">
+        <div class="flex items-center justify-between text-xs text-slate-500 pt-1 px-1">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-700">Ringkasan Anggaran & Realisasi GA</span>
+                <span id="ga-period-badge" class="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800">Semua Periode Kumulatif</span>
+            </div>
+            <span class="text-[11px] text-slate-400">Terhitung otomatis sesuai tanggal/kategori aktif</span>
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <!-- 1. Realisasi Belanja GA -->
+            <div class="bg-rose-50/50 border border-rose-200/70 rounded-xl p-3.5 shadow-2xs">
+                <div class="flex items-center justify-between text-rose-800 text-xs font-semibold">
+                    <span>Realisasi Belanja GA</span>
+                    <i class="fa-solid fa-money-bill-wave text-rose-500"></i>
+                </div>
+                <div id="ga-stat-grand-total" class="text-lg sm:text-2xl font-black text-rose-900 mt-1">Rp 0</div>
+                <div id="ga-stat-total-trx-count" class="text-[11px] text-rose-700 font-medium mt-0.5">0 Transaksi Belanja</div>
+            </div>
+
+            <!-- 2. Bukti Transaksi Terverifikasi -->
+            <div class="bg-blue-50/50 border border-blue-200/70 rounded-xl p-3.5 shadow-2xs">
+                <div class="flex items-center justify-between text-blue-800 text-xs font-semibold">
+                    <span>Bukti Transaksi</span>
+                    <i class="fa-solid fa-receipt text-blue-500"></i>
+                </div>
+                <div id="ga-stat-total-trx" class="text-lg sm:text-2xl font-black text-blue-900 mt-1">0 Transaksi</div>
+                <div class="text-[11px] text-blue-700 font-medium mt-0.5">Nota & transfer terurai Vision AI</div>
+            </div>
+
+            <!-- 3. Plafon RKAS GA & Serapan -->
+            <div class="bg-purple-50/50 border border-purple-200/70 rounded-xl p-3.5 shadow-2xs">
+                <div class="flex items-center justify-between text-purple-800 text-xs font-semibold">
+                    <span>Plafon RKAS GA</span>
+                    <i class="fa-solid fa-chart-pie text-purple-500"></i>
+                </div>
+                <div class="text-lg sm:text-2xl font-black text-purple-900 mt-1">Rp 1.507.851.796</div>
+                <div id="ga-stat-pct-serapan" class="text-[11px] text-purple-700 font-bold mt-0.5">Serapan 0.0% dari Plafon</div>
+            </div>
+
+            <!-- 4. Sisa Plafon Anggaran GA -->
+            <div class="bg-emerald-50/50 border border-emerald-200/70 rounded-xl p-3.5 shadow-2xs">
+                <div class="flex items-center justify-between text-emerald-800 text-xs font-semibold">
+                    <span>Sisa Plafon Anggaran</span>
+                    <i class="fa-solid fa-vault text-emerald-600"></i>
+                </div>
+                <div id="ga-stat-sisa-budget" class="text-lg sm:text-2xl font-black text-emerald-900 mt-1">Rp 1.507.851.796</div>
+                <div class="text-[11px] text-emerald-700 font-medium mt-0.5">Google Drive Safe (Disk: 0 Byte)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. CARD ANALIS KEUANGAN AIS UNTUK GA (AI FINANCIAL ANALYST EXECUTIVE INSIGHTS) -->
+    <div class="bg-white rounded-2xl shadow-xs border border-emerald-200/80 p-4 sm:p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shadow-2xs shrink-0">
+                    <i class="fa-solid fa-brain-circuit text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+                        Diagnosa & Analisis Keuangan Bagian Umum (Ais GA Intelligence)
+                    </h3>
+                    <p class="text-xs text-slate-500 font-medium mt-0.5">Evaluasi realisasi anggaran FKP GA, ritme belanja bulanan, dan audit efisiensi pengeluaran.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 self-start sm:self-auto">
+                <span class="text-xs font-semibold text-slate-500">Status Anggaran:</span>
+                <span id="ai-ga-status-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5 shadow-2xs">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span id="ai-ga-status-text">ANGGARAN TERKENDALI</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- 4 Mini Financial Ratios Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="bg-emerald-50/60 rounded-xl p-3.5 border border-emerald-200/70">
+                <div class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Serapan Plafon Tahunan</div>
+                <div id="ai-ga-serapan-pct" class="text-xl sm:text-2xl font-black text-emerald-900 mt-1">1.0%</div>
+                <div class="text-[11px] text-emerald-700 font-medium mt-0.5">Dari total plafon Rp 1.5 Milyar</div>
+            </div>
+            <div class="bg-blue-50/60 rounded-xl p-3.5 border border-blue-200/70">
+                <div class="text-[11px] font-bold text-blue-800 uppercase tracking-wider">Pos Serapan Terbesar</div>
+                <div id="ai-ga-top-cost" class="text-xs sm:text-sm font-extrabold text-slate-900 truncate mt-1.5" title="Pemeliharaan & Perbaikan">PEMELIHARAAN (6.1%)</div>
+                <div class="text-[11px] text-blue-700 font-semibold mt-0.5 truncate">Pos 51411 (Plafon Rp 181.7M)</div>
+            </div>
+            <div class="bg-amber-50/60 rounded-xl p-3.5 border border-amber-200/70">
+                <div class="text-[11px] font-bold text-amber-800 uppercase tracking-wider">Penerima Transaksi Terbesar</div>
+                <div id="ai-ga-top-vendor" class="text-xs sm:text-sm font-extrabold text-amber-900 truncate mt-1.5" title="Devyzar Syam">DEVYZAR SYAM (Rp 10.0M)</div>
+                <div class="text-[11px] text-amber-700 font-semibold mt-0.5 truncate">Penambahan SPC Ruang UKS SD</div>
+            </div>
+            <div class="bg-purple-50/60 rounded-xl p-3.5 border border-purple-200/70">
+                <div class="text-[11px] font-bold text-purple-800 uppercase tracking-wider">Arsip Bukti & Keamanan</div>
+                <div class="text-xs sm:text-sm font-extrabold text-purple-900 truncate mt-1.5">100% Google Drive</div>
+                <div class="text-[11px] text-purple-700 font-semibold mt-0.5 truncate">Folder: Keuangan_GA</div>
+            </div>
+        </div>
+
+        <!-- Catatan Analis Ais Box -->
+        <div class="bg-slate-50/90 rounded-xl p-4 border border-slate-200/80">
+            <div class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2.5 flex items-center gap-2">
+                <i class="fa-solid fa-lightbulb text-amber-500"></i>
+                <span>Catatan & Rekomendasi Analis Ais untuk Manajemen GA (Mr Slam & Bu Rinni):</span>
+            </div>
+            <ul id="ai-ga-insights-list" class="space-y-2 text-xs">
+                <li class="flex items-start gap-2.5 text-slate-700 font-medium">
+                    <i class="fa-solid fa-circle-check text-emerald-600 mt-0.5 shrink-0 text-sm"></i>
+                    <span class="leading-relaxed">Memuat analisis eksekutif GA...</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 5. DASHBOARD GRAFIK ANALITIK KEUANGAN GA (CHART.JS) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <!-- GRAFIK 1: Tren Belanja Bulanan GA (7 Cols) -->
+        <div class="lg:col-span-7 bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-line text-emerald-600"></i>
+                            Tren Pengeluaran Belanja GA Bulanan (TA 2026/2027)
+                        </h3>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Ritme realisasi pengeluaran bulanan bagian umum terintegrasi standar FKP.</p>
+                    </div>
+                    <span class="text-[10px] font-bold px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-md">Bulanan</span>
+                </div>
+                <div class="relative w-full h-64 sm:h-72 mt-3">
+                    <canvas id="chartGATrends"></canvas>
+                </div>
+            </div>
+            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                <span>Rata-rata belanja berjalan terpantau aman terkendali.</span>
+                <span class="font-bold text-emerald-700">TA 2026/2027</span>
+            </div>
+        </div>
+
+        <!-- GRAFIK 2: Komposisi Pengeluaran 5 Pos Induk FKP GA (5 Cols) -->
+        <div class="lg:col-span-5 bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-pie text-blue-600"></i>
+                            Komposisi Belanja 5 Pos Induk FKP GA
+                        </h3>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Proporsi pengeluaran berdasarkan kategori mata anggaran.</p>
+                    </div>
+                    <span class="text-[10px] font-bold px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md">Distribusi Pos</span>
+                </div>
+                <div class="relative w-full h-64 sm:h-72 mt-3 flex items-center justify-center">
+                    <canvas id="chartGAComposition"></canvas>
+                </div>
+            </div>
+            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                <span>Dominasi belanja: Pemeliharaan Sarpras & Investasi.</span>
+                <span class="font-bold text-blue-700">5 Pos Utama</span>
+            </div>
+        </div>
+
+        <!-- GRAFIK 3: Evaluasi Realisasi vs Plafon 5 Pos Induk FKP GA (6 Cols) -->
+        <div class="lg:col-span-6 bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-scale-balanced text-purple-600"></i>
+                            Realisasi vs Plafon 5 Pos Induk FKP GA (Rp 1.5 M)
+                        </h3>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Monitoring serapan belanja operasional terhadap batas pagu tahunan.</p>
+                    </div>
+                    <span class="text-[10px] font-bold px-2 py-0.5 bg-purple-50 text-purple-700 rounded-md">Plafon vs Realisasi</span>
+                </div>
+                <div class="relative w-full h-64 sm:h-72 mt-3">
+                    <canvas id="chartGABudget"></canvas>
+                </div>
+            </div>
+            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                <span>Plafon RKAS GA: Rp 1.507.851.796</span>
+                <span class="font-bold text-purple-700">Kontrol Pagu</span>
+            </div>
+        </div>
+
+        <!-- GRAFIK 4: Top Item Pengeluaran Operasional GA Terbesar (6 Cols) -->
+        <div class="lg:col-span-6 bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-ranking-star text-amber-500"></i>
+                            Top Item Beban Pengeluaran GA Terbesar
+                        </h3>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Item belanja dan pengeluaran dengan nilai transaksi tertinggi.</p>
+                    </div>
+                    <span class="text-[10px] font-bold px-2 py-0.5 bg-amber-50 text-amber-700 rounded-md">Top Expenses</span>
+                </div>
+                <div class="relative w-full h-64 sm:h-72 mt-3">
+                    <canvas id="chartGATopExp"></canvas>
+                </div>
+            </div>
+            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                <span>Item belanja modal & renovasi sarpras sekolah.</span>
+                <span class="font-bold text-amber-700">Audit Detail</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. KONTROL 5 POS PLAFON ANGGARAN FKP GA (MINI BARS) -->
     <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-6 space-y-4">
         <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
             <i class="fa-solid fa-layer-group text-slate-400"></i>
-            Kontrol 5 Pos Plafon Anggaran FKP GA 2026–2027
+            Detail Kontrol 5 Pos Plafon Anggaran FKP GA 2026–2027
         </h3>
         <div id="finance-categories-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <div class="text-center py-4 text-xs text-slate-400 col-span-full">Memuat data alokasi anggaran...</div>
         </div>
     </div>
 
-    <!-- Filter & Search Bar -->
-    <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 space-y-3">
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-            <div class="flex items-center gap-2 flex-wrap flex-1">
-                <select id="filter-finance-month" onchange="filterFinanceData()" class="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
-                    <option value="">Semua Periode Bulan</option>
-                    <option value="Oktober 2026" selected>Oktober 2026</option>
-                    <option value="November 2026">November 2026</option>
-                    <option value="Desember 2026">Desember 2026</option>
-                    <option value="September 2026">September 2026</option>
-                    <option value="Agustus 2026">Agustus 2026</option>
-                    <option value="Juli 2026">Juli 2026</option>
-                </select>
-
-                <select id="filter-finance-category" onchange="filterFinanceData()" class="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
-                    <option value="">Semua Kategori Pos</option>
-                    <option value="PEMELIHARAAN & PERBAIKAN">Pemeliharaan & Perbaikan (51411)</option>
-                    <option value="ADMINISTRASI DAN UMUM">Administrasi & Umum / Kas Kecil (51412)</option>
-                    <option value="ENERGI & KOMUNIKASI">Energi & Komunikasi (51413)</option>
-                    <option value="PERLENGKAPAN">Perlengkapan (51414)</option>
-                    <option value="INVESTASI">Investasi Sarpras (51415)</option>
-                </select>
-            </div>
-
-            <div class="relative w-full sm:w-64">
-                <input type="text" id="filter-finance-search" oninput="filterFinanceData()" placeholder="Cari toko, uraian, ref..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
-            </div>
-        </div>
-    </div>
-
-    <!-- Data Table Transaksi Pengeluaran GA -->
+    <!-- 7. DATA TABLE TRANSAKSI PENGELUARAN GA -->
     <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-table-list text-slate-600"></i>
+                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Tabel Rincian Pengeluaran Bagian Umum (GA)</h3>
+            </div>
+            <span id="ga-table-count" class="text-xs text-slate-400 font-medium">0 baris transaksi</span>
+        </div>
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-xs">
                 <thead>
@@ -200,103 +409,79 @@ TAB_KEUANGAN_HTML = """
                     <input type="date" id="edit-exp-date" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-700 mb-1">Nominal Riil (Rp)</label>
-                    <input type="number" id="edit-exp-amount" min="0" step="1" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-bold text-emerald-700">
+                    <label class="block font-bold text-slate-700 mb-1">Nominal (Rp)</label>
+                    <input type="number" id="edit-exp-amount" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-bold">
                 </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label class="block font-bold text-slate-700 mb-1">Penerima / Toko / Vendor</label>
-                    <input type="text" id="edit-exp-vendor" placeholder="Contoh: TB Sentosa Jaya" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
+                    <label class="block font-bold text-slate-700 mb-1">Penerima / Nama Toko</label>
+                    <input type="text" id="edit-exp-vendor" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-700 mb-1">Bank / No. Rekening</label>
-                    <input type="text" id="edit-exp-bank" placeholder="Contoh: BCA 1234567890" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
+                    <label class="block font-bold text-slate-700 mb-1">Nomor Referensi / No Nota</label>
+                    <input type="text" id="edit-exp-ref" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Pos Mata Anggaran FKP GA</label>
+                <select id="edit-exp-coa" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
+                    <option value="51411-001">51411-001 Pemeliharaan Gedung (PEMELIHARAAN)</option>
+                    <option value="51411-002">51411-002 Obat Kolam Renang (PEMELIHARAAN)</option>
+                    <option value="51411-003">51411-003 Treatment Kolam Renang (PEMELIHARAAN)</option>
+                    <option value="51411-004">51411-004 Prasarana Jalan & Pagar (PEMELIHARAAN)</option>
+                    <option value="51411-005">51411-005 Service Motor GA (PEMELIHARAAN)</option>
+                    <option value="51411-006">51411-006 Service Mobil Sekolah (PEMELIHARAAN)</option>
+                    <option value="51411-011">51411-011 Cuci AC Sekolah (PEMELIHARAAN)</option>
+                    <option value="51411-012">51411-012 Perbaikan AC (PEMELIHARAAN)</option>
+                    <option value="51412-002">51412-002 Iuran Lingkungan / Keamanan (ADMINISTRASI)</option>
+                    <option value="51412-004">51412-004 Biaya Admin Bank (ADMINISTRASI)</option>
+                    <option value="51412-006">51412-006 Petty Cash GA / Kas Kecil (ADMINISTRASI)</option>
+                    <option value="51412-007">51412-007 Konsumsi Rapat & Lembur (ADMINISTRASI)</option>
+                    <option value="51413-001">51413-001 Listrik PLN (ENERGI & KOMUNIKASI)</option>
+                    <option value="51413-002">51413-002 Telepon & Internet (ENERGI & KOMUNIKASI)</option>
+                    <option value="51413-003">51413-003 Air PDAM & Galon (ENERGI & KOMUNIKASI)</option>
+                    <option value="51414-001">51414-001 Perlengkapan Kebersihan OB (PERLENGKAPAN)</option>
+                    <option value="51414-002">51414-002 Perlengkapan Taman (PERLENGKAPAN)</option>
+                    <option value="51414-003">51414-003 Bahan Habis Pakai Chemical (PERLENGKAPAN)</option>
+                    <option value="51414-004">51414-004 Alat Kerja Sarpras (PERLENGKAPAN)</option>
+                    <option value="51415-001">51415-001 Investasi PGTK (INVESTASI)</option>
+                    <option value="51415-002">51415-002 Investasi SD (INVESTASI)</option>
+                    <option value="51415-003">51415-003 Investasi SMP (INVESTASI)</option>
+                    <option value="51415-004">51415-004 Investasi SMA (INVESTASI)</option>
+                    <option value="51415-005">51415-005 Investasi Sarpras Umum (INVESTASI)</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label class="block font-bold text-slate-700 mb-1">No. Referensi / Nota</label>
-                    <input type="text" id="edit-exp-ref" placeholder="Contoh: TRF-99821" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
-                </div>
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">Sumber Dana FKP</label>
+                    <label class="block font-bold text-slate-700 mb-1">Sumber Dana</label>
                     <select id="edit-exp-fund" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
-                        <option value="1. APBS Unit">1. APBS Unit</option>
                         <option value="2. SPP">2. SPP</option>
-                        <option value="3. Lainnya">3. Lainnya</option>
+                        <option value="1. APBS Unit">1. APBS Unit</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-700 mb-1">Unit Sasaran</label>
+                    <label class="block font-bold text-slate-700 mb-1">Unit Target</label>
                     <select id="edit-exp-unit" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
                         <option value="Umum">Umum</option>
                         <option value="SD">SD</option>
                         <option value="SMP">SMP</option>
                         <option value="SMA">SMA</option>
-                        <option value="TK">TK / PGTK</option>
-                        <option value="Supporting">Supporting</option>
+                        <option value="PGTK">PGTK</option>
                     </select>
                 </div>
             </div>
 
             <div>
-                <label class="block font-bold text-slate-700 mb-1">Mata Anggaran FKP (COA)</label>
-                <select id="edit-exp-coa" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
-                    <optgroup label="51411 — PEMELIHARAAN & PERBAIKAN">
-                        <option value="51411-001">51411-001 | Pemeliharaan Gedung</option>
-                        <option value="51411-002">51411-002 | Pemeliharaan Kolam Renang - Obat Kolam</option>
-                        <option value="51411-003">51411-003 | Pemeliharaan Kolam Renang - Treatment Vacum</option>
-                        <option value="51411-004">51411-004 | Pemeliharaan Prasarana (Jalan, Pagar, Saluran)</option>
-                        <option value="51411-005">51411-005 | Pemeliharaan Kendaraan - Service Motor</option>
-                        <option value="51411-006">51411-006 | Pemeliharaan Kendaraan - Service Mobil</option>
-                        <option value="51411-007">51411-007 | Pemeliharaan Kendaraan - Pajak Motor</option>
-                        <option value="51411-008">51411-008 | Pemeliharaan Kendaraan - Pajak Mobil</option>
-                        <option value="51411-009">51411-009 | Pemeliharaan Barang Inventaris</option>
-                        <option value="51411-010">51411-010 | Pemeliharaan Lainnya - Fogging</option>
-                        <option value="51411-011">51411-011 | Pemeliharaan AC - Cuci</option>
-                        <option value="51411-012">51411-012 | Pemeliharaan AC - Service & Perbaikan</option>
-                    </optgroup>
-                    <optgroup label="51412 — ADMINISTRASI DAN UMUM">
-                        <option value="51412-001">51412-001 | Biaya Perizinan</option>
-                        <option value="51412-002">51412-002 | Iuran Lingkungan (Keamanan & Kebersihan Kawasan)</option>
-                        <option value="51412-004">51412-004 | Admin Bank</option>
-                        <option value="51412-005">51412-005 | Sewa Lahan / Ruang Ecopark & ISBI</option>
-                        <option value="51412-006">51412-006 | Patty Cash GA (Kas Kecil Operasional)</option>
-                        <option value="51412-007">51412-007 | Konsumsi Rapat, Tamu, Olahraga & Lembur</option>
-                        <option value="51412-008">51412-008 | Pelatihan SDM Umum & Sertifikasi K3</option>
-                    </optgroup>
-                    <optgroup label="51413 — ENERGI & KOMUNIKASI">
-                        <option value="51413-001">51413-001 | Listrik PLN (YPPI & An Nahl)</option>
-                        <option value="51413-002">51413-002 | Telepon & Internet Sekolah</option>
-                        <option value="51413-003">51413-003 | Air PDAM & Air Minum Galon</option>
-                    </optgroup>
-                    <optgroup label="51414 — PERLENGKAPAN">
-                        <option value="51414-001">51414-001 | Perlengkapan Kebersihan & Sanitasi OB</option>
-                        <option value="51414-002">51414-002 | Perlengkapan Taman & Pertamanan</option>
-                        <option value="51414-003">51414-003 | Barang Habis Pakai Chemical & Sabun</option>
-                        <option value="51414-004">51414-004 | Barang Habis Pakai Sarpras & Alat Kerja</option>
-                        <option value="51414-005">51414-005 | Perlengkapan Umum Sekolah & Logistik</option>
-                    </optgroup>
-                    <optgroup label="51415 — INVESTASI">
-                        <option value="51415-001">51415-001 | Investasi PGTK</option>
-                        <option value="51415-002">51415-002 | Investasi SD</option>
-                        <option value="51415-003">51415-003 | Investasi SMP</option>
-                        <option value="51415-004">51415-004 | Investasi SMA</option>
-                        <option value="51415-005">51415-005 | Investasi Supporting & Sarpras Umum</option>
-                    </optgroup>
-                </select>
-            </div>
-
-            <div>
-                <label class="block font-bold text-slate-700 mb-1">Uraian Kebutuhan / Rincian Belanja</label>
+                <label class="block font-bold text-slate-700 mb-1">Uraian Kebutuhan / Keterangan</label>
                 <textarea id="edit-exp-desc" rows="3" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"></textarea>
             </div>
 
-            <div class="border-t border-slate-100 pt-3 flex justify-between items-center gap-2">
-                <button type="button" onclick="deleteCurrentExpense()" class="px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 font-semibold rounded-xl transition cursor-pointer">
+            <div class="border-t border-slate-100 pt-3 flex items-center justify-between">
+                <button type="button" onclick="deleteCurrentExpense()" class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold rounded-xl transition cursor-pointer">
                     <i class="fa-solid fa-trash mr-1"></i>
                     <span>Hapus Transaksi</span>
                 </button>
@@ -317,24 +502,80 @@ JS_KEUANGAN_SCRIPTS = """
 <script>
     let G_FINANCE_DATA = [];
 
+    function onGADateChange() {
+        loadKeuanganGA();
+    }
+
+    function resetGADateFilter() {
+        const s = document.getElementById('filter-ga-start-date');
+        const e = document.getElementById('filter-ga-end-date');
+        if (s) s.value = '';
+        if (e) e.value = '';
+        loadKeuanganGA();
+    }
+
+    function setGADateShortcut(type) {
+        const s = document.getElementById('filter-ga-start-date');
+        const e = document.getElementById('filter-ga-end-date');
+        if (!s || !e) return;
+
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const formatYMD = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+        if (type === 'today') {
+            const todayStr = formatYMD(now);
+            s.value = todayStr;
+            e.value = todayStr;
+        } else if (type === '7days') {
+            const past = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+            s.value = formatYMD(past);
+            e.value = formatYMD(now);
+        } else if (type === 'this_month') {
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            s.value = formatYMD(firstDay);
+            e.value = formatYMD(now);
+        } else if (type === 'all') {
+            s.value = '';
+            e.value = '';
+        }
+        loadKeuanganGA();
+    }
+
     async function loadKeuanganGA() {
         try {
+            const startDate = document.getElementById('filter-ga-start-date') ? document.getElementById('filter-ga-start-date').value : '';
+            const endDate = document.getElementById('filter-ga-end-date') ? document.getElementById('filter-ga-end-date').value : '';
+
+            let statsUrl = '/api/ga/expenses/stats?1=1';
+            let expUrl = '/api/ga/expenses?1=1';
+
+            if (startDate) {
+                statsUrl += '&start_date=' + encodeURIComponent(startDate);
+                expUrl += '&start_date=' + encodeURIComponent(startDate);
+            }
+            if (endDate) {
+                statsUrl += '&end_date=' + encodeURIComponent(endDate);
+                expUrl += '&end_date=' + encodeURIComponent(endDate);
+            }
+
             // 1. Fetch Stats
-            const resStats = await fetch('/api/ga/expenses/stats');
+            const resStats = await fetch(statsUrl);
             if (resStats.ok) {
                 const sData = await resStats.json();
                 if (sData.success) {
                     renderFinanceStats(sData);
+                    renderGACharts(sData);
                 }
             }
 
             // 2. Fetch Expenses Data
-            const resExp = await fetch('/api/ga/expenses');
+            const resExp = await fetch(expUrl);
             if (resExp.ok) {
                 const eData = await resExp.json();
                 if (eData.success) {
                     G_FINANCE_DATA = eData.data || [];
-                    filterFinanceData();
+                    filterGAData();
                 }
             }
         } catch (err) {
@@ -345,64 +586,322 @@ JS_KEUANGAN_SCRIPTS = """
     function renderFinanceStats(stats) {
         const grandTotal = stats.grand_total_realisasi || 0;
         const totalTrx = stats.total_transaksi || 0;
-        const totalBudget = 1507851796;
-        const pct = (grandTotal / totalBudget * 100).toFixed(1);
+        const totalBudget = stats.grand_budget_annual || 1507851796;
+        const pct = stats.overall_pct || (grandTotal / totalBudget * 100).toFixed(1);
+        const sisa = stats.sisa_budget !== undefined ? stats.sisa_budget : (totalBudget - grandTotal);
+        const ai = stats.ai_analysis || {};
 
-        document.getElementById('stat-grand-total').innerText = 'Rp ' + grandTotal.toLocaleString('id-ID');
-        document.getElementById('stat-total-trx').innerText = totalTrx + ' Transaksi';
-        document.getElementById('stat-pct-serapan').innerText = 'Serapan ' + pct + '% dari Plafon FKP';
+        // Badge Periode
+        const startDate = document.getElementById('filter-ga-start-date') ? document.getElementById('filter-ga-start-date').value : '';
+        const endDate = document.getElementById('filter-ga-end-date') ? document.getElementById('filter-ga-end-date').value : '';
+        const badgeEl = document.getElementById('ga-period-badge');
 
-        // Render 5 Kategori
+        let isFiltered = false;
+        let periodLabel = 'Semua Periode Kumulatif';
+        if (startDate && endDate) {
+            periodLabel = (startDate === endDate) ? `Tanggal: ${startDate}` : `${startDate} s/d ${endDate}`;
+            isFiltered = true;
+        } else if (startDate) {
+            periodLabel = `Mulai ${startDate}`;
+            isFiltered = true;
+        } else if (endDate) {
+            periodLabel = `Hingga ${endDate}`;
+            isFiltered = true;
+        }
+
+        if (badgeEl) {
+            badgeEl.innerText = periodLabel;
+            badgeEl.className = isFiltered
+                ? 'text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800'
+                : 'text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800';
+        }
+
+        // Summary Cards
+        document.getElementById('ga-stat-grand-total').innerText = 'Rp ' + Math.round(grandTotal).toLocaleString('id-ID');
+        document.getElementById('ga-stat-total-trx-count').innerText = isFiltered
+            ? `${totalTrx} Transaksi Belanja (${periodLabel})`
+            : `${totalTrx} Transaksi Belanja (Kumulatif)`;
+
+        document.getElementById('ga-stat-total-trx').innerText = totalTrx + ' Transaksi';
+        document.getElementById('ga-stat-pct-serapan').innerText = `Serapan ${pct}% dari Plafon`;
+        document.getElementById('ga-stat-sisa-budget').innerText = 'Rp ' + Math.round(sisa).toLocaleString('id-ID');
+
+        // AI Briefing
+        const statusBadge = document.getElementById('ai-ga-status-badge');
+        const statusText = document.getElementById('ai-ga-status-text');
+        if (statusBadge && statusText) {
+            statusText.innerText = ai.status || 'ANGGARAN TERKENDALI';
+            statusBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5 shadow-2xs';
+        }
+
+        if (document.getElementById('ai-ga-serapan-pct')) {
+            document.getElementById('ai-ga-serapan-pct').innerText = (pct) + '%';
+        }
+        if (document.getElementById('ai-ga-top-cost')) {
+            const costEl = document.getElementById('ai-ga-top-cost');
+            costEl.innerText = ai.top_cost_center || 'PEMELIHARAAN (6.1%)';
+            costEl.title = ai.top_cost_center || 'PEMELIHARAAN';
+        }
+        if (document.getElementById('ai-ga-top-vendor')) {
+            const vendorEl = document.getElementById('ai-ga-top-vendor');
+            vendorEl.innerText = ai.top_vendor || 'DEVYZAR SYAM';
+            vendorEl.title = ai.top_vendor || 'DEVYZAR SYAM';
+        }
+
+        const insightsList = document.getElementById('ai-ga-insights-list');
+        if (insightsList && ai.insights) {
+            insightsList.innerHTML = ai.insights.map(txt => `
+                <li class="flex items-start gap-2.5 text-xs text-slate-800 font-medium">
+                    <i class="fa-solid fa-circle-check text-emerald-600 mt-0.5 shrink-0 text-sm"></i>
+                    <span class="leading-relaxed">${txt}</span>
+                </li>
+            `).join('');
+        }
+
+        // Render 5 Kategori Bar
         const catContainer = document.getElementById('finance-categories-container');
-        if (!catContainer) return;
+        if (catContainer) {
+            const catMap = {};
+            (stats.categories || []).forEach(c => {
+                catMap[c.category] = c;
+            });
 
-        const fixedCategories = [
-            { code: '51411', name: 'Pemeliharaan & Perbaikan', cat: 'PEMELIHARAAN & PERBAIKAN', budget: 181724000 },
-            { code: '51412', name: 'Administrasi & Umum / Kas', cat: 'ADMINISTRASI DAN UMUM', budget: 102350000 },
-            { code: '51413', name: 'Energi & Komunikasi', cat: 'ENERGI & KOMUNIKASI', budget: 479250000 },
-            { code: '51414', name: 'Perlengkapan & Sanitasi', cat: 'PERLENGKAPAN', budget: 86527796 },
-            { code: '51415', name: 'Investasi Sarpras', cat: 'INVESTASI', budget: 658000000 }
-        ];
+            const fixedCategories = [
+                { code: '51411', name: 'Pemeliharaan & Perbaikan', cat: 'PEMELIHARAAN & PERBAIKAN', budget: 181724000 },
+                { code: '51412', name: 'Administrasi & Umum / Kas', cat: 'ADMINISTRASI DAN UMUM', budget: 102350000 },
+                { code: '51413', name: 'Energi & Komunikasi', cat: 'ENERGI & KOMUNIKASI', budget: 479250000 },
+                { code: '51414', name: 'Perlengkapan & Sanitasi', cat: 'PERLENGKAPAN', budget: 86527796 },
+                { code: '51415', name: 'Investasi Sarpras', cat: 'INVESTASI', budget: 658000000 }
+            ];
 
-        const catMap = {};
-        (stats.categories || []).forEach(c => {
-            catMap[c.category] = c;
-        });
+            let html = '';
+            fixedCategories.forEach(fc => {
+                const row = catMap[fc.cat] || { realisasi: 0, sisa: fc.budget, persentase: 0 };
+                const real = row.realisasi || 0;
+                const bgt = fc.budget;
+                const pctVal = (real / bgt * 100).toFixed(1);
+                let barColor = 'bg-emerald-500';
+                if (pctVal >= 100) barColor = 'bg-rose-500';
+                else if (pctVal >= 80) barColor = 'bg-amber-500';
 
-        let html = '';
-        fixedCategories.forEach(fc => {
-            const row = catMap[fc.cat] || { realisasi: 0, sisa: fc.budget, persentase: 0 };
-            const real = row.realisasi || 0;
-            const bgt = fc.budget;
-            const pctVal = (real / bgt * 100).toFixed(1);
-            let barColor = 'bg-emerald-500';
-            if (pctVal >= 100) barColor = 'bg-red-500';
-            else if (pctVal >= 80) barColor = 'bg-amber-500';
-
-            html += `
-            <div class="border border-slate-200/80 rounded-xl p-3 bg-slate-50/50 hover:bg-slate-50 transition">
-                <div class="text-[11px] font-bold text-slate-700 truncate" title="${fc.name}">${fc.code} ${fc.name}</div>
-                <div class="text-sm font-bold text-slate-800 mt-1">Rp ${real.toLocaleString('id-ID')}</div>
-                <div class="w-full bg-slate-200 rounded-full h-1.5 mt-2 overflow-hidden">
-                    <div class="${barColor} h-1.5 rounded-full" style="width: ${Math.min(pctVal, 100)}%"></div>
-                </div>
-                <div class="flex justify-between text-[10px] text-slate-400 mt-1">
-                    <span>${pctVal}% terpakai</span>
-                    <span>Plafon: ${(bgt / 1000000).toFixed(0)}M</span>
-                </div>
-            </div>`;
-        });
-
-        catContainer.innerHTML = html;
+                html += `
+                <div class="border border-slate-200/80 rounded-xl p-3 bg-slate-50/50 hover:bg-slate-50 transition">
+                    <div class="text-[11px] font-bold text-slate-700 truncate" title="${fc.name}">${fc.code} ${fc.name}</div>
+                    <div class="text-sm font-bold text-slate-800 mt-1">Rp ${Math.round(real).toLocaleString('id-ID')}</div>
+                    <div class="w-full bg-slate-200 rounded-full h-1.5 mt-2 overflow-hidden">
+                        <div class="${barColor} h-1.5 rounded-full" style="width: ${Math.min(pctVal, 100)}%"></div>
+                    </div>
+                    <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+                        <span>${pctVal}% terpakai</span>
+                        <span>Plafon: ${(bgt / 1000000).toFixed(0)}M</span>
+                    </div>
+                </div>`;
+            });
+            catContainer.innerHTML = html;
+        }
     }
 
-    function filterFinanceData() {
-        const monthFilter = document.getElementById('filter-finance-month').value.trim();
-        const catFilter = document.getElementById('filter-finance-category').value.trim();
-        const search = document.getElementById('filter-finance-search').value.toLowerCase().trim();
+    function renderGACharts(stats) {
+        if (typeof Chart === 'undefined') return;
+
+        // Cleanup instance sebelumnya agar tidak numpuk
+        if (window.gaChartMonthly instanceof Chart) window.gaChartMonthly.destroy();
+        if (window.gaChartComposition instanceof Chart) window.gaChartComposition.destroy();
+        if (window.gaChartBudget instanceof Chart) window.gaChartBudget.destroy();
+        if (window.gaChartTopExp instanceof Chart) window.gaChartTopExp.destroy();
+
+        // 1. Chart Tren Belanja Bulanan
+        const trends = stats.monthly_trends || [];
+        const tLabels = trends.map(t => t.month);
+        const tExp = trends.map(t => t.expense);
+
+        const ctxMonthly = document.getElementById('chartGATrends');
+        if (ctxMonthly) {
+            window.gaChartMonthly = new Chart(ctxMonthly, {
+                type: 'bar',
+                data: {
+                    labels: tLabels,
+                    datasets: [{
+                        label: 'Belanja GA (Rp)',
+                        data: tExp,
+                        backgroundColor: 'rgba(225, 29, 72, 0.75)',
+                        borderColor: '#E11D48',
+                        borderWidth: 1.5,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => 'Belanja: Rp ' + Math.round(ctx.parsed.y).toLocaleString('id-ID')
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: (v) => 'Rp ' + (v >= 1000000 ? (v/1000000).toFixed(1) + 'M' : (v/1000).toFixed(0) + 'K')
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 2. Chart Komposisi 5 Pos Induk FKP GA (Donut)
+        const categories = stats.categories || [];
+        const cLabels = categories.map(c => c.category);
+        const cData = categories.map(c => c.realisasi);
+
+        const ctxComp = document.getElementById('chartGAComposition');
+        if (ctxComp) {
+            window.gaChartComposition = new Chart(ctxComp, {
+                type: 'doughnut',
+                data: {
+                    labels: cLabels,
+                    datasets: [{
+                        data: cData,
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.85)',
+                            'rgba(59, 130, 246, 0.85)',
+                            'rgba(245, 158, 11, 0.85)',
+                            'rgba(139, 92, 246, 0.85)',
+                            'rgba(244, 63, 94, 0.85)'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#FFFFFF'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => {
+                                    const val = ctx.parsed || 0;
+                                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                    const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0.0';
+                                    return `${ctx.label}: Rp ${Math.round(val).toLocaleString('id-ID')} (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+
+        // 3. Chart Realisasi vs Plafon 5 Pos Induk FKP GA (Horizontal Bar)
+        const ctxBudget = document.getElementById('chartGABudget');
+        if (ctxBudget) {
+            const bLabels = categories.map(c => c.category.length > 20 ? c.category.substring(0, 18) + '...' : c.category);
+            const bPlafon = categories.map(c => c.anggaran);
+            const bReal = categories.map(c => c.realisasi);
+
+            window.gaChartBudget = new Chart(ctxBudget, {
+                type: 'bar',
+                data: {
+                    labels: bLabels,
+                    datasets: [
+                        {
+                            label: 'Plafon RKAS (Rp)',
+                            data: bPlafon,
+                            backgroundColor: 'rgba(203, 213, 225, 0.7)',
+                            borderColor: '#94A3B8',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Realisasi (Rp)',
+                            data: bReal,
+                            backgroundColor: 'rgba(5, 150, 105, 0.85)',
+                            borderColor: '#047857',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => ctx.dataset.label + ': Rp ' + Math.round(ctx.parsed.x).toLocaleString('id-ID')
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: (v) => 'Rp ' + (v >= 1000000 ? (v/1000000).toFixed(0) + 'M' : (v/1000).toFixed(0) + 'K')
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 4. Chart Top Item Belanja GA Terbesar (Horizontal Bar)
+        const topItems = stats.top_expense_items || [];
+        const topLabels = topItems.map(t => t.item.length > 22 ? t.item.substring(0, 20) + '...' : t.item);
+        const topAmounts = topItems.map(t => t.amount);
+
+        const ctxTop = document.getElementById('chartGATopExp');
+        if (ctxTop) {
+            window.gaChartTopExp = new Chart(ctxTop, {
+                type: 'bar',
+                data: {
+                    labels: topLabels,
+                    datasets: [{
+                        label: 'Nominal Belanja (Rp)',
+                        data: topAmounts,
+                        backgroundColor: 'rgba(245, 158, 11, 0.85)',
+                        borderColor: '#D97706',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => 'Rp ' + Math.round(ctx.parsed.x).toLocaleString('id-ID')
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: (v) => 'Rp ' + (v >= 1000000 ? (v/1000000).toFixed(1) + 'M' : (v/1000).toFixed(0) + 'K')
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    function filterGAData() {
+        const catFilter = document.getElementById('filter-ga-category') ? document.getElementById('filter-ga-category').value.trim() : '';
+        const search = document.getElementById('filter-ga-search') ? document.getElementById('filter-ga-search').value.toLowerCase().trim() : '';
 
         const filtered = G_FINANCE_DATA.filter(item => {
-            if (monthFilter && item.month_period !== monthFilter) return false;
             if (catFilter && item.main_category !== catFilter) return false;
             if (search) {
                 const combined = [
@@ -414,13 +913,16 @@ JS_KEUANGAN_SCRIPTS = """
             return true;
         });
 
-        renderFinanceTable(filtered);
+        renderGATable(filtered);
     }
 
-    function renderFinanceTable(data) {
+    function renderGATable(data) {
         const tbody = document.getElementById('finance-table-tbody');
         const emptyState = document.getElementById('finance-empty-state');
+        const countEl = document.getElementById('ga-table-count');
         if (!tbody) return;
+
+        if (countEl) countEl.innerText = `${data.length} baris transaksi`;
 
         if (data.length === 0) {
             tbody.innerHTML = '';
@@ -435,7 +937,7 @@ JS_KEUANGAN_SCRIPTS = """
             const nominal = item.amount || 0;
             const driveUrl = item.drive_file_url || '';
             const driveBtn = driveUrl ? `
-                <a href="${driveUrl}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-[11px] font-semibold transition" title="Buka Bukti di Google Drive">
+                <a href="${driveUrl}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-[11px] font-semibold transition shadow-2xs" title="Buka Bukti di Google Drive">
                     <i class="fa-brands fa-google-drive text-amber-500"></i>
                     <span>Bukti</span>
                 </a>
@@ -456,9 +958,9 @@ JS_KEUANGAN_SCRIPTS = """
                     <div class="text-[10px] text-slate-400">${item.bank_info || item.reference_no || ''}</div>
                 </td>
                 <td class="py-3 px-4 max-w-xs">
-                    <p class="text-slate-700 truncate" title="${item.description}">${item.description || '-'}</p>
+                    <p class="text-slate-700 truncate font-medium" title="${item.description}">${item.description || '-'}</p>
                 </td>
-                <td class="py-3 px-4 text-right font-bold text-slate-800">
+                <td class="py-3 px-4 text-right font-bold text-rose-700">
                     Rp ${nominal.toLocaleString('id-ID')}
                 </td>
                 <td class="py-3 px-4">
@@ -486,6 +988,19 @@ JS_KEUANGAN_SCRIPTS = """
         });
 
         tbody.innerHTML = html;
+    }
+
+    function exportGAExcel() {
+        const startDate = document.getElementById('filter-ga-start-date') ? document.getElementById('filter-ga-start-date').value : '';
+        const endDate = document.getElementById('filter-ga-end-date') ? document.getElementById('filter-ga-end-date').value : '';
+        const cat = document.getElementById('filter-ga-category') ? document.getElementById('filter-ga-category').value : '';
+
+        let url = '/api/ga/expenses/export?1=1';
+        if (startDate) url += '&start_date=' + encodeURIComponent(startDate);
+        if (endDate) url += '&end_date=' + encodeURIComponent(endDate);
+        if (cat) url += '&category=' + encodeURIComponent(cat);
+
+        window.open(url, '_blank');
     }
 
     function openExpenseDetail(expId) {
@@ -519,60 +1034,40 @@ JS_KEUANGAN_SCRIPTS = """
                         <div class="text-[11px] text-blue-600">Tersimpan permanen di Google Drive</div>
                     </div>
                 </div>
-                <a href="${item.drive_file_url}" target="_blank" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg font-semibold text-xs hover:bg-blue-700 transition">Buka File</a>
+                <a href="${item.drive_file_url}" target="_blank" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs transition">
+                    Lihat Berkas
+                </a>
             </div>
         ` : '';
 
-        const html = `
-            <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
-                <div>
-                    <span class="text-slate-400 block text-[10px]">Tanggal Transaksi:</span>
-                    <span class="font-bold text-slate-800">${item.transaction_date || '-'}</span>
-                </div>
-                <div>
-                    <span class="text-slate-400 block text-[10px]">Nominal Pengeluaran:</span>
-                    <span class="font-bold text-emerald-600 text-sm">Rp ${(item.amount || 0).toLocaleString('id-ID')}</span>
-                </div>
-                <div>
-                    <span class="text-slate-400 block text-[10px]">Kode KB (FKP GA):</span>
-                    <span class="font-mono font-bold text-slate-700">${item.kb_code || '-'}</span>
-                </div>
-                <div>
-                    <span class="text-slate-400 block text-[10px]">No. Referensi / Nota:</span>
-                    <span class="font-mono text-slate-700">${item.reference_no || '-'}</span>
-                </div>
-                <div>
-                    <span class="text-slate-400 block text-[10px]">Penerima / Toko:</span>
-                    <span class="font-semibold text-slate-800">${item.vendor_name || '-'}</span>
-                </div>
-                <div>
-                    <span class="text-slate-400 block text-[10px]">Bank / Rekening:</span>
-                    <span class="text-slate-700">${item.bank_info || '-'}</span>
-                </div>
+        const bodyHtml = `
+            <div class="grid grid-cols-2 gap-2 p-3 bg-slate-50 rounded-xl">
+                <div><span class="text-slate-400">Tanggal:</span> <strong class="text-slate-700">${item.transaction_date}</strong></div>
+                <div><span class="text-slate-400">Nominal:</span> <strong class="text-rose-600 text-sm">Rp ${(item.amount || 0).toLocaleString('id-ID')}</strong></div>
+                <div><span class="text-slate-400">Kode KB:</span> <code class="text-emerald-700 font-mono">${item.kb_code || '-'}</code></div>
+                <div><span class="text-slate-400">Nomor Referensi:</span> <span class="text-slate-700 font-mono">${item.reference_no || '-'}</span></div>
+                <div><span class="text-slate-400">Mata Anggaran:</span> <span class="text-slate-700">${item.coa_name} (${item.coa_code})</span></div>
+                <div><span class="text-slate-400">Kategori Utama:</span> <span class="text-slate-700">${item.main_category}</span></div>
+                <div><span class="text-slate-400">Sumber Dana:</span> <span class="text-slate-700">${item.fund_source || '2. SPP'}</span></div>
+                <div><span class="text-slate-400">Unit Target:</span> <span class="text-slate-700">${item.unit_target || 'Umum'}</span></div>
+                <div class="col-span-2"><span class="text-slate-400">Penerima / Toko:</span> <strong class="text-slate-800">${item.vendor_name || '-'}</strong> (${item.bank_info || '-'})</div>
             </div>
 
-            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                <span class="text-slate-400 block text-[10px]">Mata Anggaran FKP:</span>
-                <span class="font-bold text-slate-800">${item.coa_code} — ${item.coa_name}</span>
-                <span class="text-slate-500 block text-[11px] mt-0.5">Kategori Induk: ${item.main_category}</span>
-                <span class="text-slate-500 block text-[11px]">Sumber: ${item.fund_source} | Unit Target: ${item.unit_target}</span>
-            </div>
-
-            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                <span class="text-slate-400 block text-[10px]">Uraian Kebutuhan:</span>
-                <p class="text-slate-800 mt-0.5 font-medium">${item.description || '-'}</p>
+            <div class="p-3 bg-slate-50 rounded-xl">
+                <span class="text-slate-400 block mb-1">Uraian / Keterangan:</span>
+                <p class="text-slate-800 font-medium">${item.description || '-'}</p>
                 ${itemsHtml}
             </div>
 
             ${driveLinkHtml}
 
-            <div class="text-[11px] text-slate-400 flex justify-between px-1">
-                <span>Pelapor: ${item.reporter_name} (+${item.reporter_wa || ''})</span>
-                <span>Dicatat: ${item.created_at || '-'}</span>
+            <div class="text-[11px] text-slate-400 pt-1 flex justify-between">
+                <span>Pelapor: ${item.reporter_name || 'Bu Rinni'} (${item.reporter_wa || '-'})</span>
+                <span>Sumber: ${item.source || 'WHATSAPP_BOT'}</span>
             </div>
         `;
 
-        document.getElementById('detail-exp-body').innerHTML = html;
+        document.getElementById('detail-exp-body').innerHTML = bodyHtml;
         toggleModal('modal-finance-detail');
     }
 
@@ -584,12 +1079,11 @@ JS_KEUANGAN_SCRIPTS = """
         document.getElementById('edit-exp-date').value = item.transaction_date || '';
         document.getElementById('edit-exp-amount').value = item.amount || 0;
         document.getElementById('edit-exp-vendor').value = item.vendor_name || '';
-        document.getElementById('edit-exp-bank').value = item.bank_info || '';
         document.getElementById('edit-exp-ref').value = item.reference_no || '';
+        document.getElementById('edit-exp-desc').value = item.description || '';
         document.getElementById('edit-exp-coa').value = item.coa_code || '51412-006';
         document.getElementById('edit-exp-fund').value = item.fund_source || '2. SPP';
         document.getElementById('edit-exp-unit').value = item.unit_target || 'Umum';
-        document.getElementById('edit-exp-desc').value = item.description || '';
 
         toggleModal('modal-finance-edit');
     }
@@ -597,22 +1091,23 @@ JS_KEUANGAN_SCRIPTS = """
     async function submitEditExpense(e) {
         e.preventDefault();
         const expId = document.getElementById('edit-exp-id').value;
-        const btnSave = document.getElementById('btn-save-edit-expense');
+        if (!expId) return;
+
+        const btn = document.getElementById('btn-save-edit-expense');
+        const origText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
 
         const payload = {
             transaction_date: document.getElementById('edit-exp-date').value,
             amount: parseInt(document.getElementById('edit-exp-amount').value) || 0,
             vendor_name: document.getElementById('edit-exp-vendor').value.trim(),
-            bank_info: document.getElementById('edit-exp-bank').value.trim(),
             reference_no: document.getElementById('edit-exp-ref').value.trim(),
+            description: document.getElementById('edit-exp-desc').value.trim(),
             coa_code: document.getElementById('edit-exp-coa').value,
             fund_source: document.getElementById('edit-exp-fund').value,
-            unit_target: document.getElementById('edit-exp-unit').value,
-            description: document.getElementById('edit-exp-desc').value.trim()
+            unit_target: document.getElementById('edit-exp-unit').value
         };
-
-        btnSave.disabled = true;
-        btnSave.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
 
         try {
             const res = await fetch(`/api/ga/expenses/${expId}/update`, {
@@ -621,18 +1116,17 @@ JS_KEUANGAN_SCRIPTS = """
                 body: JSON.stringify(payload)
             });
             const data = await res.json();
-
             if (data.success) {
                 toggleModal('modal-finance-edit');
-                await loadKeuanganGA();
+                loadKeuanganGA();
             } else {
-                alert('Gagal memperbarui transaksi: ' + (data.error || 'Terjadi kesalahan'));
+                alert('Gagal menyimpan koreksi: ' + (data.error || 'Terjadi kesalahan'));
             }
         } catch (err) {
-            alert('Error: ' + err.message);
+            alert('Kesalahan jaringan: ' + err.message);
         } finally {
-            btnSave.disabled = false;
-            btnSave.innerHTML = '<i class="fa-solid fa-check"></i> Simpan Perubahan';
+            btn.disabled = false;
+            btn.innerHTML = origText;
         }
     }
 
@@ -640,24 +1134,21 @@ JS_KEUANGAN_SCRIPTS = """
         const expId = document.getElementById('edit-exp-id').value;
         if (!expId) return;
 
-        if (!confirm('Apakah Anda yakin ingin menghapus transaksi ' + expId + '? Data yang dihapus tidak dapat dipulihkan.')) {
+        if (!confirm(`Yakin ingin menghapus transaksi ${expId}? Data pengeluaran ini akan dihapus permanen.`)) {
             return;
         }
 
         try {
-            const res = await fetch(`/api/ga/expenses/${expId}/delete`, {
-                method: 'POST'
-            });
+            const res = await fetch(`/api/ga/expenses/${expId}/delete`, { method: 'POST' });
             const data = await res.json();
-
             if (data.success) {
                 toggleModal('modal-finance-edit');
-                await loadKeuanganGA();
+                loadKeuanganGA();
             } else {
                 alert('Gagal menghapus: ' + (data.error || 'Terjadi kesalahan'));
             }
         } catch (err) {
-            alert('Error: ' + err.message);
+            alert('Kesalahan jaringan: ' + err.message);
         }
     }
 </script>
