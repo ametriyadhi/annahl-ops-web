@@ -3,153 +3,88 @@
 templates_finance_ecopark.py - Komponen Tampilan HTML & JavaScript untuk Tab Keuangan Ciangsana Ecopark
 An Nahl Islamic School - Dashboard Operasional note-umum
 Mendukung Pencatatan Terpadu Kas Masuk (Omset) & Kas Keluar (Operasional FKP ECO 2026-2027),
-Filter Cerdas, Modal Input/Edit Koreksi, Modal Panduan Format WA, dan Ekspor CSV.
+Filter Dinamis di Atas Card, Kartu Metrik Adaptif, Dashboard Grafik Analitik Keuangan (Chart.js),
+Diagnosa Analis Keuangan AI Eksekutif, Modal Input/Edit Koreksi, Modal Panduan Format WA, dan Ekspor Excel (.xlsx).
 """
 
 TAB_KEUANGAN_ECOPARK_HTML = """
 <!-- TAB KEUANGAN TERPADU CIANGSANA ECOPARK -->
 <div id="tab-keuangan-ecopark" class="tab-content hidden space-y-6">
 
-    <!-- Header & Action Bar -->
-    <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-6 space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+    <!-- 1. HEADER & ACTION BAR -->
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
                 <div class="flex items-center gap-2 flex-wrap">
                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 tracking-wider uppercase">Standar RKAS FKP ECO 2026–2027</span>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700">Cashflow & Vision AI</span>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800">Google Drive Cloud</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-100 text-indigo-700">Executive Financial Analytics</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800">Vision AI & GDrive Cloud</span>
                 </div>
-                <h2 class="text-base sm:text-xl font-bold text-slate-800 flex items-center gap-2 mt-1">
+                <h2 class="text-base sm:text-2xl font-bold text-slate-800 flex items-center gap-2 mt-1.5">
                     <i class="fa-solid fa-tree text-emerald-600"></i>
-                    Buku Kas & Keuangan Terpadu Ciangsana Ecopark
+                    Buku Kas & Analitik Keuangan Ciangsana Ecopark
                 </h2>
-                <p class="text-xs text-slate-500 mt-0.5">Pencatatan real-time Kas Masuk (Omset/Sewa/Panen) dan Kas Keluar (Operasional/Budidaya/Ternak/Sarpras) terintegrasi RKAS FKP ECO 2026–2027 & WhatsApp Bot.</p>
+                <p class="text-xs text-slate-500 mt-1">Laporan analitik komprehensif: Arus Kas Bulanan, Komposisi Omset, Evaluasi Serapan Belanja 6 Pos RKAS, dan Pemantauan Transaksi Real-Time.</p>
             </div>
             <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
-                <button type="button" onclick="loadKeuanganEcopark()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 cursor-pointer">
+                <button type="button" onclick="loadKeuanganEcopark()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 cursor-pointer">
                     <i class="fa-solid fa-arrows-rotate"></i>
                     <span>Refresh</span>
                 </button>
-                <button type="button" onclick="openCreateEcoModal('EXPENSE')" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-lg shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                <button type="button" onclick="openCreateEcoModal('EXPENSE')" class="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
                     <i class="fa-solid fa-receipt"></i>
                     <span>+ Catat Belanja</span>
                 </button>
-                <button type="button" onclick="openCreateEcoModal('INCOME')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                <button type="button" onclick="openCreateEcoModal('INCOME')" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
                     <i class="fa-solid fa-hand-holding-dollar"></i>
                     <span>+ Catat Pemasukan</span>
                 </button>
-                <button type="button" onclick="toggleModal('modal-eco-format')" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 cursor-pointer">
+                <button type="button" onclick="toggleModal('modal-eco-format')" class="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 cursor-pointer">
                     <i class="fa-brands fa-whatsapp text-emerald-600"></i>
-                    <span>Format Laporan WA</span>
+                    <span>Format WA</span>
+                </button>
+                <button type="button" onclick="exportEcoExcel()" class="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
+                    <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                    <span>Ekspor Excel (.xlsx)</span>
                 </button>
             </div>
         </div>
+    </div>
 
-        <!-- 4 Summary Metric Cards Header Info -->
-        <div class="flex items-center justify-between text-xs text-slate-500 pt-1 px-1">
+    <!-- 2. KONTROL FILTER DINAMIS (POSISI DI ATAS CARD METRIK) -->
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5 space-y-3.5">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
             <div class="flex items-center gap-2">
-                <span class="font-bold text-slate-700">Ringkasan Kas Ecopark</span>
-                <span id="eco-stat-period-tag" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800">Semua Periode (Juli 2026 s/d Kini)</span>
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Kontrol Filter Dinamis & Periode</span>
+                <span id="eco-stat-period-tag" class="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800">Semua Periode (Juli 2026 s/d Kini)</span>
             </div>
-            <span class="text-[11px] text-slate-400">Gunakan filter bulan di bawah untuk melihat rincian per bulan</span>
+            <span class="text-[11px] text-slate-400">Ubah rentang tanggal atau kategori untuk memperbarui grafik analitik secara instan</span>
         </div>
 
-        <!-- 4 Summary Metric Cards -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pt-1">
-            <!-- 1. Total Pemasukan -->
-            <div class="bg-emerald-50/50 border border-emerald-200/60 rounded-xl p-3.5">
-                <div class="flex items-center justify-between text-emerald-700 text-xs font-medium">
-                    <span>Kas Masuk (Omset)</span>
-                    <i class="fa-solid fa-arrow-down-left text-emerald-600 text-sm"></i>
-                </div>
-                <div id="eco-stat-income" class="text-lg sm:text-2xl font-bold text-emerald-800 mt-1">Rp 0</div>
-                <div id="eco-stat-income-count" class="text-[11px] text-emerald-600 font-medium mt-0.5">0 Transaksi Penjualan / Sewa</div>
-            </div>
-
-            <!-- 2. Total Pengeluaran -->
-            <div class="bg-rose-50/50 border border-rose-200/60 rounded-xl p-3.5">
-                <div class="flex items-center justify-between text-rose-700 text-xs font-medium">
-                    <span>Kas Keluar (Belanja)</span>
-                    <i class="fa-solid fa-arrow-up-right text-rose-600 text-sm"></i>
-                </div>
-                <div id="eco-stat-expense" class="text-lg sm:text-2xl font-bold text-rose-800 mt-1">Rp 0</div>
-                <div id="eco-stat-expense-count" class="text-[11px] text-rose-600 font-medium mt-0.5">0 Transaksi Operasional</div>
-            </div>
-
-            <!-- 3. Saldo Kas Bersih -->
-            <div class="bg-indigo-50/50 border border-indigo-200/60 rounded-xl p-3.5">
-                <div class="flex items-center justify-between text-indigo-700 text-xs font-medium">
-                    <span>Saldo Kas Bersih</span>
-                    <i class="fa-solid fa-wallet text-indigo-600 text-sm"></i>
-                </div>
-                <div id="eco-stat-balance" class="text-lg sm:text-2xl font-bold text-indigo-800 mt-1">Rp 0</div>
-                <div id="eco-stat-balance-desc" class="text-[11px] text-indigo-600 font-medium mt-0.5">Net Cashflow Juli 2026 s/d Kini</div>
-            </div>
-
-            <!-- 4. Kontrol Plafon RKAS -->
-            <div class="bg-slate-50/70 border border-slate-200/70 rounded-xl p-3.5">
-                <div class="flex items-center justify-between text-slate-600 text-xs font-medium">
-                    <span>Plafon RKAS ECO</span>
-                    <i class="fa-solid fa-chart-pie text-purple-600 text-sm"></i>
-                </div>
-                <div class="text-lg sm:text-2xl font-bold text-slate-800 mt-1">Rp 282.850.000</div>
-                <div id="eco-stat-pct-serapan" class="text-[11px] text-purple-700 font-semibold mt-0.5">Serapan 0.0% dari Plafon</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 6 Pos Mata Anggaran Utama FKP ECO 2026-2027 (Control Bars) -->
-    <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-6 space-y-4">
-        <div class="flex items-center justify-between">
-            <h3 class="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-2">
-                <i class="fa-solid fa-layer-group text-slate-400"></i>
-                Kontrol 6 Pos Plafon Anggaran Operasional Ecopark 2026–2027
-            </h3>
-            <span class="text-[11px] text-slate-400">Dasar Pengendalian Belanja Rutin</span>
-        </div>
-        <div id="eco-categories-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
-            <div class="text-center py-4 text-xs text-slate-400 col-span-full">Memuat alokasi anggaran RKAS Ecopark...</div>
-        </div>
-    </div>
-
-    <!-- Filter & Search Bar -->
-    <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 space-y-3">
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-            <!-- Filter Tipe Tab Switcher -->
-            <div class="inline-flex p-1 bg-slate-100 rounded-xl gap-1 text-xs font-semibold self-start sm:self-auto">
-                <button type="button" onclick="setEcoTypeFilter('')" id="btn-eco-type-all" class="px-3 py-1.5 rounded-lg bg-white text-slate-800 shadow-xs transition">Semua (892)</button>
-                <button type="button" onclick="setEcoTypeFilter('INCOME')" id="btn-eco-type-income" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-emerald-700 transition flex items-center gap-1">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    <span>Kas Masuk (Omset)</span>
-                </button>
-                <button type="button" onclick="setEcoTypeFilter('EXPENSE')" id="btn-eco-type-expense" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-rose-700 transition flex items-center gap-1">
-                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                    <span>Kas Keluar (Belanja)</span>
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+            <!-- Date Range Pickers (Cols 5) -->
+            <div class="md:col-span-5 flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl text-xs text-slate-700 shadow-2xs">
+                <i class="fa-regular fa-calendar-days text-emerald-600 text-sm"></i>
+                <input type="date" id="filter-eco-start-date" onchange="onEcoDateChange()" class="bg-transparent text-slate-700 text-xs font-semibold focus:outline-hidden cursor-pointer" title="Tanggal Mulai (YYYY-MM-DD)" />
+                <span class="text-slate-400 font-bold text-[11px]">s/d</span>
+                <input type="date" id="filter-eco-end-date" onchange="onEcoDateChange()" class="bg-transparent text-slate-700 text-xs font-semibold focus:outline-hidden cursor-pointer" title="Tanggal Selesai (YYYY-MM-DD)" />
+                <button type="button" onclick="clearEcoDateFilter()" id="btn-eco-clear-date" class="text-slate-400 hover:text-rose-600 transition ml-auto cursor-pointer" title="Reset Rentang Tanggal">
+                    <i class="fa-solid fa-circle-xmark"></i>
                 </button>
             </div>
 
-            <!-- Filter Tanggal Murni & Rentang Dinamis -->
-            <div class="flex items-center gap-2 flex-wrap flex-1 sm:justify-end">
-                <!-- Date Range Box (Pilih Tanggal Mulai & Selesai) -->
-                <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-xl text-xs text-slate-700 shadow-2xs">
-                    <i class="fa-regular fa-calendar-days text-emerald-600"></i>
-                    <input type="date" id="filter-eco-start-date" onchange="onEcoDateChange()" class="bg-transparent text-slate-700 text-xs font-semibold focus:outline-hidden cursor-pointer" title="Tanggal Mulai (YYYY-MM-DD)" />
-                    <span class="text-slate-400 font-bold text-[11px]">s/d</span>
-                    <input type="date" id="filter-eco-end-date" onchange="onEcoDateChange()" class="bg-transparent text-slate-700 text-xs font-semibold focus:outline-hidden cursor-pointer" title="Tanggal Selesai (YYYY-MM-DD)" />
-                    <button type="button" onclick="clearEcoDateFilter()" id="btn-eco-clear-date" class="text-slate-400 hover:text-rose-600 transition ml-1 cursor-pointer" title="Reset Rentang Tanggal">
-                        <i class="fa-solid fa-circle-xmark"></i>
-                    </button>
-                </div>
+            <!-- Shortcut Presets (Cols 4) -->
+            <div class="md:col-span-4 inline-flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs justify-between sm:justify-start">
+                <button type="button" onclick="setEcoQuickDate('today')" class="flex-1 sm:flex-initial px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-white text-slate-700 hover:text-emerald-700 shadow-2xs transition">Hari Ini</button>
+                <button type="button" onclick="setEcoQuickDate('7days')" class="flex-1 sm:flex-initial px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-white text-slate-700 hover:text-emerald-700 shadow-2xs transition">7 Hari</button>
+                <button type="button" onclick="setEcoQuickDate('this_month')" class="flex-1 sm:flex-initial px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-white text-slate-700 hover:text-emerald-700 shadow-2xs transition">Bulan Ini</button>
+                <button type="button" onclick="setEcoQuickDate('all')" class="flex-1 sm:flex-initial px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-white text-slate-700 hover:text-emerald-700 shadow-2xs transition">Semua</button>
+            </div>
 
-                <!-- Preset Shortcut Cepat Tanggal -->
-                <div class="inline-flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl text-xs">
-                    <button type="button" onclick="setEcoQuickDate('today')" class="px-2 py-1 text-[11px] font-semibold rounded-lg bg-white text-slate-700 hover:text-emerald-700 shadow-2xs transition">Hari Ini</button>
-                    <button type="button" onclick="setEcoQuickDate('7days')" class="px-2 py-1 text-[11px] font-semibold rounded-lg bg-white text-slate-700 hover:text-emerald-700 shadow-2xs transition">7 Hari</button>
-                    <button type="button" onclick="setEcoQuickDate('this_month')" class="px-2 py-1 text-[11px] font-semibold rounded-lg bg-white text-slate-700 hover:text-emerald-700 shadow-2xs transition">Bulan Ini</button>
-                    <button type="button" onclick="setEcoQuickDate('all')" class="px-2 py-1 text-[11px] font-semibold rounded-lg bg-white text-slate-700 hover:text-emerald-700 shadow-2xs transition">Semua</button>
-                </div>
-
-                <select id="filter-eco-category" onchange="filterEcoData()" class="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-medium">
+            <!-- Kategori Dropdown (Cols 3) -->
+            <div class="md:col-span-3">
+                <select id="filter-eco-category" onchange="filterEcoData()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-medium">
                     <option value="">Semua Kategori / Pos</option>
                     <optgroup label="Pengeluaran (FKP ECO)">
                         <option value="OPERASIONAL BUDIDAYA">52111 Operasional Budidaya</option>
@@ -165,139 +100,374 @@ TAB_KEUANGAN_ECOPARK_HTML = """
                         <option value="Telur">Hasil Telur</option>
                         <option value="Buah">Hasil Buah Sunnah & Lokal</option>
                         <option value="Kunjungan Edukasi">Kunjungan Edukasi & Outbound</option>
+                        <option value="Kelas Edukasi">Kelas Edukasi</option>
                     </optgroup>
                 </select>
+            </div>
+        </div>
 
-                <div class="relative flex-1 min-w-[180px] sm:max-w-xs">
-                    <input type="text" id="search-eco-trx" onkeyup="debounceEcoSearch()" placeholder="Cari uraian, pembeli, toko..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
-                </div>
-
-                <button type="button" onclick="exportEcoExcel()" class="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
-                    <i class="fa-solid fa-file-excel text-emerald-600"></i>
-                    <span>Ekspor Excel (.xlsx)</span>
+        <!-- Baris Sub-Filter: Switcher Tipe Kas & Pencarian -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1 border-t border-slate-100">
+            <!-- Tipe Kas Switcher -->
+            <div class="inline-flex p-1 bg-slate-100 rounded-xl gap-1 text-xs font-semibold self-start sm:self-auto">
+                <button type="button" onclick="setEcoTypeFilter('')" id="btn-eco-type-all" class="px-3 py-1.5 rounded-lg bg-white text-slate-800 shadow-xs transition">Semua (<span id="lbl-cnt-all">892</span>)</button>
+                <button type="button" onclick="setEcoTypeFilter('INCOME')" id="btn-eco-type-income" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-emerald-700 transition flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span>Kas Masuk (Omset)</span>
                 </button>
+                <button type="button" onclick="setEcoTypeFilter('EXPENSE')" id="btn-eco-type-expense" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-rose-700 transition flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                    <span>Kas Keluar (Belanja)</span>
+                </button>
+            </div>
+
+            <!-- Search Box -->
+            <div class="relative flex-1 sm:max-w-xs">
+                <input type="text" id="search-eco-trx" onkeyup="debounceEcoSearch()" placeholder="Cari uraian, pembeli, toko..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
             </div>
         </div>
     </div>
 
-    <!-- Tabel Data Transaksi -->
+    <!-- 3. KARTU METRIK DINAMIS (RESPONSIF TERHADAP FILTER) -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <!-- 1. Total Pemasukan -->
+        <div class="bg-emerald-50/50 border border-emerald-200/60 rounded-2xl p-4 shadow-2xs hover:shadow-xs transition">
+            <div class="flex items-center justify-between text-emerald-700 text-xs font-semibold">
+                <span>Kas Masuk (Omset)</span>
+                <div class="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
+                    <i class="fa-solid fa-arrow-down-left text-xs"></i>
+                </div>
+            </div>
+            <div id="eco-stat-income" class="text-xl sm:text-2xl font-bold text-emerald-800 mt-2">Rp 0</div>
+            <div id="eco-stat-income-count" class="text-[11px] text-emerald-600 font-medium mt-1">0 Transaksi Penjualan / Sewa</div>
+        </div>
+
+        <!-- 2. Total Pengeluaran -->
+        <div class="bg-rose-50/50 border border-rose-200/60 rounded-2xl p-4 shadow-2xs hover:shadow-xs transition">
+            <div class="flex items-center justify-between text-rose-700 text-xs font-semibold">
+                <span>Kas Keluar (Belanja)</span>
+                <div class="w-7 h-7 rounded-lg bg-rose-100 flex items-center justify-center text-rose-600">
+                    <i class="fa-solid fa-arrow-up-right text-xs"></i>
+                </div>
+            </div>
+            <div id="eco-stat-expense" class="text-xl sm:text-2xl font-bold text-rose-800 mt-2">Rp 0</div>
+            <div id="eco-stat-expense-count" class="text-[11px] text-rose-600 font-medium mt-1">0 Transaksi Operasional</div>
+        </div>
+
+        <!-- 3. Saldo Kas Bersih -->
+        <div class="bg-indigo-50/50 border border-indigo-200/60 rounded-2xl p-4 shadow-2xs hover:shadow-xs transition">
+            <div class="flex items-center justify-between text-indigo-700 text-xs font-semibold">
+                <span>Saldo Kas Bersih</span>
+                <div class="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600">
+                    <i class="fa-solid fa-wallet text-xs"></i>
+                </div>
+            </div>
+            <div id="eco-stat-balance" class="text-xl sm:text-2xl font-bold text-indigo-800 mt-2">Rp 0</div>
+            <div id="eco-stat-balance-desc" class="text-[11px] text-indigo-600 font-medium mt-1">Net Cashflow Juli 2026 s/d Kini</div>
+        </div>
+
+        <!-- 4. Kontrol Plafon RKAS -->
+        <div class="bg-purple-50/50 border border-purple-200/60 rounded-2xl p-4 shadow-2xs hover:shadow-xs transition">
+            <div class="flex items-center justify-between text-purple-700 text-xs font-semibold">
+                <span>Plafon RKAS ECO</span>
+                <div class="w-7 h-7 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600">
+                    <i class="fa-solid fa-chart-pie text-xs"></i>
+                </div>
+            </div>
+            <div class="text-xl sm:text-2xl font-bold text-slate-800 mt-2">Rp 282.850.000</div>
+            <div id="eco-stat-pct-serapan" class="text-[11px] text-purple-700 font-semibold mt-1">Serapan 0.0% dari Plafon</div>
+        </div>
+    </div>
+
+    <!-- 4. CARD ANALIS KEUANGAN AIS (AI FINANCIAL ANALYST EXECUTIVE INSIGHTS) -->
+    <div class="bg-gradient-to-br from-slate-900 via-slate-850 to-emerald-950 rounded-2xl p-5 text-white shadow-md border border-emerald-900/40">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-white/10 pb-3.5">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400">
+                    <i class="fa-solid fa-brain-circuit text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        Diagnosa & Analisis Keuangan Eksekutif (Ais Finance Intelligence)
+                    </h3>
+                    <p class="text-[11px] text-slate-300">Penilaian otomatis kesehatan arus kas, struktur profitabilitas, dan pusat biaya Ecopark.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-slate-300">Status Finansial:</span>
+                <span id="ai-eco-status-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span id="ai-eco-status-text">SURPLUS SEHAT</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- 4 Mini Financial Ratios -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-3.5 pb-3">
+            <div class="bg-white/5 rounded-xl p-3 border border-white/5">
+                <div class="text-[11px] text-slate-400 font-medium">Margin Surplus (Net Margin)</div>
+                <div id="ai-eco-margin" class="text-lg font-bold text-emerald-400 mt-0.5">9.2%</div>
+                <div class="text-[10px] text-slate-400">Persentase kas tersisa dari omset</div>
+            </div>
+            <div class="bg-white/5 rounded-xl p-3 border border-white/5">
+                <div class="text-[11px] text-slate-400 font-medium">Operating Expense Ratio</div>
+                <div id="ai-eco-oer" class="text-lg font-bold text-amber-400 mt-0.5">90.8%</div>
+                <div class="text-[10px] text-slate-400">Proporsi belanja thd omset</div>
+            </div>
+            <div class="bg-white/5 rounded-xl p-3 border border-white/5">
+                <div class="text-[11px] text-slate-400 font-medium">Kontributor Omset Utama</div>
+                <div id="ai-eco-top-rev" class="text-sm font-bold text-sky-300 truncate mt-1">Sewa Fasilitas (63.8%)</div>
+                <div class="text-[10px] text-slate-400">Kolam Aquatic & Futsal</div>
+            </div>
+            <div class="bg-white/5 rounded-xl p-3 border border-white/5">
+                <div class="text-[11px] text-slate-400 font-medium">Pusat Beban Belanja Terbesar</div>
+                <div id="ai-eco-top-cost" class="text-sm font-bold text-rose-300 truncate mt-1">PEMELIHARAAN (61.5%)</div>
+                <div class="text-[10px] text-slate-400">Fasilitas, Sarpras & BBM</div>
+            </div>
+        </div>
+
+        <!-- Actionable Insights List -->
+        <div class="bg-white/5 rounded-xl p-3.5 border border-white/5 mt-1">
+            <div class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <i class="fa-solid fa-lightbulb"></i>
+                <span>Catatan Analis Ais untuk Manajemen (Mr Slam & Tim Ecopark):</span>
+            </div>
+            <ul id="ai-eco-insights-list" class="space-y-1.5 text-xs text-slate-200">
+                <li class="flex items-start gap-2"><i class="fa-solid fa-circle-check text-emerald-400 mt-1 text-[10px]"></i><span>Memuat analisis eksekutif...</span></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 5. DASHBOARD GRAFIK ANALITIK KEUANGAN (CHART.JS) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <!-- GRAFIK 1: Tren Arus Kas Bulanan (7 Cols) -->
+        <div class="lg:col-span-7 bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-line text-emerald-600"></i>
+                            Tren Arus Kas Bulanan (Omset vs Belanja vs Saldo)
+                        </h3>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Komparasi pendapatan, pengeluaran, dan net cashflow per bulan TA 2026/2027.</p>
+                    </div>
+                    <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-slate-100 text-slate-600">Kumulatif</span>
+                </div>
+                <div class="relative h-64 sm:h-72 mt-3">
+                    <canvas id="chart-eco-monthly-trend"></canvas>
+                </div>
+            </div>
+            <div class="flex items-center justify-center gap-4 text-[11px] text-slate-500 pt-3 border-t border-slate-100 mt-2">
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-emerald-500 inline-block"></span> Kas Masuk (Omset)</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-rose-500 inline-block"></span> Kas Keluar (Belanja)</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-indigo-600 inline-block"></span> Saldo Kas Bersih</span>
+            </div>
+        </div>
+
+        <!-- GRAFIK 2: Komposisi Sumber Pendapatan (5 Cols) -->
+        <div class="lg:col-span-5 bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-pie text-emerald-600"></i>
+                            Komposisi Sumber Pendapatan (Omset)
+                        </h3>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Proporsi pemasukan per klaster produk & layanan Ecopark.</p>
+                    </div>
+                </div>
+                <div class="relative h-64 sm:h-72 mt-3 flex items-center justify-center">
+                    <canvas id="chart-eco-income-donut"></canvas>
+                </div>
+            </div>
+            <div id="eco-donut-legend" class="grid grid-cols-2 gap-1 text-[11px] text-slate-600 pt-3 border-t border-slate-100 mt-2">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+
+        <!-- GRAFIK 3: Evaluasi Realisasi vs Plafon 6 Pos RKAS (6 Cols) -->
+        <div class="lg:col-span-6 bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-bars-progress text-purple-600"></i>
+                        Evaluasi Realisasi vs Plafon 6 Pos FKP ECO 2026–2027
+                    </h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Monitoring batas plafon anggaran tahunan Rp 282.85M.</p>
+                </div>
+            </div>
+            <div class="relative h-64 sm:h-72 mt-3">
+                <canvas id="chart-eco-budget-bars"></canvas>
+            </div>
+        </div>
+
+        <!-- GRAFIK 4: Top 8 Beban Pengeluaran Operasional Terbesar (6 Cols) -->
+        <div class="lg:col-span-6 bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-cart-shopping text-rose-600"></i>
+                        Top 8 Item Beban Pengeluaran Operasional Terbesar
+                    </h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Rincian item belanja yang paling banyak menyerap anggaran operasional.</p>
+                </div>
+            </div>
+            <div class="relative h-64 sm:h-72 mt-3">
+                <canvas id="chart-eco-top-expense"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. KONTROL 6 POS MATA ANGGARAN UTAMA (MINI CONTROL BARS) -->
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5 space-y-3.5">
+        <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-layer-group text-slate-400"></i>
+                Detail Alokasi & Sisa Saldo 6 Pos Anggaran FKP ECO
+            </h3>
+            <span class="text-[11px] text-slate-400">Plafon Tahunan: Rp 282.850.000</span>
+        </div>
+        <div id="eco-categories-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+            <div class="text-center py-4 text-xs text-slate-400 col-span-full">Memuat alokasi anggaran RKAS Ecopark...</div>
+        </div>
+    </div>
+
+    <!-- 7. TABEL DATA TRANSAKSI LENGKAP -->
     <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden">
+        <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-slate-600"></i>
+                    Buku Jurnal Transaksi Keuangan Ecopark
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">Menampilkan <span id="lbl-table-count" class="font-bold text-emerald-700">0</span> transaksi aktif sesuai filter.</p>
+            </div>
+            <div class="text-xs font-semibold text-slate-500">
+                Total Nilai Terfilter: <span id="lbl-table-total" class="font-bold text-slate-800">Rp 0</span>
+            </div>
+        </div>
+
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse min-w-[900px]">
                 <thead>
                     <tr class="bg-slate-50/75 border-b border-slate-200/80 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                        <th class="py-3 px-4">Tipe & ID</th>
-                        <th class="py-3 px-3">Tanggal</th>
-                        <th class="py-3 px-3">Pihak Terkait</th>
-                        <th class="py-3 px-4">Uraian / Deskripsi</th>
-                        <th class="py-3 px-3">Pos Anggaran / Kategori</th>
-                        <th class="py-3 px-4 text-right">Nominal (Rp)</th>
+                        <th class="py-3 px-4">Tgl & ID</th>
+                        <th class="py-3 px-3">Tipe & Kategori</th>
+                        <th class="py-3 px-4">Uraian Transaksi</th>
+                        <th class="py-3 px-3">Toko / Pembeli</th>
+                        <th class="py-3 px-3 text-right">Nominal (Rp)</th>
                         <th class="py-3 px-3 text-center">Metode</th>
-                        <th class="py-3 px-3 text-center">Bukti</th>
-                        <th class="py-3 px-4 text-center">Aksi</th>
+                        <th class="py-3 px-3 text-center">Bukti Nota</th>
+                        <th class="py-3 px-3 text-center">Aksi</th>
                     </tr>
                 </thead>
-                <tbody id="eco-transactions-tbody" class="divide-y divide-slate-100 text-xs text-slate-700">
+                <tbody id="eco-table-body" class="divide-y divide-slate-100 text-xs">
                     <tr>
-                        <td colspan="9" class="py-8 text-center text-slate-400">
-                            <i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat riwayat transaksi Ecopark...
+                        <td colspan="8" class="text-center py-8 text-slate-400">
+                            <i class="fa-solid fa-spinner fa-spin text-xl text-emerald-600 mb-2"></i>
+                            <div>Memuat data transaksi Ecopark...</div>
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
-
-        <!-- Table Footer / Counter -->
-        <div class="p-4 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-            <div id="eco-table-summary">Menampilkan 0 transaksi</div>
-            <div class="flex items-center gap-2">
-                <span class="text-[11px] text-slate-400">Data tercatat dari Juli 2026 s/d kini</span>
-            </div>
-        </div>
     </div>
 
 </div>
 
-<!-- ==================== MODAL CREATE TRANSAKSI MANUAL ==================== -->
-<div id="modal-eco-create" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in fade-in duration-150">
-        <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-            <h3 id="modal-eco-create-title" class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <i class="fa-solid fa-plus-circle text-emerald-600"></i>
-                <span>Catat Transaksi Baru Ecopark</span>
-            </h3>
-            <button type="button" onclick="toggleModal('modal-eco-create')" class="text-slate-400 hover:text-slate-600 cursor-pointer text-lg">&times;</button>
+<!-- MODAL INPUT TRANSAKSI BARU -->
+<div id="modal-eco-create" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
+        <div class="p-4 sm:p-5 bg-gradient-to-r from-emerald-700 to-teal-800 text-white flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-white">
+                    <i id="create-eco-modal-icon" class="fa-solid fa-receipt"></i>
+                </div>
+                <div>
+                    <h3 id="create-eco-modal-title" class="font-bold text-sm sm:text-base">Catat Transaksi Ecopark</h3>
+                    <p class="text-[11px] text-emerald-100">Pencatatan kas masuk & kas keluar standar RKAS FKP ECO</p>
+                </div>
+            </div>
+            <button type="button" onclick="toggleModal('modal-eco-create')" class="text-white/80 hover:text-white cursor-pointer text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
-        <form id="form-eco-create" onsubmit="submitCreateEco(event)" class="p-6 space-y-4">
-            <!-- Switcher Tipe -->
-            <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl">
-                <label class="flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg cursor-pointer transition has-checked:bg-emerald-600 has-checked:text-white text-slate-600">
-                    <input type="radio" name="create_trx_type" value="INCOME" onchange="toggleCreateType('INCOME')" class="hidden">
-                    <i class="fa-solid fa-arrow-down-left"></i>
-                    <span>Kas Masuk (Omset)</span>
-                </label>
-                <label class="flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg cursor-pointer transition has-checked:bg-rose-600 has-checked:text-white text-slate-600">
-                    <input type="radio" name="create_trx_type" value="EXPENSE" onchange="toggleCreateType('EXPENSE')" checked class="hidden">
-                    <i class="fa-solid fa-arrow-up-right"></i>
-                    <span>Kas Keluar (Belanja)</span>
-                </label>
-            </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal Transaksi</label>
-                    <input type="date" id="create-eco-date" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Nominal (Rp)</label>
-                    <input type="number" id="create-eco-amount" min="1" step="1" required placeholder="Contoh: 150000" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-mono">
+        <form id="form-create-eco" onsubmit="submitCreateEco(event)" class="p-4 sm:p-5 space-y-3.5 overflow-y-auto flex-1">
+            <input type="hidden" id="create-eco-type" value="EXPENSE">
+
+            <!-- Toggle Pilihan Tipe Transaksi -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Tipe Transaksi</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" onclick="toggleCreateType('EXPENSE')" id="btn-create-type-expense" class="py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 border-rose-500 bg-rose-50 text-rose-800">
+                        <i class="fa-solid fa-arrow-up-right"></i>
+                        <span>Kas Keluar (Belanja)</span>
+                    </button>
+                    <button type="button" onclick="toggleCreateType('INCOME')" id="btn-create-type-income" class="py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 border-slate-200 bg-white text-slate-600 hover:bg-slate-50">
+                        <i class="fa-solid fa-arrow-down-left"></i>
+                        <span>Kas Masuk (Omset)</span>
+                    </button>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label id="lbl-create-pihak" class="block text-xs font-bold text-slate-700 mb-1">Nama Toko / Penjual</label>
-                    <input type="text" id="create-eco-pihak" required placeholder="Contoh: Toko Pakan Berkah" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Transaksi</label>
+                    <input type="date" id="create-eco-date" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Metode Pembayaran</label>
-                    <select id="create-eco-method" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
-                        <option value="Cash">Cash (Tunai)</option>
-                        <option value="Transfer">Transfer Bank</option>
-                        <option value="QRIS">QRIS</option>
-                    </select>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nominal (Rp)</label>
+                    <input type="number" id="create-eco-amount" min="1" step="1" required placeholder="Contoh: 350000" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-semibold">
                 </div>
             </div>
 
+            <!-- Pos Anggaran FKP ECO (Hanya untuk Expense) -->
             <div id="wrap-create-coa">
-                <label class="block text-xs font-bold text-slate-700 mb-1">Pos Anggaran FKP ECO</label>
-                <select id="create-eco-coa" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
-                    <option value="">-- Pilih Pos Anggaran FKP --</option>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Pos Mata Anggaran FKP ECO</label>
+                <select id="create-eco-coa" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
+                    <option value="">-- Pilih Pos Anggaran FKP ECO --</option>
                 </select>
             </div>
 
+            <!-- Kategori Omset (Hanya untuk Income) -->
             <div id="wrap-create-income-cat" class="hidden">
-                <label class="block text-xs font-bold text-slate-700 mb-1">Kategori Pemasukan</label>
-                <select id="create-eco-income-cat" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
-                    <option value="Sewa Fasilitas">Sewa Fasilitas (Kolam/Lapangan/ISBI/Camping)</option>
-                    <option value="Sayuran">Hasil Sayuran Hidroponik & Kebun</option>
-                    <option value="Telur">Hasil Telur Ayam & Bebek</option>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Kategori Pendapatan (Omset)</label>
+                <select id="create-eco-income-cat" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
+                    <option value="Sewa Fasilitas">Sewa Fasilitas (Kolam Aquatic / Lapangan / ISBI)</option>
+                    <option value="Sayuran">Hasil Panen Sayuran</option>
+                    <option value="Telur">Hasil Telur Ternak</option>
                     <option value="Buah">Hasil Buah Sunnah & Lokal</option>
-                    <option value="Ternak">Hasil Peternakan</option>
+                    <option value="Ternak">Hasil Daging Ternak</option>
                     <option value="Kunjungan Edukasi">Kunjungan Edukasi & Outbound</option>
+                    <option value="Kelas Edukasi">Kelas Edukasi / Workshop</option>
                     <option value="Lain-lain">Lain-lain</option>
                 </select>
             </div>
 
-            <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Uraian / Deskripsi Barang / Layanan</label>
-                <textarea id="create-eco-desc" rows="2" required placeholder="Contoh: Pembelian Pur GT 1 karung & dedak pakan ayam" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"></textarea>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label id="lbl-create-pihak" class="block text-xs font-semibold text-slate-700 mb-1">Nama Toko / Penjual</label>
+                    <input type="text" id="create-eco-pihak" placeholder="Contoh: Toko Pakan Berkah" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Metode Pembayaran</label>
+                    <select id="create-eco-method" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
+                        <option value="Cash">Cash (Tunai)</option>
+                        <option value="Transfer">Transfer Bank / QRIS</option>
+                    </select>
+                </div>
             </div>
 
-            <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Uraian / Deskripsi Rincian</label>
+                <textarea id="create-eco-desc" rows="2" required placeholder="Contoh: Pembelian Pur GT 1 karung & dedak untuk bebek petelur" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"></textarea>
+            </div>
+
+            <div class="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
                 <button type="button" onclick="toggleModal('modal-eco-create')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition cursor-pointer">Batal</button>
-                <button type="submit" id="btn-save-create-eco" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                <button type="submit" id="btn-save-create-eco" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
                     <i class="fa-solid fa-check"></i>
                     <span>Simpan Transaksi</span>
                 </button>
@@ -306,74 +476,78 @@ TAB_KEUANGAN_ECOPARK_HTML = """
     </div>
 </div>
 
-<!-- ==================== MODAL EDIT TRANSAKSI ==================== -->
-<div id="modal-eco-edit" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in fade-in duration-150">
-        <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <i class="fa-solid fa-pen-to-square text-emerald-600"></i>
-                <span>Koreksi & Edit Transaksi Ecopark</span>
-            </h3>
-            <button type="button" onclick="toggleModal('modal-eco-edit')" class="text-slate-400 hover:text-slate-600 cursor-pointer text-lg">&times;</button>
+<!-- MODAL EDIT KOREKSI TRANSAKSI -->
+<div id="modal-eco-edit" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
+        <div class="p-4 sm:p-5 bg-slate-900 text-white flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm sm:text-base">Koreksi Transaksi Ecopark</h3>
+                    <p id="edit-eco-id-display" class="text-[11px] text-slate-400">ID: ECO-TRX-...</p>
+                </div>
+            </div>
+            <button type="button" onclick="toggleModal('modal-eco-edit')" class="text-white/80 hover:text-white cursor-pointer text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
-        <form id="form-eco-edit" onsubmit="submitEditEco(event)" class="p-6 space-y-4">
+
+        <form id="form-edit-eco" onsubmit="submitEditEco(event)" class="p-4 sm:p-5 space-y-3.5 overflow-y-auto flex-1">
             <input type="hidden" id="edit-eco-id">
             <input type="hidden" id="edit-eco-type">
 
-            <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between text-xs">
-                <div>
-                    <span class="text-slate-400">ID Transaksi:</span>
-                    <span id="edit-eco-id-badge" class="font-mono font-bold text-slate-700 ml-1"></span>
-                </div>
-                <div id="edit-eco-type-badge"></div>
+            <div class="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                <span class="text-xs text-slate-500 font-semibold">Tipe Transaksi:</span>
+                <span id="edit-eco-type-badge"></span>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal Transaksi</label>
-                    <input type="date" id="edit-eco-date" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Transaksi</label>
+                    <input type="date" id="edit-eco-date" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Nominal (Rp)</label>
-                    <input type="number" id="edit-eco-amount" min="1" step="1" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-mono font-bold">
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                    <label id="lbl-edit-pihak" class="block text-xs font-bold text-slate-700 mb-1">Pihak (Toko / Pembeli)</label>
-                    <input type="text" id="edit-eco-pihak" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Metode Pembayaran</label>
-                    <select id="edit-eco-method" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
-                        <option value="Cash">Cash (Tunai)</option>
-                        <option value="Transfer">Transfer Bank</option>
-                        <option value="QRIS">QRIS</option>
-                    </select>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nominal (Rp)</label>
+                    <input type="number" id="edit-eco-amount" min="1" step="1" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-semibold">
                 </div>
             </div>
 
             <div id="wrap-edit-coa">
-                <label class="block text-xs font-bold text-slate-700 mb-1">Pos Anggaran FKP ECO</label>
-                <select id="edit-eco-coa" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
-                    <option value="">-- Pilih Pos Anggaran FKP --</option>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Pos Mata Anggaran FKP ECO</label>
+                <select id="edit-eco-coa" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
+                    <option value="">-- Pilih Pos Anggaran FKP ECO --</option>
                 </select>
             </div>
 
-            <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Uraian / Deskripsi Barang / Layanan</label>
-                <textarea id="edit-eco-desc" rows="2" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"></textarea>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label id="lbl-edit-pihak" class="block text-xs font-semibold text-slate-700 mb-1">Toko / Pembeli</label>
+                    <input type="text" id="edit-eco-pihak" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Metode Pembayaran</label>
+                    <select id="edit-eco-method" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden">
+                        <option value="Cash">Cash (Tunai)</option>
+                        <option value="Transfer">Transfer Bank / QRIS</option>
+                    </select>
+                </div>
             </div>
 
-            <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                <button type="button" onclick="deleteEcoTransactionCurrent()" class="px-3 py-2 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1">
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Uraian / Deskripsi Rincian</label>
+                <textarea id="edit-eco-desc" rows="2" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"></textarea>
+            </div>
+
+            <div class="pt-2 flex items-center justify-between border-t border-slate-100">
+                <button type="button" onclick="deleteEcoTransactionCurrent()" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold rounded-xl transition flex items-center gap-1 cursor-pointer">
                     <i class="fa-solid fa-trash"></i>
                     <span>Hapus</span>
                 </button>
                 <div class="flex items-center gap-2">
                     <button type="button" onclick="toggleModal('modal-eco-edit')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition cursor-pointer">Batal</button>
-                    <button type="submit" id="btn-save-edit-eco" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                    <button type="submit" id="btn-save-edit-eco" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
                         <i class="fa-solid fa-check"></i>
                         <span>Simpan Perubahan</span>
                     </button>
@@ -383,89 +557,94 @@ TAB_KEUANGAN_ECOPARK_HTML = """
     </div>
 </div>
 
-<!-- ==================== MODAL PANDUAN FORMAT WA ==================== -->
-<div id="modal-eco-format" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-xl overflow-hidden animate-in fade-in duration-150">
-        <div class="px-6 py-4 bg-emerald-700 text-white flex items-center justify-between">
-            <h3 class="text-sm font-bold flex items-center gap-2">
-                <i class="fa-brands fa-whatsapp text-emerald-300 text-base"></i>
-                <span>Format Pelaporan WhatsApp Tim Ecopark</span>
-            </h3>
-            <button type="button" onclick="toggleModal('modal-eco-format')" class="text-emerald-200 hover:text-white cursor-pointer text-lg">&times;</button>
+<!-- MODAL PREVIEW BUKTI GAMBAR -->
+<div id="modal-eco-image" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[90vh]">
+        <div class="p-3.5 bg-slate-900 text-white flex items-center justify-between">
+            <h3 id="eco-image-title" class="font-bold text-xs truncate max-w-md">Bukti Struk Transaksi Ecopark</h3>
+            <button type="button" onclick="toggleModal('modal-eco-image')" class="text-white/80 hover:text-white cursor-pointer text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
-        <div class="p-6 space-y-4 max-h-[80vh] overflow-y-auto text-xs text-slate-700">
-            <p class="text-slate-600 leading-relaxed">
-                Tim Ecopark (Pak Said Husaen, Mas Ekky, atau Mr Slam) dapat melaporkan transaksi langsung ke bot WhatsApp dengan 2 cara mudah:
-            </p>
-
-            <!-- Format 1: Belanja / Kas Keluar -->
-            <div class="p-4 bg-rose-50/70 border border-rose-200 rounded-xl space-y-2">
-                <div class="flex items-center justify-between text-rose-800 font-bold">
-                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-arrow-up-right text-rose-600"></i> Format 1: Belanja Operasional (Kas Keluar)</span>
-                    <button type="button" onclick="copyFormatText('fmt-belanja')" class="text-[11px] px-2 py-0.5 bg-rose-200/80 hover:bg-rose-300 rounded font-semibold text-rose-900 cursor-pointer">Salin</button>
-                </div>
-                <pre id="fmt-belanja" class="p-3 bg-white border border-rose-200 rounded-lg text-[11px] font-mono text-slate-800 overflow-x-auto">#belanja_ecopark
-Tanggal: Hari ini
-Pos: Peternakan
-Barang: Pur GT 1 Karung & Dedak
-Nominal: 395000
-Toko: Toko Pakan Barokah
-Metode: Cash
-Keterangan: Pakan ayam & bebek petelur</pre>
-                <div class="text-[11px] text-rose-700 italic">
-                    💡 <strong>Tips:</strong> Jika ada foto struk/nota belanja, cukup kirim foto ke bot dengan caption <code>#belanja_ecopark</code> (AI otomatis membaca rinciannya).
-                </div>
-            </div>
-
-            <!-- Format 2: Pendapatan / Kas Masuk -->
-            <div class="p-4 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-2">
-                <div class="flex items-center justify-between text-emerald-800 font-bold">
-                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-arrow-down-left text-emerald-600"></i> Format 2: Pemasukan / Omset (Kas Masuk)</span>
-                    <button type="button" onclick="copyFormatText('fmt-pemasukan')" class="text-[11px] px-2 py-0.5 bg-emerald-200/80 hover:bg-emerald-300 rounded font-semibold text-emerald-900 cursor-pointer">Salin</button>
-                </div>
-                <pre id="fmt-pemasukan" class="p-3 bg-white border border-emerald-200 rounded-lg text-[11px] font-mono text-slate-800 overflow-x-auto">#pemasukan_ecopark
-Tanggal: Hari ini
-Kategori: Sewa Fasilitas
-Uraian: Sewa Kolam Renang (Fee Aquatic)
-Pembeli: Siti Tri Hutami
-Nominal: 500000
-Metode: Transfer
-Keterangan: Sesi terapi pekan ke-2</pre>
-                <div class="text-[11px] text-emerald-700 italic">
-                    💡 <strong>Tips:</strong> Jika ada bukti transfer m-banking, kirim foto ke bot dengan caption <code>#pemasukan_ecopark</code> (AI otomatis mencatatnya).
-                </div>
-            </div>
-
-            <!-- Perintah Cek Status -->
-            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                <div class="font-bold text-slate-800">Perintah Pintas Bot WhatsApp:</div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
-                    <div><code>#rekap_ecopark</code> : Cek saldo kas & omset bulan ini</div>
-                    <div><code>#format_ecopark</code> : Kirim template format laporan</div>
-                </div>
-            </div>
+        <div class="p-4 overflow-auto flex-1 flex items-center justify-center bg-slate-950">
+            <img id="eco-image-src" src="" alt="Bukti Transaksi" class="max-h-[70vh] max-w-full rounded-lg object-contain shadow-lg">
         </div>
-        <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 text-right">
-            <button type="button" onclick="toggleModal('modal-eco-format')" class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded-xl transition cursor-pointer">Tutup</button>
+        <div class="p-3 bg-slate-100 border-t border-slate-200 flex items-center justify-between text-xs text-slate-600">
+            <span>Tersimpan aman di Google Drive Cloud</span>
+            <a id="eco-image-drive-link" href="#" target="_blank" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition flex items-center gap-1">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                <span>Buka di Google Drive</span>
+            </a>
         </div>
     </div>
 </div>
 
-<!-- ==================== MODAL PREVIEW GAMBAR BUKTI ==================== -->
-<div id="modal-eco-image" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs hidden items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-2xl w-full overflow-hidden">
-        <div class="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-            <h4 id="eco-image-title" class="text-xs font-bold text-slate-700 truncate">Bukti Transaksi Ecopark</h4>
-            <button type="button" onclick="toggleModal('modal-eco-image')" class="text-slate-400 hover:text-slate-600 text-lg cursor-pointer">&times;</button>
+<!-- MODAL PANDUAN FORMAT LAPORAN WA -->
+<div id="modal-eco-format" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
+        <div class="p-4 sm:p-5 bg-gradient-to-r from-emerald-800 to-teal-900 text-white flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-white">
+                    <i class="fa-brands fa-whatsapp text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm sm:text-base">Panduan Format WhatsApp Tim Ecopark</h3>
+                    <p class="text-[11px] text-emerald-100">Kirim format ini ke bot WA An Nahl Ops</p>
+                </div>
+            </div>
+            <button type="button" onclick="toggleModal('modal-eco-format')" class="text-white/80 hover:text-white cursor-pointer text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
-        <div class="p-4 text-center max-h-[75vh] overflow-y-auto">
-            <img id="eco-image-src" src="" alt="Bukti" class="max-h-[65vh] mx-auto rounded-lg shadow-sm">
+
+        <div class="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1 text-xs">
+            <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200/80">
+                <div class="font-bold text-emerald-800 flex items-center gap-1.5 mb-1">
+                    <i class="fa-solid fa-bolt text-emerald-600"></i>
+                    <span>Praktis dengan Foto Struk / Screenshot Transfer:</span>
+                </div>
+                <p class="text-slate-600 text-[11px]">Cukup jepret foto struk belanja / bukti transfer m-banking, lalu kirim ke nomor bot WhatsApp dengan caption <b>#belanja_ecopark</b> atau <b>#pemasukan_ecopark</b>. Vision AI akan otomatis mengurai detailnya!</p>
+            </div>
+
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between font-bold text-slate-700">
+                    <span class="flex items-center gap-1.5 text-rose-700">
+                        <i class="fa-solid fa-arrow-up-right"></i>
+                        Format Kas Keluar (Belanja / Operasional)
+                    </span>
+                    <button type="button" onclick="copyFormatText('fmt-belanja')" class="text-[11px] text-indigo-600 hover:text-indigo-800 font-semibold cursor-pointer">Salin</button>
+                </div>
+                <pre id="fmt-belanja" class="p-3 bg-slate-900 text-emerald-400 rounded-xl font-mono text-[11px] whitespace-pre-wrap select-all cursor-pointer">#belanja_ecopark
+Tanggal: Hari ini
+Pos: Peternakan
+Barang: Pur GT 1 Karung & Dedak
+Nominal: 395000
+Toko: Toko Pakan Berkah
+Metode: Cash
+Keterangan: Pakan ayam & bebek petelur</pre>
+            </div>
+
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between font-bold text-slate-700">
+                    <span class="flex items-center gap-1.5 text-emerald-700">
+                        <i class="fa-solid fa-arrow-down-left"></i>
+                        Format Kas Masuk (Omset / Sewa / Panen)
+                    </span>
+                    <button type="button" onclick="copyFormatText('fmt-pemasukan')" class="text-[11px] text-indigo-600 hover:text-indigo-800 font-semibold cursor-pointer">Salin</button>
+                </div>
+                <pre id="fmt-pemasukan" class="p-3 bg-slate-900 text-teal-400 rounded-xl font-mono text-[11px] whitespace-pre-wrap select-all cursor-pointer">#pemasukan_ecopark
+Tanggal: Hari ini
+Kategori: Sewa Fasilitas
+Uraian: Sewa Kolam Renang (Fee Aquatic Therapy)
+Pembeli: Siti Tri Hutami
+Nominal: 500000
+Metode: Transfer
+Keterangan: Sesi terapi renang pekan ke-2</pre>
+            </div>
         </div>
-        <div class="p-3 bg-slate-50 border-t border-slate-100 text-right">
-            <a id="eco-image-drive-link" href="#" target="_blank" class="px-3 py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 inline-flex items-center gap-1.5">
-                <i class="fa-brands fa-google-drive"></i>
-                <span>Buka di Google Drive</span>
-            </a>
+
+        <div class="p-3 bg-slate-50 border-t border-slate-100 flex justify-end">
+            <button type="button" onclick="toggleModal('modal-eco-format')" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-xl transition cursor-pointer">Tutup</button>
         </div>
     </div>
 </div>
@@ -477,6 +656,12 @@ JS_KEUANGAN_ECOPARK_SCRIPTS = """
     let G_ECO_COA = [];
     let G_ECO_TYPE_FILTER = '';
     let G_ECO_SEARCH_TIMER = null;
+
+    // Chart.js global instances
+    window.ecoChartTrend = null;
+    window.ecoChartIncome = null;
+    window.ecoChartBudget = null;
+    window.ecoChartTopExp = null;
 
     function onEcoDateChange() {
         loadKeuanganEcopark();
@@ -537,7 +722,7 @@ JS_KEUANGAN_ECOPARK_SCRIPTS = """
                 }
             }
 
-            // 2. Fetch Stats & Transactions based on Date Range
+            // 2. Build Query Params berdasarkan Filter Tanggal
             const startDate = document.getElementById('filter-eco-start-date') ? document.getElementById('filter-eco-start-date').value : '';
             const endDate = document.getElementById('filter-eco-end-date') ? document.getElementById('filter-eco-end-date').value : '';
 
@@ -546,16 +731,17 @@ JS_KEUANGAN_ECOPARK_SCRIPTS = """
             if (endDate) queryParams.push('end_date=' + encodeURIComponent(endDate));
             const qStr = queryParams.length ? '?' + queryParams.join('&') : '';
 
-            // Fetch Stats
+            // 3. Fetch Stats & Analytics
             const resStats = await fetch('/api/eco/stats' + qStr);
             if (resStats.ok) {
                 const sData = await resStats.json();
                 if (sData.success) {
                     renderEcoStats(sData);
+                    renderEcoCharts(sData);
                 }
             }
 
-            // Fetch Transactions
+            // 4. Fetch Transactions
             let url = '/api/eco/transactions?limit=1000' + (qStr ? '&' + queryParams.join('&') : '');
             const resTrx = await fetch(url);
             if (resTrx.ok) {
@@ -599,6 +785,7 @@ JS_KEUANGAN_ECOPARK_SCRIPTS = """
         const exp = sum.total_expense || 0;
         const bal = sum.saldo_kas || 0;
         const pct = sum.overall_pct || 0;
+        const ai = stats.ai_analysis || {};
 
         const startDate = document.getElementById('filter-eco-start-date') ? document.getElementById('filter-eco-start-date').value : '';
         const endDate = document.getElementById('filter-eco-end-date') ? document.getElementById('filter-eco-end-date').value : '';
@@ -654,92 +841,417 @@ JS_KEUANGAN_ECOPARK_SCRIPTS = """
             balEl.classList.add('text-indigo-800');
         }
 
-        document.getElementById('eco-stat-pct-serapan').innerText = 'Serapan ' + pct + '% dari Plafon FKP';
+        const pctEl = document.getElementById('eco-stat-pct-serapan');
+        if (pctEl) {
+            pctEl.innerText = `Serapan ${pct}% dari Plafon RKAS`;
+        }
 
-        // Render 6 Pos Kategori FKP ECO
-        const container = document.getElementById('eco-categories-container');
-        if (!container) return;
+        // Render AI Analyst Briefing
+        const statusBadge = document.getElementById('ai-eco-status-badge');
+        const statusText = document.getElementById('ai-eco-status-text');
+        if (statusBadge && statusText) {
+            statusText.innerText = ai.status || 'SURPLUS SEHAT';
+            if (ai.status_color === 'rose') {
+                statusBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center gap-1.5';
+            } else if (ai.status_color === 'amber') {
+                statusBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1.5';
+            } else {
+                statusBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5';
+            }
+        }
 
-        let html = '';
-        (stats.categories || []).forEach(cat => {
-            const real = cat.realisasi || 0;
-            const bgt = cat.anggaran || 0;
-            const pVal = cat.persentase || 0;
+        if (document.getElementById('ai-eco-margin')) {
+            document.getElementById('ai-eco-margin').innerText = (ai.surplus_rate || 0) + '%';
+        }
+        if (document.getElementById('ai-eco-oer')) {
+            document.getElementById('ai-eco-oer').innerText = (ai.burn_ratio || 0) + '%';
+        }
+        if (document.getElementById('ai-eco-top-rev')) {
+            document.getElementById('ai-eco-top-rev').innerText = ai.top_revenue_driver || 'Sewa Fasilitas';
+        }
+        if (document.getElementById('ai-eco-top-cost')) {
+            document.getElementById('ai-eco-top-cost').innerText = ai.top_cost_center || 'PEMELIHARAAN';
+        }
 
-            let barColor = 'bg-emerald-500';
-            if (pVal >= 100) barColor = 'bg-rose-500';
-            else if (pVal >= 80) barColor = 'bg-amber-500';
+        const insightsList = document.getElementById('ai-eco-insights-list');
+        if (insightsList && ai.insights) {
+            insightsList.innerHTML = ai.insights.map(txt => `
+                <li class="flex items-start gap-2">
+                    <i class="fa-solid fa-circle-check text-emerald-400 mt-1 text-[10px]"></i>
+                    <span>${txt}</span>
+                </li>
+            `).join('');
+        }
 
-            html += `
-            <div class="border border-slate-200/80 rounded-xl p-3 bg-slate-50/50 hover:bg-slate-50 transition">
-                <div class="text-[11px] font-bold text-slate-700 truncate" title="${cat.code} ${cat.name}">${cat.code} ${cat.name}</div>
-                <div class="text-sm font-bold text-slate-800 mt-1">Rp ${Math.round(real).toLocaleString('id-ID')}</div>
-                <div class="w-full bg-slate-200 rounded-full h-1.5 mt-2 overflow-hidden">
-                    <div class="${barColor} h-1.5 rounded-full" style="width: ${Math.min(pVal, 100)}%"></div>
-                </div>
-                <div class="flex justify-between text-[10px] text-slate-400 mt-1">
-                    <span>${pVal}%</span>
-                    <span>Plafon: ${(bgt / 1000000).toFixed(1)}M</span>
-                </div>
-            </div>`;
-        });
-        container.innerHTML = html;
+        // Render 6 Control Bars
+        const cats = stats.categories || [];
+        const catContainer = document.getElementById('eco-categories-container');
+        if (catContainer) {
+            let html = '';
+            cats.forEach(c => {
+                let barColor = 'bg-emerald-500';
+                if (c.persentase > 80) barColor = 'bg-rose-500';
+                else if (c.persentase > 50) barColor = 'bg-amber-500';
+
+                html += `
+                <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-3 flex flex-col justify-between">
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-400">${c.code}</div>
+                        <div class="text-xs font-bold text-slate-700 truncate" title="${c.name}">${c.name}</div>
+                        <div class="text-xs font-bold text-slate-800 mt-1">Rp ${Math.round(c.realisasi).toLocaleString('id-ID')}</div>
+                        <div class="text-[10px] text-slate-500">Plafon: Rp ${(c.anggaran/1000000).toFixed(1)}M</div>
+                    </div>
+                    <div class="mt-2.5">
+                        <div class="flex items-center justify-between text-[10px] mb-1">
+                            <span class="text-slate-400">${c.transaksi} Trx</span>
+                            <span class="font-bold text-slate-700">${c.persentase}%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                            <div class="${barColor} h-1.5 rounded-full" style="width: ${Math.min(c.persentase, 100)}%"></div>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            catContainer.innerHTML = html;
+        }
+    }
+
+    function renderEcoCharts(stats) {
+        if (typeof Chart === 'undefined') {
+            console.warn('Chart.js belum siap.');
+            return;
+        }
+
+        // ----------------------------------------------------
+        // GRAFIK 1: Tren Arus Kas Bulanan (Bar Ganda + Line Net)
+        // ----------------------------------------------------
+        const trendEl = document.getElementById('chart-eco-monthly-trend');
+        if (trendEl) {
+            if (window.ecoChartTrend instanceof Chart) {
+                window.ecoChartTrend.destroy();
+            }
+
+            const trends = stats.monthly_trends || [];
+            const labels = trends.map(t => t.month);
+            const incomes = trends.map(t => t.income);
+            const expenses = trends.map(t => t.expense);
+            const nets = trends.map(t => t.net);
+
+            window.ecoChartTrend = new Chart(trendEl, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Kas Masuk (Omset)',
+                            data: incomes,
+                            backgroundColor: 'rgba(16, 185, 129, 0.85)',
+                            borderColor: '#059669',
+                            borderWidth: 1.5,
+                            borderRadius: 6,
+                            order: 2
+                        },
+                        {
+                            label: 'Kas Keluar (Belanja)',
+                            data: expenses,
+                            backgroundColor: 'rgba(244, 63, 94, 0.85)',
+                            borderColor: '#e11d48',
+                            borderWidth: 1.5,
+                            borderRadius: 6,
+                            order: 3
+                        },
+                        {
+                            label: 'Saldo Bersih',
+                            data: nets,
+                            type: 'line',
+                            borderColor: '#4f46e5',
+                            backgroundColor: '#4f46e5',
+                            pointBackgroundColor: '#4f46e5',
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            borderWidth: 2.5,
+                            tension: 0.25,
+                            order: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    return ctx.dataset.label + ': Rp ' + Math.round(ctx.parsed.y).toLocaleString('id-ID');
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(val) {
+                                    return (val / 1000000).toFixed(1) + 'M';
+                                },
+                                font: { size: 10 }
+                            },
+                            grid: { color: 'rgba(226, 232, 240, 0.6)' }
+                        },
+                        x: {
+                            ticks: { font: { size: 11, weight: '600' } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ----------------------------------------------------
+        // GRAFIK 2: Komposisi Sumber Pendapatan (Donut Chart)
+        // ----------------------------------------------------
+        const incomeEl = document.getElementById('chart-eco-income-donut');
+        if (incomeEl) {
+            if (window.ecoChartIncome instanceof Chart) {
+                window.ecoChartIncome.destroy();
+            }
+
+            const incData = stats.income_breakdown || [];
+            const top5 = incData.slice(0, 5);
+            const otherSum = incData.slice(5).reduce((acc, curr) => acc + curr.amount, 0);
+            if (otherSum > 0) {
+                top5.push({ category: 'Lainnya', amount: otherSum, percentage: 0 });
+            }
+
+            const incLabels = top5.map(d => d.category);
+            const incValues = top5.map(d => d.amount);
+            const palette = ['#059669', '#0d9488', '#0284c7', '#6366f1', '#eab308', '#94a3b8'];
+
+            window.ecoChartIncome = new Chart(incomeEl, {
+                type: 'doughnut',
+                data: {
+                    labels: incLabels,
+                    datasets: [{
+                        data: incValues,
+                        backgroundColor: palette.slice(0, incLabels.length),
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    const val = ctx.parsed || 0;
+                                    const total = incValues.reduce((a, b) => a + b, 0);
+                                    const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                                    return ctx.label + ': Rp ' + Math.round(val).toLocaleString('id-ID') + ' (' + pct + '%)';
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+
+            // Update Donut Legend HTML
+            const legendEl = document.getElementById('eco-donut-legend');
+            if (legendEl) {
+                legendEl.innerHTML = top5.map((item, idx) => `
+                    <div class="flex items-center gap-1.5 truncate">
+                        <span class="w-2.5 h-2.5 rounded-full inline-block shrink-0" style="background-color: ${palette[idx] || '#94a3b8'}"></span>
+                        <span class="truncate" title="${item.category}">${item.category}:</span>
+                        <span class="font-bold text-slate-800 shrink-0">Rp ${(item.amount/1000000).toFixed(1)}M</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // ----------------------------------------------------
+        // GRAFIK 3: Evaluasi Realisasi vs Plafon 6 Pos (Horizontal Bar)
+        // ----------------------------------------------------
+        const budgetEl = document.getElementById('chart-eco-budget-bars');
+        if (budgetEl) {
+            if (window.ecoChartBudget instanceof Chart) {
+                window.ecoChartBudget.destroy();
+            }
+
+            const cats = stats.categories || [];
+            const bLabels = cats.map(c => c.name.replace('OPERASIONAL ', ''));
+            const bPlafon = cats.map(c => c.anggaran);
+            const bReal = cats.map(c => c.realisasi);
+
+            window.ecoChartBudget = new Chart(budgetEl, {
+                type: 'bar',
+                data: {
+                    labels: bLabels,
+                    datasets: [
+                        {
+                            label: 'Plafon RKAS',
+                            data: bPlafon,
+                            backgroundColor: 'rgba(203, 213, 225, 0.5)',
+                            borderColor: '#94a3b8',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Realisasi Belanja',
+                            data: bReal,
+                            backgroundColor: 'rgba(147, 51, 234, 0.85)',
+                            borderColor: '#7e22ce',
+                            borderWidth: 1.5,
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 12, font: { size: 10 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    return ctx.dataset.label + ': Rp ' + Math.round(ctx.parsed.x).toLocaleString('id-ID');
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                callback: function(val) { return (val / 1000000).toFixed(0) + 'M'; },
+                                font: { size: 10 }
+                            },
+                            grid: { color: 'rgba(226, 232, 240, 0.6)' }
+                        },
+                        y: {
+                            ticks: { font: { size: 10, weight: '500' } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ----------------------------------------------------
+        // GRAFIK 4: Top 8 Item Beban Pengeluaran Terbesar (Horizontal Bar)
+        // ----------------------------------------------------
+        const topExpEl = document.getElementById('chart-eco-top-expense');
+        if (topExpEl) {
+            if (window.ecoChartTopExp instanceof Chart) {
+                window.ecoChartTopExp.destroy();
+            }
+
+            const items = stats.top_expense_items || [];
+            const expLabels = items.map(i => i.item.length > 20 ? i.item.substring(0, 18) + '...' : i.item);
+            const expValues = items.map(i => i.amount);
+
+            window.ecoChartTopExp = new Chart(topExpEl, {
+                type: 'bar',
+                data: {
+                    labels: expLabels,
+                    datasets: [{
+                        label: 'Pengeluaran',
+                        data: expValues,
+                        backgroundColor: 'rgba(225, 29, 72, 0.85)',
+                        borderColor: '#be123c',
+                        borderWidth: 1.5,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    return 'Total: Rp ' + Math.round(ctx.parsed.x).toLocaleString('id-ID');
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                callback: function(val) { return (val / 1000000).toFixed(1) + 'M'; },
+                                font: { size: 10 }
+                            },
+                            grid: { color: 'rgba(226, 232, 240, 0.6)' }
+                        },
+                        y: {
+                            ticks: { font: { size: 10, weight: '500' } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
     }
 
     function setEcoTypeFilter(type) {
         G_ECO_TYPE_FILTER = type;
-        const btnAll = document.getElementById('btn-eco-type-all');
-        const btnInc = document.getElementById('btn-eco-type-income');
-        const btnExp = document.getElementById('btn-eco-type-expense');
+        const bAll = document.getElementById('btn-eco-type-all');
+        const bInc = document.getElementById('btn-eco-type-income');
+        const bExp = document.getElementById('btn-eco-type-expense');
 
-        [btnAll, btnInc, btnExp].forEach(b => {
-            if (b) {
-                b.classList.remove('bg-white', 'text-slate-800', 'shadow-xs', 'bg-emerald-600', 'bg-rose-600', 'text-white');
-                b.classList.add('text-slate-600');
-            }
-        });
+        if (bAll) bAll.className = 'px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-800 transition';
+        if (bInc) bInc.className = 'px-3 py-1.5 rounded-lg text-slate-600 hover:text-emerald-700 transition flex items-center gap-1.5';
+        if (bExp) bExp.className = 'px-3 py-1.5 rounded-lg text-slate-600 hover:text-rose-700 transition flex items-center gap-1.5';
 
-        if (type === '') {
-            btnAll.classList.add('bg-white', 'text-slate-800', 'shadow-xs');
-            btnAll.classList.remove('text-slate-600');
-        } else if (type === 'INCOME') {
-            btnInc.classList.add('bg-white', 'text-emerald-700', 'shadow-xs');
-            btnInc.classList.remove('text-slate-600');
+        if (type === 'INCOME') {
+            if (bInc) bInc.className = 'px-3 py-1.5 rounded-lg bg-emerald-600 text-white shadow-xs font-bold transition flex items-center gap-1.5';
         } else if (type === 'EXPENSE') {
-            btnExp.classList.add('bg-white', 'text-rose-700', 'shadow-xs');
-            btnExp.classList.remove('text-slate-600');
+            if (bExp) bExp.className = 'px-3 py-1.5 rounded-lg bg-rose-600 text-white shadow-xs font-bold transition flex items-center gap-1.5';
+        } else {
+            if (bAll) bAll.className = 'px-3 py-1.5 rounded-lg bg-white text-slate-800 shadow-xs font-bold transition';
         }
 
         filterEcoData();
     }
 
     function debounceEcoSearch() {
-        clearTimeout(G_ECO_SEARCH_TIMER);
+        if (G_ECO_SEARCH_TIMER) clearTimeout(G_ECO_SEARCH_TIMER);
         G_ECO_SEARCH_TIMER = setTimeout(() => {
             filterEcoData();
         }, 250);
     }
 
     function filterEcoData() {
-        const selMonth = document.getElementById('filter-eco-month') ? document.getElementById('filter-eco-month').value : '';
-        const selCat = document.getElementById('filter-eco-category') ? document.getElementById('filter-eco-category').value : '';
+        const cat = document.getElementById('filter-eco-category') ? document.getElementById('filter-eco-category').value.toLowerCase() : '';
         const search = document.getElementById('search-eco-trx') ? document.getElementById('search-eco-trx').value.toLowerCase().trim() : '';
 
         const filtered = G_ECO_DATA.filter(item => {
-            if (G_ECO_TYPE_FILTER && item.trx_type !== G_ECO_TYPE_FILTER) return false;
-            if (selMonth && item.month_period !== selMonth) return false;
-            if (selCat) {
-                if (item.main_category !== selCat && item.coa_name !== selCat) return false;
+            if (G_ECO_TYPE_FILTER && item.trx_type !== G_ECO_TYPE_FILTER) {
+                return false;
+            }
+            if (cat) {
+                const itemCat = (item.main_category || '').toLowerCase();
+                const itemCoa = (item.coa_name || '').toLowerCase();
+                if (!itemCat.includes(cat) && !itemCoa.includes(cat)) {
+                    return false;
+                }
             }
             if (search) {
-                const txt = (
-                    (item.id || '') + ' ' +
-                    (item.description || '') + ' ' +
-                    (item.buyer_or_vendor || '') + ' ' +
-                    (item.coa_name || '') + ' ' +
-                    (item.main_category || '')
-                ).toLowerCase();
-                if (!txt.includes(search)) return false;
+                const desc = (item.description || '').toLowerCase();
+                const pihak = (item.buyer_or_vendor || '').toLowerCase();
+                const coa = (item.coa_name || '').toLowerCase();
+                const id = (item.id || '').toLowerCase();
+                if (!desc.includes(search) && !pihak.includes(search) && !coa.includes(search) && !id.includes(search)) {
+                    return false;
+                }
             }
             return true;
         });
@@ -748,130 +1260,156 @@ JS_KEUANGAN_ECOPARK_SCRIPTS = """
     }
 
     function renderEcoTable(data) {
-        const tbody = document.getElementById('eco-transactions-tbody');
-        const summary = document.getElementById('eco-table-summary');
-        if (!tbody) return;
+        const tbody = document.getElementById('eco-table-body');
+        const lblCount = document.getElementById('lbl-table-count');
+        const lblTotal = document.getElementById('lbl-table-total');
+        const lblCntAll = document.getElementById('lbl-cnt-all');
 
-        if (data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-slate-400">Tidak ada transaksi yang cocok dengan filter.</td></tr>`;
-            if (summary) summary.innerText = 'Menampilkan 0 transaksi';
-            return;
-        }
+        if (lblCntAll) lblCntAll.innerText = G_ECO_DATA.length;
+        if (lblCount) lblCount.innerText = data.length;
 
         let totalAmountFiltered = 0;
         let html = '';
 
+        if (data.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center py-8 text-slate-400">
+                        <i class="fa-solid fa-folder-open text-2xl mb-1 text-slate-300"></i>
+                        <div>Tidak ada transaksi yang cocok dengan filter yang dipilih.</div>
+                    </td>
+                </tr>`;
+            if (lblTotal) lblTotal.innerText = 'Rp 0';
+            return;
+        }
+
         data.forEach(item => {
-            const isInc = item.trx_type === 'INCOME';
             totalAmountFiltered += (item.amount || 0);
+            const isInc = item.trx_type === 'INCOME';
 
             const badgeType = isInc
-                ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 whitespace-nowrap"><i class="fa-solid fa-arrow-down-left mr-1"></i>MASUK</span>`
-                : `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 whitespace-nowrap"><i class="fa-solid fa-arrow-up-right mr-1"></i>KELUAR</span>`;
+                ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>MASUK
+                   </span>`
+                : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">
+                     <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>KELUAR
+                   </span>`;
 
-            const driveBtn = item.drive_file_url
-                ? `<button type="button" onclick="showEcoImage('${item.drive_file_url}', '${encodeURIComponent(item.description || 'Bukti Transaksi')}')" class="px-2 py-1 rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-[11px] font-semibold transition" title="Lihat Bukti Foto"><i class="fa-solid fa-image"></i></button>`
+            const imgBtn = item.drive_file_url
+                ? `<button type="button" onclick="showEcoImage('${item.drive_file_url}', '${encodeURIComponent(item.description)}')" class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1 mx-auto" title="Lihat Bukti Foto">
+                     <i class="fa-solid fa-receipt"></i><span>Bukti</span>
+                   </button>`
                 : `<span class="text-slate-300 text-[11px]">-</span>`;
 
             html += `
-            <tr class="hover:bg-slate-50/70 transition">
-                <td class="py-3 px-4">
-                    <div class="flex items-center gap-1.5">
-                        ${badgeType}
+            <tr class="hover:bg-slate-50/80 transition">
+                <td class="py-2.5 px-4 font-mono">
+                    <div class="font-bold text-slate-800">${item.transaction_date}</div>
+                    <div class="text-[10px] text-slate-400">${item.id}</div>
+                </td>
+                <td class="py-2.5 px-3">
+                    <div class="flex items-center gap-1.5 mb-0.5">${badgeType}</div>
+                    <div class="text-[11px] font-semibold text-slate-700 truncate max-w-[150px]" title="${item.main_category || item.coa_name || '-'}">
+                        ${item.main_category || item.coa_name || '-'}
                     </div>
-                    <div class="font-mono text-[10px] text-slate-400 mt-1">${item.id}</div>
                 </td>
-                <td class="py-3 px-3 whitespace-nowrap text-slate-600 font-medium">${item.transaction_date}</td>
-                <td class="py-3 px-3">
-                    <div class="font-semibold text-slate-800">${item.buyer_or_vendor || '-'}</div>
-                    <div class="text-[10px] text-slate-400">${item.reporter_name || 'Tim Ecopark'}</div>
+                <td class="py-2.5 px-4">
+                    <div class="font-medium text-slate-800 text-xs">${item.description || '-'}</div>
+                    <div class="text-[10px] text-slate-400 flex items-center gap-2 mt-0.5">
+                        <span>Qty: ${item.qty || 1} ${item.unit || ''}</span>
+                        ${item.coa_code ? `<span class="bg-slate-100 px-1 rounded text-slate-500 font-mono">${item.coa_code}</span>` : ''}
+                    </div>
                 </td>
-                <td class="py-3 px-4 max-w-xs">
-                    <div class="font-medium text-slate-800 line-clamp-2">${item.description || '-'}</div>
-                    ${item.notes ? `<div class="text-[10px] text-slate-400 italic">${item.notes}</div>` : ''}
+                <td class="py-2.5 px-3 text-slate-600 font-medium">
+                    ${item.buyer_or_vendor || '-'}
                 </td>
-                <td class="py-3 px-3">
-                    <div class="font-semibold text-slate-700">${item.coa_name || item.main_category || '-'}</div>
-                    ${item.coa_code ? `<span class="font-mono text-[10px] text-slate-400">${item.coa_code}</span>` : ''}
+                <td class="py-2.5 px-3 text-right font-mono font-bold ${isInc ? 'text-emerald-700' : 'text-slate-800'}">
+                    ${isInc ? '+' : '-'}Rp ${Math.round(item.amount).toLocaleString('id-ID')}
                 </td>
-                <td class="py-3 px-4 text-right font-mono font-bold whitespace-nowrap ${isInc ? 'text-emerald-700' : 'text-rose-700'}">
-                    ${isInc ? '+' : '-'} Rp ${Math.round(item.amount || 0).toLocaleString('id-ID')}
+                <td class="py-2.5 px-3 text-center">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${item.payment_method === 'Cash' ? 'bg-amber-50 text-amber-800 border border-amber-200/60' : 'bg-blue-50 text-blue-800 border border-blue-200/60'}">
+                        ${item.payment_method || 'Cash'}
+                    </span>
                 </td>
-                <td class="py-3 px-3 text-center whitespace-nowrap">
-                    <span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-600">${item.payment_method || 'Cash'}</span>
+                <td class="py-2.5 px-3 text-center">
+                    ${imgBtn}
                 </td>
-                <td class="py-3 px-3 text-center whitespace-nowrap">
-                    ${driveBtn}
-                </td>
-                <td class="py-3 px-4 text-center whitespace-nowrap">
-                    <button type="button" onclick="editEcoTransaction('${item.id}')" class="p-1.5 text-slate-400 hover:text-emerald-600 rounded-lg hover:bg-slate-100 transition cursor-pointer" title="Edit Koreksi">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                    </button>
-                    <button type="button" onclick="deleteEcoTransaction('${item.id}')" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-100 transition cursor-pointer ml-1" title="Hapus">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
+                <td class="py-2.5 px-3 text-center">
+                    <div class="flex items-center justify-center gap-1">
+                        <button type="button" onclick="editEcoTransaction('${item.id}')" class="p-1.5 text-slate-400 hover:text-indigo-600 transition cursor-pointer" title="Edit Transaksi">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button type="button" onclick="deleteEcoTransaction('${item.id}')" class="p-1.5 text-slate-400 hover:text-rose-600 transition cursor-pointer" title="Hapus Transaksi">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
                 </td>
             </tr>`;
         });
 
         tbody.innerHTML = html;
-        if (summary) {
-            summary.innerHTML = `Menampilkan <strong>${data.length}</strong> transaksi. Total Nominal: <strong class="text-slate-800">Rp ${Math.round(totalAmountFiltered).toLocaleString('id-ID')}</strong>`;
-        }
+        if (lblTotal) lblTotal.innerText = 'Rp ' + Math.round(totalAmountFiltered).toLocaleString('id-ID');
     }
 
     function openCreateEcoModal(type) {
-        const form = document.getElementById('form-eco-create');
-        if (form) form.reset();
-
-        document.getElementById('create-eco-date').value = new Date().toISOString().slice(0, 10);
-        const radio = document.querySelector(`input[name="create_trx_type"][value="${type}"]`);
-        if (radio) {
-            radio.checked = true;
-            toggleCreateType(type);
-        }
+        toggleCreateType(type || 'EXPENSE');
+        const todayStr = new Date().toISOString().split('T')[0];
+        document.getElementById('create-eco-date').value = todayStr;
+        document.getElementById('create-eco-amount').value = '';
+        document.getElementById('create-eco-pihak').value = '';
+        document.getElementById('create-eco-desc').value = '';
+        document.getElementById('create-eco-method').value = 'Cash';
         toggleModal('modal-eco-create');
     }
 
     function toggleCreateType(type) {
-        const lblPihak = document.getElementById('lbl-create-pihak');
+        document.getElementById('create-eco-type').value = type;
+        const bExp = document.getElementById('btn-create-type-expense');
+        const bInc = document.getElementById('btn-create-type-income');
         const wrapCoa = document.getElementById('wrap-create-coa');
-        const wrapIncomeCat = document.getElementById('wrap-create-income-cat');
-        const title = document.getElementById('modal-eco-create-title');
+        const wrapIncCat = document.getElementById('wrap-create-income-cat');
+        const lblPihak = document.getElementById('lbl-create-pihak');
 
         if (type === 'INCOME') {
-            if (lblPihak) lblPihak.innerText = 'Nama Pembeli / Penyewa';
-            if (wrapCoa) wrapCoa.classList.add('hidden');
-            if (wrapIncomeCat) wrapIncomeCat.classList.remove('hidden');
-            if (title) title.innerHTML = '<i class="fa-solid fa-hand-holding-dollar text-emerald-600"></i><span>Catat Kas Masuk (Omset Ecopark)</span>';
+            bInc.className = 'py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 border-emerald-500 bg-emerald-50 text-emerald-800';
+            bExp.className = 'py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 border-slate-200 bg-white text-slate-600 hover:bg-slate-50';
+            wrapCoa.classList.add('hidden');
+            wrapIncCat.classList.remove('hidden');
+            lblPihak.innerText = 'Nama Pembeli / Penyewa Fasilitas';
+            document.getElementById('create-eco-modal-title').innerText = 'Catat Kas Masuk (Omset)';
+            document.getElementById('create-eco-modal-icon').className = 'fa-solid fa-hand-holding-dollar';
         } else {
-            if (lblPihak) lblPihak.innerText = 'Nama Toko / Penjual';
-            if (wrapCoa) wrapCoa.classList.remove('hidden');
-            if (wrapIncomeCat) wrapIncomeCat.classList.add('hidden');
-            if (title) title.innerHTML = '<i class="fa-solid fa-receipt text-rose-600"></i><span>Catat Kas Keluar (Belanja Ecopark)</span>';
+            bExp.className = 'py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 border-rose-500 bg-rose-50 text-rose-800';
+            bInc.className = 'py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 border-slate-200 bg-white text-slate-600 hover:bg-slate-50';
+            wrapCoa.classList.remove('hidden');
+            wrapIncCat.classList.add('hidden');
+            lblPihak.innerText = 'Nama Toko / Penjual / Mitra';
+            document.getElementById('create-eco-modal-title').innerText = 'Catat Kas Keluar (Belanja Operasional)';
+            document.getElementById('create-eco-modal-icon').className = 'fa-solid fa-receipt';
         }
     }
 
     async function submitCreateEco(event) {
         event.preventDefault();
+        const type = document.getElementById('create-eco-type').value;
         const btn = document.getElementById('btn-save-create-eco');
         btn.disabled = true;
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
 
         try {
-            const trxType = document.querySelector('input[name="create_trx_type"]:checked').value;
+            const isInc = type === 'INCOME';
             const payload = {
-                trx_type: trxType,
+                trx_type: type,
                 transaction_date: document.getElementById('create-eco-date').value,
-                amount: parseFloat(document.getElementById('create-eco-amount').value),
-                buyer_or_vendor: document.getElementById('create-eco-pihak').value,
-                description: document.getElementById('create-eco-desc').value,
+                amount: parseFloat(document.getElementById('create-eco-amount').value || 0),
+                buyer_or_vendor: document.getElementById('create-eco-pihak').value.trim(),
+                description: document.getElementById('create-eco-desc').value.trim(),
                 payment_method: document.getElementById('create-eco-method').value,
-                coa_code: trxType === 'EXPENSE' ? document.getElementById('create-eco-coa').value : '',
-                main_category: trxType === 'INCOME' ? document.getElementById('create-eco-income-cat').value : ''
+                coa_code: isInc ? '' : document.getElementById('create-eco-coa').value,
+                main_category: isInc ? document.getElementById('create-eco-income-cat').value : ''
             };
 
-            const res = await fetch('/api/eco/transactions/manual', {
+            const res = await fetch('/api/eco/manual-create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -882,7 +1420,7 @@ JS_KEUANGAN_ECOPARK_SCRIPTS = """
                 toggleModal('modal-eco-create');
                 await loadKeuanganEcopark();
             } else {
-                alert('Gagal menyimpan transaksi: ' + (data.error || data.message || 'Unknown error'));
+                alert('Gagal mencatat transaksi: ' + (data.error || 'Unknown error'));
             }
         } catch (e) {
             alert('Terjadi kesalahan jaringan: ' + e.message);
@@ -898,10 +1436,10 @@ JS_KEUANGAN_ECOPARK_SCRIPTS = """
 
         document.getElementById('edit-eco-id').value = item.id;
         document.getElementById('edit-eco-type').value = item.trx_type;
-        document.getElementById('edit-eco-id-badge').innerText = item.id;
+        document.getElementById('edit-eco-id-display').innerText = `ID: ${item.id} (${item.month_period})`;
 
-        const typeBadge = document.getElementById('edit-eco-type-badge');
         const isInc = item.trx_type === 'INCOME';
+        const typeBadge = document.getElementById('edit-eco-type-badge');
         typeBadge.innerHTML = isInc
             ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">KAS MASUK (OMSET)</span>`
             : `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">KAS KELUAR (BELANJA)</span>`;
@@ -939,9 +1477,9 @@ JS_KEUANGAN_ECOPARK_SCRIPTS = """
             const isInc = document.getElementById('edit-eco-type').value === 'INCOME';
             const payload = {
                 transaction_date: document.getElementById('edit-eco-date').value,
-                amount: parseFloat(document.getElementById('edit-eco-amount').value),
-                buyer_or_vendor: document.getElementById('edit-eco-pihak').value,
-                description: document.getElementById('edit-eco-desc').value,
+                amount: parseFloat(document.getElementById('edit-eco-amount').value || 0),
+                buyer_or_vendor: document.getElementById('edit-eco-pihak').value.trim(),
+                description: document.getElementById('edit-eco-desc').value.trim(),
                 payment_method: document.getElementById('edit-eco-method').value,
                 coa_code: isInc ? '' : document.getElementById('edit-eco-coa').value
             };

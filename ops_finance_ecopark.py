@@ -608,6 +608,99 @@ def api_get_eco_stats():
 
         overall_pct = round((grand_realisasi / grand_budget * 100), 1) if grand_budget > 0 else 0.0
 
+        # 1. Tren Arus Kas Bulanan (Juli - Oktober 2026 TA 2026/2027)
+        month_order = ["Juli 2026", "Agustus 2026", "September 2026", "Oktober 2026"]
+        monthly_trends = []
+        for m in month_order:
+            m_inc = conn.execute("SELECT SUM(amount) as t FROM ops_eco_transactions WHERE trx_type = 'INCOME' AND month_period = ?", (m,)).fetchone()['t'] or 0.0
+            m_exp = conn.execute("SELECT SUM(amount) as t FROM ops_eco_transactions WHERE trx_type = 'EXPENSE' AND month_period = ?", (m,)).fetchone()['t'] or 0.0
+            monthly_trends.append({
+                'month': m.replace(' 2026', ''),
+                'full_month': m,
+                'income': m_inc,
+                'expense': m_exp,
+                'net': m_inc - m_exp
+            })
+
+        # 2. Komposisi Sumber Pendapatan / Omset per Kategori (dengan filter dinamis)
+        inc_rows = conn.execute(f"""
+            SELECT main_category, SUM(amount) as total, COUNT(*) as cnt
+            FROM ops_eco_transactions
+            WHERE trx_type = 'INCOME' {time_and}
+            GROUP BY main_category
+            ORDER BY total DESC
+        """, params).fetchall()
+
+        income_breakdown = []
+        for r in inc_rows:
+            cat_name = r['main_category'] or 'Lainnya'
+            tot = r['total'] or 0.0
+            pct = round((tot / tot_income * 100), 1) if tot_income > 0 else 0.0
+            income_breakdown.append({
+                'category': cat_name,
+                'amount': tot,
+                'percentage': pct,
+                'count': r['cnt'] or 0
+            })
+
+        # 3. Top 8 Item Pengeluaran Operasional Terbesar (dengan filter dinamis)
+        exp_items = conn.execute(f"""
+            SELECT description, SUM(amount) as total, COUNT(*) as cnt
+            FROM ops_eco_transactions
+            WHERE trx_type = 'EXPENSE' {time_and}
+            GROUP BY description
+            ORDER BY total DESC
+            LIMIT 8
+        """, params).fetchall()
+
+        top_expense_items = []
+        for r in exp_items:
+            tot = r['total'] or 0.0
+            pct = round((tot / tot_expense * 100), 1) if tot_expense > 0 else 0.0
+            top_expense_items.append({
+                'item': r['description'] or 'Tanpa Keterangan',
+                'amount': tot,
+                'percentage': pct,
+                'count': r['cnt'] or 0
+            })
+
+        # 4. Ringkasan Analisis Keuangan Eksekutif (AI Analyst Health Check)
+        surplus_rate = round((saldo_kas / tot_income * 100), 1) if tot_income > 0 else 0.0
+        burn_ratio = round((tot_expense / tot_income * 100), 1) if tot_income > 0 else 0.0
+
+        top_income_cat = income_breakdown[0]['category'] if income_breakdown else "N/A"
+        top_income_val = income_breakdown[0]['amount'] if income_breakdown else 0.0
+        top_income_pct = income_breakdown[0]['percentage'] if income_breakdown else 0.0
+
+        highest_cat = max(category_summary, key=lambda x: x['realisasi']) if category_summary else None
+
+        health_status = "SURPLUS SEHAT" if saldo_kas > 0 else ("BREAK EVEN" if saldo_kas == 0 else "DEFISIT OPERASIONAL")
+        health_color = "emerald" if saldo_kas > 0 else ("amber" if saldo_kas == 0 else "rose")
+
+        key_insights = []
+        if saldo_kas > 0:
+            key_insights.append(f"Arus kas surplus bersih Rp {saldo_kas:,.0f} (Margin Surplus: {surplus_rate}%)".replace(',', '.'))
+        else:
+            key_insights.append(f"Arus kas mengalami defisit Rp {abs(saldo_kas):,.0f}".replace(',', '.'))
+
+        key_insights.append(f"Penopang omset utama: {top_income_cat} menyumbang Rp {top_income_val:,.0f} ({top_income_pct}% dari total pemasukan)".replace(',', '.'))
+
+        if highest_cat and highest_cat['realisasi'] > 0:
+            key_insights.append(f"Pusat beban terbesar: {highest_cat['name']} menyerap Rp {highest_cat['realisasi']:,.0f} ({highest_cat['persentase']}% dari plafon RKAS)".replace(',', '.'))
+
+        if tot_expense > 0:
+            key_insights.append(f"Operating Expense Ratio (Rasio Belanja thd Omset): {burn_ratio}%")
+
+        ai_analysis = {
+            'status': health_status,
+            'status_color': health_color,
+            'surplus_rate': surplus_rate,
+            'burn_ratio': burn_ratio,
+            'insights': key_insights,
+            'top_revenue_driver': f"{top_income_cat} ({top_income_pct}%)",
+            'top_cost_center': f"{highest_cat['name'] if highest_cat else 'N/A'}"
+        }
+
         return jsonify({
             'success': True,
             'summary': {
@@ -618,9 +711,14 @@ def api_get_eco_stats():
                 'saldo_kas': saldo_kas,
                 'grand_budget_annual': grand_budget,
                 'grand_realisasi_annual': grand_realisasi,
-                'overall_pct': overall_pct
+                'overall_pct': overall_pct,
+                'surplus_rate': surplus_rate
             },
-            'categories': category_summary
+            'categories': category_summary,
+            'monthly_trends': monthly_trends,
+            'income_breakdown': income_breakdown,
+            'top_expense_items': top_expense_items,
+            'ai_analysis': ai_analysis
         })
     finally:
         conn.close()
