@@ -34,6 +34,8 @@ import templates_pm
 import ops_pm
 import templates_evaluasi
 import ops_evaluasi
+import templates_mutabaah
+import ops_mutabaah
 import templates_finance
 import templates_finance_ecopark
 app.register_blueprint(ops_auth_bp)
@@ -419,7 +421,7 @@ HTML_TEMPLATE = """
             {% if user_role == 'manager' or 'all' in user_permissions or 'tab-mutabaah' in user_permissions %}
             <button onclick="showTab('tab-mutabaah')" id="btn-tab-mutabaah" class="tab-btn w-full px-3.5 py-2.5 rounded-xl flex items-center text-left space-x-3 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-hands-praying text-base w-5 shrink-0 text-center"></i>
-                <span class="text-left flex-1">Log Mutabaah WA</span>
+                <span class="text-left flex-1">Laporan Mutabaah Tim</span>
             </button>
             {% endif %}
 
@@ -1935,84 +1937,8 @@ HTML_TEMPLATE = """
                 </div>
             </div>
 
-            <!-- TAB 3: MUTABAAH LOGS WITH FILTER -->
-            <div id="tab-mutabaah" class="tab-content hidden space-y-6">
-                <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-6 space-y-4">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                        <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
-                            <i class="fa-solid fa-kaaba text-teal-600"></i>
-                            Log Masuk Mutabaah Yaumiyah Petugas (WhatsApp)
-                        </h2>
-                        <div class="flex items-center gap-3">
-                            <a href="/export/mutabaah" class="px-3.5 py-1.5 bg-teal-600 text-white text-xs font-semibold rounded-lg hover:bg-teal-700 transition shadow-xs flex items-center gap-1.5" title="Export ke Excel">
-                                <i class="fa-solid fa-file-excel"></i> Export Excel
-                            </a>
-                            <span id="mutabaah-count-badge" class="px-3 py-1 bg-teal-50 text-teal-700 text-xs font-bold rounded-full border border-teal-200">
-                                Total: {{ mutabaah_logs|length }} Laporan
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Filter Control Bar -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-xs">
-                        <div>
-                            <label class="block font-semibold text-slate-600 mb-1">Cari Nama / Kata Kunci</label>
-                            <input type="text" id="mutabaah-search" onkeyup="filterMutabaahTable()" placeholder="Ketik nama petugas..." class="w-full p-2 bg-white border border-slate-200 rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block font-semibold text-slate-600 mb-1">Filter Unit</label>
-                            <select id="mutabaah-filter-unit" onchange="filterMutabaahTable()" class="w-full p-2 bg-white border border-slate-200 rounded-lg">
-                                <option value="">Semua Unit</option>
-                                <option value="OB">OB</option>
-                                <option value="Security">Security</option>
-                                <option value="Gardener">Gardener</option>
-                                <option value="PGTK">PGTK</option>
-                                <option value="SD">SD</option>
-                                <option value="SMP">SMP</option>
-                                <option value="SMA">SMA</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block font-semibold text-slate-600 mb-1">Filter Tanggal</label>
-                            <input type="date" id="mutabaah-filter-date" onchange="filterMutabaahTable()" class="w-full p-2 bg-white border border-slate-200 rounded-lg" value="{{ today_date }}">
-                        </div>
-                    </div>
-
-                    <div class="overflow-x-auto">
-                        <table id="table-mutabaah" class="w-full text-left border-collapse text-sm">
-                            <thead>
-                                <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold">
-                                    <th class="p-3">Waktu</th>
-                                    <th class="p-3">Nama Petugas</th>
-                                    <th class="p-3">Unit</th>
-                                    <th class="p-2 sm:p-3">Sholat</th>
-                                    <th class="p-3">Tilawah</th>
-                                    <th class="p-2 sm:p-3">Dzikir</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100">
-                                {% for log in mutabaah_logs|reverse %}
-                                <tr class="mutabaah-row hover:bg-slate-50/50" 
-                                    data-nama="{{ log.nama|lower }}" 
-                                    data-unit="{{ log.unit }}" 
-                                    data-date="{{ log.wibDate or log.timestamp[:10] }}">
-                                    <td class="p-3 text-xs font-mono text-slate-500">{{ log.wibDate or log.timestamp[:10] }}</td>
-                                    <td class="p-3 font-semibold text-slate-800">{{ log.nama }}</td>
-                                    <td class="p-3 text-xs font-medium text-slate-600">{{ log.unit }}</td>
-                                    <td class="p-3 text-xs text-slate-700">{{ log.sholat }}</td>
-                                    <td class="p-3 text-xs text-slate-700">{{ log.tilawah }}</td>
-                                    <td class="p-3 text-xs text-slate-700">{{ log.dzikir }}</td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="6" class="p-6 text-center text-slate-400">Belum ada log mutabaah.</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+            <!-- TAB 3: LAPORAN & EVALUASI MUTABAAH PETUGAS -->
+            {{ tab_mutabaah_html | safe }}
 
             <!-- TAB STANDBY: KESIAGAAN POS & GEOTAGGING -->
             <div id="tab-standby" class="tab-content hidden space-y-6">
@@ -5210,6 +5136,9 @@ HTML_TEMPLATE = """
             }
             if (tabId === 'tab-kebersihan') {
                 filterKebersihanTable();
+            }
+            if (tabId === 'tab-mutabaah') {
+                initMutabaahTab();
             }
             if (tabId === 'tab-standby') {
                 loadStandbyRadar();
@@ -9371,6 +9300,7 @@ HTML_TEMPLATE = """
     </script>
     {{ pm_client_script | safe }}
     {{ evaluasi_client_script | safe }}
+    {{ mutabaah_client_script | safe }}
     {{ finance_client_script | safe }}
     {{ finance_ecopark_client_script | safe }}
 </body>
@@ -9587,6 +9517,8 @@ def index():
         pm_client_script=templates_pm.PM_CLIENT_SCRIPT,
         tab_evaluasi_html=templates_evaluasi.TAB_EVALUASI_HTML,
         evaluasi_client_script=templates_evaluasi.EVALUASI_CLIENT_SCRIPT,
+        tab_mutabaah_html=templates_mutabaah.TAB_MUTABAAH_HTML,
+        mutabaah_client_script=templates_mutabaah.MUTABAAH_CLIENT_SCRIPT,
         tab_keuangan_html=templates_finance.TAB_KEUANGAN_HTML,
         finance_client_script=templates_finance.JS_KEUANGAN_SCRIPTS,
         tab_keuangan_ecopark_html=templates_finance_ecopark.TAB_KEUANGAN_ECOPARK_HTML,
@@ -11029,6 +10961,64 @@ def export_evaluasi():
     response.headers["Content-Disposition"] = f"attachment; filename={filename}"
     response.headers["Content-Type"] = "text/csv; charset=utf-8"
     return response
+
+# =========================================================================
+# API ROUTES MODUL LAPORAN & EVALUASI MUTABA'AH PETUGAS (OB, GARDENER, SECURITY)
+# =========================================================================
+
+@app.route("/api/ops/mutabaah/radar", methods=["GET"])
+@login_required
+def api_ops_mutabaah_radar():
+    date_val = request.args.get("date", "").strip() or None
+    unit_val = request.args.get("unit", "OB").strip()
+    data = ops_mutabaah.get_mutabaah_radar(date_str=date_val, unit_filter=unit_val)
+    return jsonify(data)
+
+@app.route("/api/ops/mutabaah/logs", methods=["GET"])
+@login_required
+def api_ops_mutabaah_logs():
+    start_date = request.args.get("start", "").strip() or None
+    end_date = request.args.get("end", "").strip() or None
+    unit_val = request.args.get("unit", "ALL").strip()
+    search_val = request.args.get("q", "").strip()
+    data = ops_mutabaah.get_mutabaah_logs_filtered(
+        start_date=start_date,
+        end_date=end_date,
+        unit_filter=unit_val,
+        search=search_val
+    )
+    return jsonify(data)
+
+@app.route("/api/ops/mutabaah/evaluasi", methods=["GET"])
+@login_required
+def api_ops_mutabaah_evaluasi():
+    start_date = request.args.get("start", "").strip() or None
+    end_date = request.args.get("end", "").strip() or None
+    unit_val = request.args.get("unit", "OB").strip()
+    data = ops_mutabaah.get_mutabaah_evaluasi(
+        start_date=start_date,
+        end_date=end_date,
+        unit_filter=unit_val
+    )
+    return jsonify(data)
+
+@app.route("/export/mutabaah/excel")
+@login_required
+def export_mutabaah_excel():
+    start_date = request.args.get("start", "").strip() or None
+    end_date = request.args.get("end", "").strip() or None
+    unit_val = request.args.get("unit", "OB").strip()
+    excel_stream = ops_mutabaah.create_mutabaah_excel_report(
+        start_date=start_date,
+        end_date=end_date,
+        unit_filter=unit_val
+    )
+    filename = f"Laporan_Mutabaah_{unit_val}_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+    return Response(
+        excel_stream.getvalue(),
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
 
 app.register_blueprint(mutubaah_bp)
 if __name__ == "__main__":
