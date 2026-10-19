@@ -478,6 +478,14 @@ def get_mutabaah_evaluasi(
             "last_reported_date": last_date
         })
 
+    total_personnel = len(evaluasi_list)
+    avg_compliance = round(sum(e["compliance_pct"] for e in evaluasi_list) / total_personnel, 1) if total_personnel else 0.0
+    active_count = sum(1 for e in evaluasi_list if e["days_reported"] > 0)
+    perlu_pembinaan_count = sum(1 for e in evaluasi_list if e["compliance_pct"] < 50.0)
+    total_sholat_5 = sum(e["sholat_5_count"] for e in evaluasi_list)
+    total_tilawah = sum(e["tilawah_count"] for e in evaluasi_list)
+    total_dzikir = sum(e["dzikir_count"] for e in evaluasi_list)
+
     # Urutkan berdasarkan persentase kepatuhan tertinggi
     evaluasi_list.sort(key=lambda x: (-x["compliance_pct"], -x["days_reported"], x["personnel"]["name"]))
 
@@ -487,6 +495,15 @@ def get_mutabaah_evaluasi(
         "end_date": e_date,
         "total_days": total_days,
         "unit_filter": unit_filter,
+        "summary": {
+            "total_personnel": total_personnel,
+            "avg_compliance": avg_compliance,
+            "active_count": active_count,
+            "perlu_pembinaan_count": perlu_pembinaan_count,
+            "total_sholat_5": total_sholat_5,
+            "total_tilawah": total_tilawah,
+            "total_dzikir": total_dzikir
+        },
         "evaluasi": evaluasi_list
     }
 
