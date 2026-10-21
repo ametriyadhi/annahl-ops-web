@@ -3118,7 +3118,7 @@ HTML_TEMPLATE = """
                             <button onclick="loadOpsUsers()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition flex items-center gap-1.5">
                                 <i class="fa-solid fa-arrows-rotate"></i> Refresh
                             </button>
-                            <button onclick="toggleModal('modal-add-ops-user')" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center gap-1.5">
+                            <button onclick="openAddOpsUserModal()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center gap-1.5">
                                 <i class="fa-solid fa-user-plus"></i> Tambah Koordinator
                             </button>
                         </div>
@@ -5169,6 +5169,15 @@ HTML_TEMPLATE = """
         }
 
         function toggleModal(modalId) {
+            // Safety net: pastikan pilihan role selalu ter-render walau modal dibuka via tombol lain
+            if (modalId === 'modal-add-ops-user') {
+                const c = document.getElementById('add-user-roles-container');
+                if (c && !c.querySelector('.user-role-cb')) renderUserRoleCheckboxes('add-user-roles-container', ['koordinator_ob']);
+            }
+            if (modalId === 'modal-edit-ops-user') {
+                const c2 = document.getElementById('edit-user-roles-container');
+                if (c2 && !c2.querySelector('.user-role-cb') && c2.innerHTML.indexOf('Memuat') === -1) renderUserRoleCheckboxes('edit-user-roles-container', []);
+            }
             const modal = document.getElementById(modalId);
             modal.classList.toggle('hidden');
         }
