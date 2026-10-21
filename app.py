@@ -5128,6 +5128,7 @@ HTML_TEMPLATE = """
             }
             // Auto-load Ops Users data when its tab is opened
             if (tabId === 'tab-users') {
+                ensureOpsRoles().catch(() => {});
                 loadOpsUsers();
             }
             // Auto-load Ops Roles data when its tab is opened
@@ -5678,11 +5679,28 @@ HTML_TEMPLATE = """
         let cachedOpsUsers = [];
         let G_ROLE_NAME_MAP = {};
 
+        function ensureOpsRoles() {
+            if (G_OPS_ROLES && G_OPS_ROLES.length > 0) return Promise.resolve(G_OPS_ROLES);
+            return fetch('/api/ops/roles', {credentials: 'same-origin'})
+                .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+                .then(roles => {
+                    G_OPS_ROLES = Array.isArray(roles) ? roles : [];
+                    G_ROLE_NAME_MAP = {};
+                    G_OPS_ROLES.forEach(r => { G_ROLE_NAME_MAP[r.role_code] = r.role_name; });
+                    return G_OPS_ROLES;
+                });
+        }
+
         function renderUserRoleCheckboxes(containerId, selectedRoles = []) {
             const cont = document.getElementById(containerId);
             if (!cont) return;
             if (!G_OPS_ROLES || G_OPS_ROLES.length === 0) {
-                cont.innerHTML = '<div class="col-span-2 text-center text-slate-400 py-2 text-xs">Memuat daftar role...</div>';
+                cont.innerHTML = '<div class="col-span-2 text-center text-slate-400 py-2 text-xs"><i class="fa-solid fa-spinner fa-spin mr-1"></i>Memuat daftar role...</div>';
+                ensureOpsRoles()
+                    .then(() => renderUserRoleCheckboxes(containerId, selectedRoles))
+                    .catch(err => {
+                        cont.innerHTML = '<div class="col-span-2 text-center text-red-500 py-2 text-xs">Gagal memuat role (' + err.message + '). Tutup lalu buka kembali form, atau muat ulang halaman (Ctrl+F5).</div>';
+                    });
                 return;
             }
             let html = '';
